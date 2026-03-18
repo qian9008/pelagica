@@ -306,6 +306,7 @@ const PlayerPage = () => {
                 startTicks={item.UserData?.PlaybackPositionTicks || 0}
                 subtitles={subtitleTracks}
                 isAudioSwitchRef={isAudioSwitchRef}
+                subtitleTrackIndex={subtitleTrackIndex}
             />
             <PlayerControls
                 item={item}

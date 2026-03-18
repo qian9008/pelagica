@@ -18,6 +18,7 @@ interface VideoPlayerProps {
     subtitles?: SubtitleTrack[];
     onReady?: (player: VideoJsPlayer) => void;
     isAudioSwitchRef: React.MutableRefObject<boolean>;
+    subtitleTrackIndex: number | null;
 }
 
 const VideoPlayer = ({
@@ -27,6 +28,7 @@ const VideoPlayer = ({
     subtitles,
     onReady,
     isAudioSwitchRef,
+    subtitleTrackIndex,
 }: VideoPlayerProps) => {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const playerRef = useRef<VideoJsPlayer | null>(null);
@@ -109,7 +111,7 @@ const VideoPlayer = ({
 
         const player = playerRef.current;
 
-        const addSubtitles = () => {
+        const addSubtitles = (activeIndex: number | null) => {
             const tracks = player.remoteTextTracks();
             while (tracks.tracks_.length > 0) {
                 const track = tracks.tracks_[0];
@@ -117,7 +119,7 @@ const VideoPlayer = ({
             }
 
             if (subtitles && subtitles.length > 0) {
-                subtitles.forEach((subtitle) => {
+                subtitles.forEach((subtitle, index) => {
                     player.addRemoteTextTrack(
                         {
                             kind: 'subtitles',
@@ -128,12 +130,28 @@ const VideoPlayer = ({
                         },
                         false // Don't add to DOM manually
                     );
+
+                    const addedTrack = player.remoteTextTracks().tracks_[index];
+                    if (addedTrack) {
+                        addedTrack.mode = index === activeIndex ? 'showing' : 'disabled';
+                    }
                 });
             }
         };
 
-        addSubtitles();
-    }, [subtitles, src]);
+        addSubtitles(subtitleTrackIndex);
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                addSubtitles(subtitleTrackIndex);
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [subtitles, src, subtitleTrackIndex]);
 
     return (
         <div
