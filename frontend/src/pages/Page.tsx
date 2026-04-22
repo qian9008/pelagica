@@ -15,6 +15,7 @@ import FullPageLoader from '@/components/FullPageLoader';
 import { logout } from '@/api/logout';
 import { getApi } from '@/api/getApi';
 import FullPageError from '@/components/FullPageError';
+import { getSidebarState, saveSidebarState } from '../utils/localstorageSidebar';
 
 interface PageProps {
     title?: string;
@@ -61,6 +62,7 @@ const PageContent = ({
     const { theme } = useTheme();
     const effectiveTheme = getEffectiveTheme(theme);
     const [showLoader, setShowLoader] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(getSidebarState);
 
     useEffect(() => {
         if (title) document.title = title;
@@ -131,7 +133,11 @@ const PageContent = ({
     return (
         <SidebarProvider
             className={`relative min-h-dvh h-dvh ${containerClassName ?? ''}`}
-            defaultOpen={false}
+            open={sidebarOpen ?? false}
+            onOpenChange={(open) => {
+                setSidebarOpen(open);
+                saveSidebarState(open);
+            }}
         >
             {background || bgItem}
             {sidebar && <AppSidebar />}
