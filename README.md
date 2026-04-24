@@ -148,7 +148,7 @@ Join the Pelagica community on Discord for support, discussions, and updates: ht
 
 ## Localization
 
-Pelagica supports multiple languages and depends on community contributions for translations. If you'd like to help translate Pelagica into your language, you can contribute via [GitLocalize](https://gitlocalize.com/repo/10635).
+Pelagica supports multiple languages and depends on community contributions for translations. If you'd like to help translate Pelagica into your language, you can contribute via [GitLocalize](https://gitlocalize.com/repo/10758).
 
 ## Development Setup
 
