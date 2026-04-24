@@ -11,6 +11,7 @@ import ResumeRow from './ResumeRow';
 import type { CollectionType } from '@jellyfin/sdk/lib/generated-client/models';
 import GenresRow from './GenresRow';
 import LibrariesRow from './LibrariesRow';
+import StudiosRow from './StudiosRow';
 
 function getDetailFieldsForCollectionType(type: CollectionType | undefined): DetailField[] {
     switch (type) {
@@ -35,6 +36,14 @@ const HomePage = () => {
                     if (section.enabled === false) return null;
 
                     switch (section.type) {
+                        case 'studios':
+                            return (
+                                <StudiosRow
+                                    key={index}
+                                    title={section.title || t('studios')}
+                                    limit={section.limit}
+                                />
+                            );
                         case 'libraries':
                             return (
                                 <LibrariesRow key={index} title={section.title || t('libraries')} />

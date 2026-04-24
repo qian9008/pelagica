@@ -142,6 +142,12 @@ export interface LibrariesSection extends BaseHomeScreenSection {
     type: 'libraries';
 }
 
+export interface StudiosSection extends BaseHomeScreenSection {
+    type: 'studios';
+    /** Maximum number of studios to display */
+    limit?: number;
+}
+
 export type HomeScreenSection =
     | MediaBarSection
     | RecentlyAddedSection
@@ -151,7 +157,8 @@ export type HomeScreenSection =
     | NextUpSection
     | ResumeSection
     | GenresSection
-    | LibrariesSection;
+    | LibrariesSection
+    | StudiosSection;
 
 export const EPISODE_DISPLAYS = ['grid', 'row'] as const;
 export type EpisodeDisplay = (typeof EPISODE_DISPLAYS)[number];
@@ -273,6 +280,11 @@ const DEFAULT_CONFIG: AppConfig = {
                 isInKefinTweaksWatchlist: true,
                 limit: 10,
             },
+        },
+        {
+            type: 'studios',
+            title: 'Studios',
+            limit: 20,
         },
         {
             type: 'items',

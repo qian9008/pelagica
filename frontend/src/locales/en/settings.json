@@ -136,5 +136,6 @@
     "link_url_placeholder": "https://example.com",
     "link_icon_label": "Icon",
     "link_icon_placeholder": "Pick an icon",
-    "link_icon_search_placeholder": "Search icons..."
+    "link_icon_search_placeholder": "Search icons...",
+    "section_type_studios": "Studios"
 }

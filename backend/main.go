@@ -51,6 +51,9 @@ func main() {
 	api.Delete("/themes/:id", protected, handlers.DeleteTheme)
 	api.Post("/themes/:id/install", protected, handlers.InstallTheme)
 
+	api.Get("/studios", handlers.GetStudios)
+	api.Get("/studios/:name/thumb", handlers.GetStudioThumb)
+
 	log.Println("Server starting on " + getPort())
 	log.Fatal(app.Listen(getPort()))
 }

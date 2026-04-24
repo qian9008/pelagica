@@ -47,13 +47,12 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # config directory (volume-friendly)
 RUN mkdir -p /config
-COPY default.config.json /config/config.json
-RUN chmod 644 /config/config.json
 
 ENV PORT=4321
 ENV ENABLE_AUTH=true
 ENV CONFIG_PATH=/config/config.json
 ENV THEMES_DIR=/config/themes
+ENV STUDIO_THUMBS=/config/studio_thumbs
 ENV BRANDING_DIR=/config/branding
 ENV DEFAULT_THEME_PATH=/default.theme.json
 ENV THEMES_REPO_BASE_URL=https://themes.pelagica.app/

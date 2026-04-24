@@ -215,6 +215,7 @@ const SectionEditor = ({
                             { value: 'streamystatsRecommended', label: 'Recommended' },
                             { value: 'genres', label: 'Genres' },
                             { value: 'libraries', label: 'Libraries' },
+                            { value: 'studios', label: 'Studios' },
                         ]}
                         value={editedSection.type}
                         onChange={(value) => {

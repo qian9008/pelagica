@@ -29,5 +29,6 @@
     "track_count": "{{count}} Track",
     "track_count_plural": "{{count}} Tracks",
     "genres": "Genres",
-    "libraries": "Libraries"
+    "libraries": "Libraries",
+    "studios": "Studios"
 }
