@@ -109,5 +109,14 @@
   "upload_image": "Bild hochladen",
   "uploading": "Wird hochgeladen...",
   "upload": "Hochladen",
-  "upcoming_episodes": "Demnächst erscheinende Folgen"
+  "upcoming_episodes": "Demnächst erscheinende Folgen",
+  "subtitles": "Untertitel",
+  "subtitle_download_description": "Für dieses Video zum Download verfügbare Untertitel.",
+  "no_subtitles_available": "Für dieses Video sind keine Untertitel verfügbar.",
+  "unknown_subtitle": "Unbekannter Untertitel",
+  "image_based": "Bildbasiert",
+  "download": "Herunterladen",
+  "original": "Original",
+  "download_original_file": "Originaldatei herunterladen",
+  "open_in_new_tab": "In neuem Tab öffnen"
 }
