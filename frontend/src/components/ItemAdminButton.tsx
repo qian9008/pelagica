@@ -6,12 +6,13 @@ import {
     DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Button } from './ui/button';
-import { Captions, EllipsisVertical, Image, RotateCcw, Trash2 } from 'lucide-react';
+import { Captions, EllipsisVertical, Image, RotateCcw, Trash2, PencilLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCurrentUser } from '@/hooks/api/useCurrentUser';
 import { useRef } from 'react';
 import ManageImageButton from './ManageImageButton';
 import RefreshItemMetadataButton from './RefreshItemMetadataButton';
+import EditItemMetadataButton from './EditItemMetadataButton';
 import MediaDeleteButton from './MediaDeleteButton';
 import SubtitleDownloadDialog from '../pages/Item/SubtitleDownloadDialog';
 
@@ -28,6 +29,7 @@ const ItemAdminButton = ({
     const refreshMetadataTriggerRef = useRef<HTMLButtonElement>(null);
     const deleteTriggerRef = useRef<HTMLButtonElement>(null);
     const subtitlesTriggerRef = useRef<HTMLButtonElement>(null);
+    const editMetadataTriggerRef = useRef<HTMLButtonElement>(null);
 
     if (currentUser?.Policy?.IsAdministrator !== true) return null;
 
@@ -68,6 +70,14 @@ const ItemAdminButton = ({
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onClick={() => {
+                            setTimeout(() => editMetadataTriggerRef.current?.click(), 0);
+                        }}
+                    >
+                        <PencilLine />
+                        {t('editMetadata')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        onClick={() => {
                             setTimeout(() => deleteTriggerRef.current?.click(), 0);
                         }}
                     >
@@ -86,6 +96,10 @@ const ItemAdminButton = ({
                 <RefreshItemMetadataButton
                     item={item}
                     trigger={<button ref={refreshMetadataTriggerRef} />}
+                />
+                <EditItemMetadataButton
+                    item={item}
+                    trigger={<button ref={editMetadataTriggerRef} />}
                 />
                 <MediaDeleteButton item={item} trigger={<button ref={deleteTriggerRef} />} />
             </div>
