@@ -57,6 +57,9 @@ func main() {
 	api.Get("/studios", handlers.GetStudios)
 	api.Get("/studios/:name/thumb", handlers.GetStudioThumb)
 
+	api.Get("/stats-consent", handlers.GetStatsConsent)
+	api.Post("/stats-consent", handlers.PostStatsConsent)
+
 	log.Println("Server starting on " + getPort())
 	log.Fatal(app.Listen(getPort()))
 }

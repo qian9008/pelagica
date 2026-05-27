@@ -39,6 +39,64 @@ func getInstanceIdFile() string {
 	return os.Getenv("COLLECTOR_INSTANCE_ID_FILE")
 }
 
+func getStatsConsentFile() string {
+	return os.Getenv("COLLECTOR_STATS_CONSENT_FILE")
+}
+
+// hasStatsConsent determines whether the user has consented to anonymous statistics collection
+// Return values:
+// 0 -> consent explicitly given
+// 1 -> consent not specified or invalid
+// 2 -> consent explicitly denied
+func HasStatsConsent() int {
+	parseBool := func(v string) (bool, bool) {
+		switch strings.ToLower(strings.TrimSpace(v)) {
+		case "true":
+			return true, true
+		case "false":
+			return false, true
+		default:
+			return false, false
+		}
+	}
+
+	if envValue := os.Getenv("COLLECTOR_STATS_CONSENT"); envValue != "" {
+		if val, ok := parseBool(envValue); ok {
+			if val {
+				return 0
+			}
+			return 2
+		}
+	}
+
+	if file := getStatsConsentFile(); file != "" {
+		content, err := os.ReadFile(file)
+		if err == nil {
+			if val, ok := parseBool(string(content)); ok {
+				if val {
+					return 0
+				}
+				return 2
+			}
+		}
+	}
+
+	return 1
+}
+
+func WriteStatsConsent(consent bool) error {
+	file := getStatsConsentFile()
+	if file == "" {
+		return fmt.Errorf("COLLECTOR_STATS_CONSENT_FILE is not set")
+	}
+	value := "false"
+	if consent {
+		value = "true"
+	}
+	return os.WriteFile(file, []byte(value+"\n"), 0644)
+
+}
+
 func getInstanceId() (string, error) {
 	path := getInstanceIdFile()
 	if path == "" {
@@ -108,8 +166,30 @@ func sendPing(baseURL, instanceID, version, token string) error {
 }
 
 func RegisterStatsJob() {
+	if HasStatsConsent() != 0 {
+		fmt.Println("Stats collection skipped: user has not given consent")
+		return
+	}
+
+	instanceId, err := getInstanceId()
+	if err != nil {
+		fmt.Printf("Failed to get instance ID: %v\n", err)
+		return
+	}
+
+	err = sendPing(getPingBaseUrl(), instanceId, getVersion(), getPingToken())
+	if err != nil {
+		fmt.Printf("Failed to send stats ping: %v\n", err)
+	}
+	fmt.Printf("Stats ping sent successfully (instance ID: %s)\n", instanceId)
+
 	c := cron.New()
-	_, err := c.AddFunc("0 0 * * *", func() {
+	_, err = c.AddFunc("0 0 * * *", func() {
+		if HasStatsConsent() != 0 {
+			fmt.Println("Stats collection skipped: user has not given consent")
+			return
+		}
+
 		instanceId, err := getInstanceId()
 		if err != nil {
 			fmt.Printf("Failed to get instance ID: %v\n", err)
