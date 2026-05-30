@@ -9,7 +9,6 @@ interface ContinueWatchingRowProps {
     detailLine?: ContinueWatchingDetailLine[];
     limit?: number;
     accurateSorting?: boolean;
-    contentInset?: number;
 }
 
 const ContinueWatchingRow = ({
@@ -18,7 +17,6 @@ const ContinueWatchingRow = ({
     detailLine,
     limit,
     accurateSorting = true,
-    contentInset,
 }: ContinueWatchingRowProps) => {
     const {
         data: continueWatchingData,
@@ -34,7 +32,6 @@ const ContinueWatchingRow = ({
             items={continueWatchingData?.items || []}
             isLoading={isLoading}
             error={error}
-            contentInset={contentInset}
         />
     );
 };

@@ -8,7 +8,7 @@ interface SectionScrollerProps {
     icon?: React.ReactNode;
     className?: string;
     additionalButtons?: React.ReactNode;
-    contentInset?: number;
+    contentInset?: boolean;
 }
 
 export default function SectionScroller({
@@ -16,7 +16,7 @@ export default function SectionScroller({
     items,
     className,
     additionalButtons,
-    contentInset,
+    contentInset = false,
 }: SectionScrollerProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -55,7 +55,7 @@ export default function SectionScroller({
             <div
                 className={
                     'flex items-center justify-between mb-3' +
-                    (contentInset ? ` px-${contentInset}` : '')
+                    (contentInset ? ` px-4 sm:px-12` : '')
                 }
             >
                 {title ? title : <div />}
@@ -85,7 +85,7 @@ export default function SectionScroller({
                 ref={scrollRef}
                 className={
                     'flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide custom-scrollbar scrollbar-hide' +
-                    (contentInset ? ` pl-${contentInset}` : '')
+                    (contentInset ? ` pl-4 sm:pl-12` : '')
                 }
             >
                 {items}

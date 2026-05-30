@@ -18,7 +18,6 @@ interface RecommendedItemsRowProps {
     limit?: number;
     showSimilarity?: boolean;
     showBasedOn?: boolean;
-    contentInset?: number;
 }
 
 const RecommendedItemsRow = ({
@@ -144,7 +143,7 @@ const RecommendedItemsRow = ({
                               </div>
                           ))
                 }
-                contentInset={contentInset}
+                contentInset={true}
             />
         )
     );

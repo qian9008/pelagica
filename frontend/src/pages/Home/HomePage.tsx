@@ -13,8 +13,6 @@ import GenresRow from './GenresRow';
 import LibrariesRow from './LibrariesRow';
 import StudiosRow from './StudiosRow';
 
-const CONTENT_INSET = 12;
-
 function getDetailFieldsForCollectionType(type: CollectionType | undefined): DetailField[] {
     switch (type) {
         case 'music':
@@ -49,16 +47,11 @@ const HomePage = () => {
                                     key={index}
                                     title={section.title || t('studios')}
                                     limit={section.limit}
-                                    contentInset={CONTENT_INSET}
                                 />
                             );
                         case 'libraries':
                             return (
-                                <LibrariesRow
-                                    key={index}
-                                    title={section.title || t('libraries')}
-                                    contentInset={CONTENT_INSET}
-                                />
+                                <LibrariesRow key={index} title={section.title || t('libraries')} />
                             );
 
                         case 'continueWatching':
@@ -74,7 +67,6 @@ const HomePage = () => {
                                     }
                                     limit={section.limit || 20}
                                     accurateSorting={section.accurateSorting}
-                                    contentInset={CONTENT_INSET}
                                 />
                             );
 
@@ -90,7 +82,6 @@ const HomePage = () => {
                                             : ['TimeRemaining']
                                     }
                                     limit={section.limit || 20}
-                                    contentInset={CONTENT_INSET}
                                 />
                             );
 
@@ -106,7 +97,6 @@ const HomePage = () => {
                                             : ['TimeRemaining']
                                     }
                                     limit={section.limit || 20}
-                                    contentInset={CONTENT_INSET}
                                 />
                             );
 
@@ -149,7 +139,6 @@ const HomePage = () => {
                                                             detailFields={getDetailFieldsForCollectionType(
                                                                 view.CollectionType
                                                             )}
-                                                            contentInset={CONTENT_INSET}
                                                         />
                                                     )}
                                                 </div>
@@ -173,7 +162,6 @@ const HomePage = () => {
                                             ? section.detailFields
                                             : ['ReleaseYear']
                                     }
-                                    contentInset={CONTENT_INSET}
                                 />
                             );
 
@@ -186,7 +174,6 @@ const HomePage = () => {
                                     limit={section.limit}
                                     showSimilarity={section.showSimilarity}
                                     showBasedOn={section.showBasedOn}
-                                    contentInset={CONTENT_INSET}
                                 />
                             );
 
@@ -196,7 +183,6 @@ const HomePage = () => {
                                     key={index}
                                     title={section.title || t('genres')}
                                     limit={section.limit}
-                                    contentInset={CONTENT_INSET}
                                 />
                             );
 

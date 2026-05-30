@@ -8,9 +8,8 @@ interface ResumeRowProps {
     titleLine?: ContinueWatchingTitleLine;
     detailLine?: ContinueWatchingDetailLine[];
     limit?: number;
-    contentInset?: number;
 }
-export function ResumeRow({ title, titleLine, detailLine, limit, contentInset }: ResumeRowProps) {
+export function ResumeRow({ title, titleLine, detailLine, limit }: ResumeRowProps) {
     const { data, isLoading, error } = useResumeItems(getUserId(), limit);
 
     return (
@@ -21,7 +20,6 @@ export function ResumeRow({ title, titleLine, detailLine, limit, contentInset }:
             items={data || []}
             isLoading={isLoading}
             error={error}
-            contentInset={contentInset}
         />
     );
 }

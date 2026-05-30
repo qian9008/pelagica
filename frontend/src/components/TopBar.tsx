@@ -566,7 +566,7 @@ const TopBar = ({ overlay = false }: { overlay?: boolean }) => {
 
             <div
                 className={cn(
-                    'relative flex h-14 items-center gap-2 px-12 transition-all duration-300 border-b',
+                    'relative flex h-14 items-center gap-2 px-4 sm:px-12 transition-all duration-300 border-b',
                     !overlay || scrolled
                         ? 'border-border bg-background/60 backdrop-blur'
                         : 'border-transparent'

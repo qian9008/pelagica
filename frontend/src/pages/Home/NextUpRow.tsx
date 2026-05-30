@@ -8,9 +8,8 @@ interface NextUpRowProps {
     titleLine?: ContinueWatchingTitleLine;
     detailLine?: ContinueWatchingDetailLine[];
     limit?: number;
-    contentInset?: number;
 }
-export function NextUpRow({ title, titleLine, detailLine, limit, contentInset }: NextUpRowProps) {
+export function NextUpRow({ title, titleLine, detailLine, limit }: NextUpRowProps) {
     const { data: nextUpData, isLoading, error } = useNextUp(getUserId(), limit);
 
     return (
@@ -21,7 +20,6 @@ export function NextUpRow({ title, titleLine, detailLine, limit, contentInset }:
             items={nextUpData || []}
             isLoading={isLoading}
             error={error}
-            contentInset={contentInset}
         />
     );
 }
