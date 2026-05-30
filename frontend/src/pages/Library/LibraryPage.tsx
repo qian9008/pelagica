@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Page from '../Page';
 import { useUserViews } from '@/hooks/api/useUserViews';
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useLibraryItems } from '@/hooks/api/useLibraryItems';
 import { useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -51,14 +51,12 @@ function getColumnCount(width: number): number {
 
 const LibraryContent = ({
     libraryId,
-    pageRef,
     sortBy,
     sortOrder,
     page,
     onPageChange,
 }: {
     libraryId: string;
-    pageRef: React.RefObject<HTMLDivElement | null>;
     sortBy: ItemSortBy;
     sortOrder: SortOrder;
     page: number;
@@ -87,12 +85,6 @@ const LibraryContent = ({
         sortBy: [sortBy],
         sortOrder,
     });
-
-    useEffect(() => {
-        if (pageRef.current && !isLoading && libraryData?.items?.length) {
-            pageRef.current.scrollIntoView({ block: 'start' });
-        }
-    }, [libraryData?.items, isLoading, pageRef]);
 
     const posterUrls = useMemo(() => {
         if (!libraryData) return {};
@@ -179,7 +171,6 @@ const LibraryContent = ({
 };
 
 const LibraryPage = () => {
-    const pageRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation('library');
     const { data: libraries } = useUserViews();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -226,7 +217,6 @@ const LibraryPage = () => {
                 value={activeLibraryId}
                 onValueChange={handleLibraryChange}
                 className="w-full"
-                ref={pageRef}
             >
                 <div className="flex flex-col sm:items-center sm:justify-between sm:flex-row gap-2">
                     <TabsList className="max-w-full overflow-auto">
@@ -296,7 +286,6 @@ const LibraryPage = () => {
                             <LibraryContent
                                 key={`${library.Id}-${sortBy}-${sortOrder}`}
                                 libraryId={library.Id}
-                                pageRef={pageRef}
                                 sortBy={sortBy}
                                 sortOrder={sortOrder}
                                 page={page}
