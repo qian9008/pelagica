@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/command';
 import { useSearch } from '@/context/SearchContext';
 import { useSearchItems } from '@/hooks/api/useSearchItems';
+import { useMusicPlayback } from '@/hooks/useMusicPlayback';
 import { useNavigate } from 'react-router';
 import { getImageApi } from '@jellyfin/sdk/lib/utils/api/image-api';
 import { getApi } from '@/api/getApi';
@@ -21,6 +22,7 @@ export const SearchCommand = () => {
     const { t } = useTranslation('search');
     const { isOpen, searchMode, closeSearch } = useSearch();
     const navigate = useNavigate();
+    const { loadTrack } = useMusicPlayback();
     const [query, setQuery] = useState('');
     const [debouncedQuery, setDebouncedQuery] = useState('');
     const [, startTransition] = useTransition();
@@ -110,8 +112,19 @@ export const SearchCommand = () => {
                                 key={item.Id}
                                 value={item.Name!}
                                 onSelect={() => {
-                                    navigate(`/item/${item.Id}`);
-                                    closeSearch();
+                                    if (item.Type === 'Audio') {
+                                        loadTrack({
+                                            id: item.Id || '',
+                                            title: item.Name || '',
+                                            artist: item.ArtistItems?.[0]?.Name || item.Artists?.[0] || 'Unknown',
+                                            albumId: item.AlbumId || item.ParentId || '',
+                                            albumName: item.Album || '',
+                                        }, true);
+                                        closeSearch();
+                                    } else {
+                                        navigate(`/item/${item.Id}`);
+                                        closeSearch();
+                                    }
                                 }}
                             >
                                 <div className="flex items-start gap-3 w-full">
