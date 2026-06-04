@@ -6,7 +6,7 @@ import { useParams, useSearchParams } from 'react-router';
 import VideoPlayer, { type SubtitleTrack } from '@/pages/Player/VideoPlayer';
 import PlayerControls from '@/pages/Player/PlayerControls';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getPrimaryImageUrl, getVideoStreamUrl, getSubtitleUrl } from '@/utils/jellyfinUrls';
+import { getPrimaryImageUrl, getVideoStreamUrl, getSubtitleUrl, getStaticStreamUrl } from '@/utils/jellyfinUrls';
 import { generateRandomId } from '@/utils/idGenerator';
 import { useMediaSegments } from '@/hooks/api/useMediaSegments';
 import { useAdjacentItems } from '@/hooks/api/useAdjacentItems';
@@ -333,6 +333,32 @@ const PlayerPage = () => {
         );
     }, [item]);
 
+    const videoSrc = useMemo(() => {
+        if (!item) return '';
+
+        const mediaSource = item.MediaSources?.[0];
+        const isStrm = !!(
+            item.Path?.toLowerCase().endsWith('.strm') ||
+            mediaSource?.Path?.toLowerCase().endsWith('.strm')
+        );
+
+        // 网盘挂载资源（以 .strm 结尾）强制启用 Static 直链免转码播放，
+        // 对于本地存储的常规视频（.mkv/.mp4 等），仍遵循原厂判定是否支持直连（优先原画，不兼容时自动转码）
+        const supportsDirect = mediaSource
+            ? (isStrm ? true : (mediaSource.SupportsDirectPlay || mediaSource.SupportsDirectStream))
+            : false;
+
+        if (supportsDirect) {
+            return getStaticStreamUrl(itemId!);
+        }
+
+        // 不支持直连的原常规本地视频，走原装的 getVideoStreamUrl 接口由 Emby 进行自适应转码切片
+        return getVideoStreamUrl(itemId!, {
+            audioStreamIndex: audioTrackIndex,
+            playSessionId: playSessionId,
+        });
+    }, [item, itemId, audioTrackIndex, playSessionId]);
+
     if (
         isLoading ||
         isLoadingMediaSegments ||
@@ -378,10 +404,7 @@ const PlayerPage = () => {
         >
             <VideoPlayer
                 key={itemId}
-                src={getVideoStreamUrl(itemId!, {
-                    audioStreamIndex: audioTrackIndex,
-                    playSessionId: playSessionId,
-                })}
+                src={videoSrc}
                 poster={posterUrl}
                 onReady={setPlayer}
                 startTicks={startTicks}
@@ -401,10 +424,7 @@ const PlayerPage = () => {
                 mediaSegments={mediaSegments}
                 previousItem={adjacentItems?.previousItem}
                 nextItem={adjacentItems?.nextItem}
-                srcUrl={getVideoStreamUrl(itemId!, {
-                    audioStreamIndex: audioTrackIndex,
-                    playSessionId: playSessionId,
-                })}
+                srcUrl={videoSrc}
                 containerRef={containerRef}
             />
         </div>

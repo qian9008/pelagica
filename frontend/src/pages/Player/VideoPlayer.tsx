@@ -115,7 +115,11 @@ const VideoPlayer = ({
         }
 
         player.pause();
-        player.src({ src, type: 'application/x-mpegURL' });
+        const isHls = src.toLowerCase().includes('m3u8');
+        player.src({
+            src,
+            type: isHls ? 'application/x-mpegURL' : 'video/mp4',
+        });
         player.load();
 
         if (seekTo !== null) {
