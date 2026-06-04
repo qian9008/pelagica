@@ -57,8 +57,8 @@ import { IconPicker, type IconName } from '../../components/ui/icon-picker';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { getAccessToken, getServerUrl } from '@/utils/localstorageCredentials';
 import FileDropInput from '@/components/FileDropInput';
-import { useStatsConsent } from '../../hooks/api/statsConsent/useStatsConsent';
-import { useSetStatsConsent } from '../../hooks/api/statsConsent/useSetStatsConsent';
+import { useTitleDisplayMode } from '@/hooks/useTitleDisplayMode';
+import { useCurrentUser } from '@/hooks/api/useCurrentUser';
 
 const StringInput = ({
     label,
@@ -256,7 +256,6 @@ const SectionEditor = ({
                                     { value: 'small', label: t('small') },
                                     { value: 'medium', label: t('medium') },
                                     { value: 'large', label: t('large') },
-                                    { value: 'xlarge', label: t('xlarge') },
                                 ]}
                                 value={(editedSection as any).size || 'medium'}
                                 onChange={(value) =>
@@ -615,23 +614,10 @@ const LinkRow = ({
     );
 };
 
-const StatsConsentSetting = () => {
-    const { t } = useTranslation('settings');
-    const { data: statsConsent } = useStatsConsent();
-    const setStatsConsent = useSetStatsConsent();
-
-    return (
-        <BooleanInput
-            label={t('usage_statistics_label')}
-            checked={statsConsent === 'granted'}
-            onChange={(checked) => setStatsConsent.mutate(checked)}
-        />
-    );
-};
-
 const SettingsPage = () => {
     const { t } = useTranslation('settings');
     const { config, loading, error } = useConfig();
+    const [titleMode, setTitleMode] = useTitleDisplayMode();
     const { updateConfig, loading: updating } = useUpdateConfig();
     const [serverAddress, setServerAddress] = useState('');
     const [streamystatsUrl, setStreamystatsUrl] = useState('');
@@ -659,6 +645,8 @@ const SettingsPage = () => {
     const [showThemeUploadDialog, setShowThemeUploadDialog] = useState(false);
     const { mutate: createTheme, isPending: isCreatingTheme } = useCreateTheme();
     const [links, setLinks] = useState<ConfigLink[]>([]);
+    const { data: user } = useCurrentUser();
+    const isAdmin = user?.Policy?.IsAdministrator || false;
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get('tab') || 'general';
 
@@ -846,7 +834,7 @@ const SettingsPage = () => {
     }
 
     return (
-        <Page title={t('title')} className="flex-1 flex flex-col" requireAdmin requiresAuth>
+        <Page title={t('title')} className="flex-1 flex flex-col" requiresAuth>
             <Dialog
                 open={showThemeUploadDialog}
                 onOpenChange={() => setShowThemeUploadDialog(false)}
@@ -888,13 +876,17 @@ const SettingsPage = () => {
                     setSearchParams({ tab: val });
                 }}
             >
-                <TabsList>
-                    <TabsTrigger value="general">{t('category_general')}</TabsTrigger>
-                    <TabsTrigger value="homesections">{t('category_homesections')}</TabsTrigger>
-                    <TabsTrigger value="itempage">{t('category_itempage')}</TabsTrigger>
-                    <TabsTrigger value="branding">{t('category_branding')}</TabsTrigger>
-                    <TabsTrigger value="themes">{t('category_themes')}</TabsTrigger>
-                    <TabsTrigger value="links">{t('category_links')}</TabsTrigger>
+                <TabsList className="max-w-full overflow-auto self-start">
+                    {isAdmin && (
+                        <>
+                            <TabsTrigger value="general">{t('category_general')}</TabsTrigger>
+                            <TabsTrigger value="homesections">{t('category_homesections')}</TabsTrigger>
+                            <TabsTrigger value="itempage">{t('category_itempage')}</TabsTrigger>
+                            <TabsTrigger value="branding">{t('category_branding')}</TabsTrigger>
+                            <TabsTrigger value="themes">{t('category_themes')}</TabsTrigger>
+                            <TabsTrigger value="links">{t('category_links')}</TabsTrigger>
+                        </>
+                    )}
                 </TabsList>
                 <TabsContent value="branding" className="max-w-200">
                     <h1 className="mb-2 mt-2 text-2xl font-bold leading-none tracking-tight">
@@ -1059,12 +1051,20 @@ const SettingsPage = () => {
                         onChange={setWatchedStateBadgeSearch}
                     />
                     <h2 className="mt-6 mb-2 text-xl font-semibold leading-none tracking-tight">
-                        {t('usage_statistics')}
+                        媒体标题显示字段
                     </h2>
                     <p className="mb-2 text-sm text-muted-foreground">
-                        {t('usage_statistics_description')}
+                        自定义列表卡片和详情页里主要标题的呈现方式，默认优先读取并解析物理文件名。
                     </p>
-                    <StatsConsentSetting />
+                    <SelectInput
+                        label="名称显示模式"
+                        options={[
+                            { value: 'filename', label: '显示文件名 (优先解析文件名)' },
+                            { value: 'title', label: '显示标题 (Emby/Jellyfin 原生标题)' },
+                        ]}
+                        value={titleMode}
+                        onChange={(val) => setTitleMode(val as any)}
+                    />
                 </TabsContent>
                 <TabsContent value="homesections" className="max-w-200">
                     <h1 className="mb-2 mt-2 text-2xl font-bold leading-none tracking-tight">
@@ -1324,6 +1324,7 @@ const SettingsPage = () => {
                         {t('add_link')}
                     </Button>
                 </TabsContent>
+
             </Tabs>
             <SectionEditor
                 section={editingIndex !== null ? homeScreenSections[editingIndex] : null}
@@ -1337,17 +1338,19 @@ const SettingsPage = () => {
                 }}
                 onClose={() => setEditingIndex(null)}
             />
-            <Button className="mt-6 w-fit" onClick={handleUpdateConfig} disabled={updating}>
-                {updating ? (
-                    t('saving')
-                ) : saveSuccess ? (
-                    <>
-                        <Check /> {t('save_success')}
-                    </>
-                ) : (
-                    t('save_settings')
-                )}
-            </Button>
+            {isAdmin && (
+                <Button className="mt-6 w-fit" onClick={handleUpdateConfig} disabled={updating}>
+                    {updating ? (
+                        t('saving')
+                    ) : saveSuccess ? (
+                        <>
+                            <Check /> {t('save_success')}
+                        </>
+                    ) : (
+                        t('save_settings')
+                    )}
+                </Button>
+            )}
         </Page>
     );
 };
