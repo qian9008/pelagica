@@ -226,7 +226,6 @@ const LoginPage = () => {
         <Page
             title={t('title')}
             className="flex items-center justify-center h-full w-full"
-            sidebar={false}
             bgItem={
                 splashScreenUrl && branding?.SplashscreenEnabled ? (
                     <div className="fixed top-0 left-0 w-full h-full -z-20 overflow-hidden">
