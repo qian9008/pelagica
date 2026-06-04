@@ -142,34 +142,37 @@ const PageContent = ({
             {background || bgItem}
             {sidebar && <AppSidebar />}
             <div className="relative w-full flex flex-col overflow-x-hidden overflow-y-auto h-dvh md:h-[calc(100dvh-2rem)] px-4 my-0 md:my-4 z-5 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground [&::-webkit-scrollbar-thumb]:rounded-full">
-                {sidebar && breadcrumbs ? (
-                    <div className="flex items-center gap-2 mb-4">
-                        <SidebarTrigger />
-                        {breadcrumbs}
-                    </div>
-                ) : (
-                    <div className="flex items-center justify-between py-4 md:hidden">
-                        <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8 p-1 rounded-lg">
-                                <AvatarImage
-                                    src={effectiveTheme === 'dark' ? '/logo.svg' : '/logo-dark.svg'}
-                                    alt={'Pelagica logo'}
-                                />
-                                <AvatarFallback className="rounded-lg">{'PE'}</AvatarFallback>
-                            </Avatar>
-                            <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-medium">Pelagica</span>
-                                {serverDomain && (
-                                    <span className="truncate text-xs font-normal text-muted-foreground">
-                                        {serverDomain}
-                                    </span>
-                                )}
-                            </div>
-                        </div>
-                        <Button asChild size={'icon'} variant={'ghost'}>
+                {sidebar && (
+                    <>
+                        {/* 桌面端折叠按钮（含可选的面包屑） */}
+                        <div className="hidden md:flex items-center gap-2 mb-4">
                             <SidebarTrigger />
-                        </Button>
-                    </div>
+                            {breadcrumbs}
+                        </div>
+                        {/* 移动端带Logo顶栏与折叠按钮 */}
+                        <div className="flex md:hidden items-center justify-between py-4">
+                            <div className="flex items-center gap-2">
+                                <Avatar className="h-8 w-8 p-1 rounded-lg">
+                                    <AvatarImage
+                                        src={effectiveTheme === 'dark' ? '/logo.svg' : '/logo-dark.svg'}
+                                        alt={'Pelagica logo'}
+                                    />
+                                    <AvatarFallback className="rounded-lg">{'PE'}</AvatarFallback>
+                                </Avatar>
+                                <div className="grid flex-1 text-left text-sm leading-tight">
+                                    <span className="truncate font-medium">Pelagica</span>
+                                    {serverDomain && (
+                                        <span className="truncate text-xs font-normal text-muted-foreground">
+                                            {serverDomain}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <Button asChild size={'icon'} variant={'ghost'}>
+                                <SidebarTrigger />
+                            </Button>
+                        </div>
+                    </>
                 )}
                 <main className={`w-full ${className ?? ''}`}>{children}</main>
                 {showPlayerBar && <MusicPlayerBar />}

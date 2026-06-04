@@ -92,7 +92,7 @@ export default function ShareDialog({
                     </DialogTitle>
                     <DialogDescription className="text-sm text-muted-foreground mt-1">
                         {t('share_description', '将此影片共享给同一个 Emby 服务器的其他用户。')}
-                        <span className="block font-semibold text-foreground mt-1 truncate">
+                        <span className="block font-semibold text-foreground mt-1 break-all">
                             《{mediaName}》
                         </span>
                     </DialogDescription>

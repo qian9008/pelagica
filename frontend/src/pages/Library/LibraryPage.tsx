@@ -363,8 +363,34 @@ const LibraryPage = () => {
         return 'poster';
     });
 
-    // 文件夹路径导航栈
-    const [folderPathStack, setFolderPathStack] = useState<Array<{ id: string; name: string }>>([]);
+    // 文件夹路径导航栈：从 URL 的 folderPath 派生（URL 作为唯一的事实来源）
+    const folderPathStack = useMemo<Array<{ id: string; name: string }>>(() => {
+        const param = searchParams.get('folderPath');
+        if (!param) return [];
+        try {
+            return JSON.parse(param);
+        } catch (e) {
+            console.error('Failed to parse folderPath from URL', e);
+            return [];
+        }
+    }, [searchParams]);
+
+    // 修改文件夹导航栈的辅助函数，直接通过更新 URL 实现
+    const setFolderPathStack = (
+        updater: Array<{ id: string; name: string }> | ((prev: Array<{ id: string; name: string }>) => Array<{ id: string; name: string }>)
+    ) => {
+        const nextStack = typeof updater === 'function' ? updater(folderPathStack) : updater;
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            if (nextStack.length > 0) {
+                next.set('folderPath', JSON.stringify(nextStack));
+            } else {
+                next.delete('folderPath');
+            }
+            next.set('page', '0'); // 切换目录时重置页码为 0
+            return next;
+        });
+    };
 
     const handleViewModeChange = (mode: ViewMode) => {
         setViewMode(mode);
@@ -388,7 +414,7 @@ const LibraryPage = () => {
 
     const handleLibraryChange = (libraryId: string) => {
         setPage(0);
-        setFolderPathStack([]); // 切换不同库的时候清空子级文件夹面包屑，防止路径错乱
+        // 切换不同库的时候通过 setSearchParams 隐式清空子级文件夹参数，防止路径错乱
         setSearchParams({
             library: libraryId,
             page: '0',
@@ -401,14 +427,31 @@ const LibraryPage = () => {
         SUPPORTED_LIBRARY_COLLECTION_TYPES.includes(library.CollectionType!)
     );
 
+    const folderPathStr = searchParams.get('folderPath') || '';
+
+    // 将状态同步到 URL 的 searchParams 中
     useEffect(() => {
-        setSearchParams({
+        const nextParams: any = {
             library: activeLibraryId,
             page: String(page),
             sortBy,
             sortOrder,
-        });
-    }, [activeLibraryId, page, sortBy, sortOrder, setSearchParams]);
+        };
+        if (folderPathStr) {
+            nextParams.folderPath = folderPathStr;
+        }
+
+        // 仅在参数真正变化时调用 setSearchParams，杜绝一切潜在的死循环
+        const hasChanged = Object.keys(nextParams).some(
+            (key) => searchParams.get(key) !== nextParams[key]
+        ) || Array.from(searchParams.keys()).some(
+            (key) => nextParams[key] === undefined
+        );
+
+        if (hasChanged) {
+            setSearchParams(nextParams);
+        }
+    }, [activeLibraryId, page, sortBy, sortOrder, folderPathStr, searchParams, setSearchParams]);
 
     return (
         <Page title={t('title')} requiresAuth className="flex-1">
