@@ -124,7 +124,9 @@ const PlayerControls = ({
     const { t } = useTranslation('player');
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
+    const [duration, setDuration] = useState(() => {
+        return item.RunTimeTicks ? ticksToSeconds(item.RunTimeTicks) : 0;
+    });
     const [bufferedTime, setBufferedTime] = useState(0);
     const [volume, setVolume] = useState(() => {
         const saved = localStorage.getItem('playerVolume');
@@ -182,13 +184,17 @@ const PlayerControls = ({
     const markItemAsCompleted = useCallback(
         (itemId: string | undefined) => {
             if (!itemId) return;
+            const playerDuration = player && !player.isDisposed?.() ? player.duration() : 0;
+            const finalTicks = playerDuration && playerDuration > 0 && playerDuration !== Infinity && !isNaN(playerDuration)
+                ? Math.floor(playerDuration * 10000000)
+                : (item.RunTimeTicks || 0);
             reportProgress({
                 itemId,
-                positionTicks: item.RunTimeTicks || 0,
+                positionTicks: finalTicks,
                 isPaused: true,
             });
         },
-        [item.RunTimeTicks, reportProgress]
+        [item.RunTimeTicks, player, reportProgress]
     );
 
     useEffect(() => {
@@ -210,7 +216,18 @@ const PlayerControls = ({
 
         const updatePlayState = () => setIsPlaying(!player.paused());
         const updateTime = () => setCurrentTime(player.currentTime() || 0);
-        const updateDuration = () => setDuration(player.duration() || 0);
+        const updateDuration = () => {
+            const playerDuration = player.duration();
+            if (playerDuration && playerDuration > 0 && playerDuration !== Infinity && !isNaN(playerDuration)) {
+                setDuration(playerDuration);
+            } else if (item.RunTimeTicks) {
+                setDuration(ticksToSeconds(item.RunTimeTicks));
+            } else {
+                setDuration(playerDuration || 0);
+            }
+            // 确保视频加载/切换流后播放速度被正确同步
+            player.playbackRate(playbackRate);
+        };
         const updateMuted = () => setIsMuted(player.muted() || false);
         const updateBuffered = () => {
             const buffered = player.buffered();
@@ -239,6 +256,7 @@ const PlayerControls = ({
         player.on('timeupdate', updateTime);
         player.on('timeupdate', updateBuffered);
         player.on('loadedmetadata', updateDuration);
+        player.on('durationchange', updateDuration);
         player.on('progress', updateBuffered);
         player.on('volumechange', updateMuted);
         player.on('ended', handleEnded);
@@ -249,6 +267,7 @@ const PlayerControls = ({
             player.off('timeupdate', updateTime);
             player.off('timeupdate', updateBuffered);
             player.off('loadedmetadata', updateDuration);
+            player.off('durationchange', updateDuration);
             player.off('progress', updateBuffered);
             player.off('volumechange', updateMuted);
             player.off('ended', handleEnded);

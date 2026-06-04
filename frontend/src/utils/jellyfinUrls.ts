@@ -360,3 +360,21 @@ export function getDownloadurl(itemId: string) {
         return '';
     }
 }
+
+export function getStaticStreamUrl(itemId: string) {
+    try {
+        const server = getServerUrl();
+        const token = getAccessToken();
+
+        if (!server || !token) return '';
+
+        const url = new URL(server);
+        url.pathname = `/videos/${itemId}/stream`;
+        url.searchParams.append('Static', 'true');
+        url.searchParams.append('api_key', token);
+
+        return url.toString();
+    } catch {
+        return '';
+    }
+}
