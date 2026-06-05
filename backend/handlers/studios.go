@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -24,12 +23,17 @@ import (
 	"golang.org/x/sync/singleflight"
 )
 
+type studioThumbEntry struct {
+	Name        string `json:"name"`
+	MachineName string `json:"machine-name"`
+}
+
 const (
 	defaultStudiosCacheTTL    = 10 * time.Minute
 	defaultThumbsCacheTTL     = 12 * time.Hour
 	defaultStudiosLimit       = 20
 	maxStudiosLimit           = 300
-	thumbsListURL             = "https://raw.githubusercontent.com/Entree3k/Jellyfin/main/studios/thumbs.txt"
+	studiosJSONURL            = "https://raw.githubusercontent.com/Entree3k/Jellyfin/main/studios/studios.json"
 	thumbBaseURL              = "https://raw.githubusercontent.com/Entree3k/Jellyfin/main/studios/"
 	defaultJellyfinPageSize   = 300
 	studioThumbCacheControl   = "public, max-age=86400"
@@ -380,7 +384,7 @@ func getStudiosWithCache(jellyfinURL, token string) ([]models.StudioSummary, err
 }
 
 func fetchThumbsList() (map[string]struct{}, error) {
-	req, err := http.NewRequest(http.MethodGet, thumbsListURL, nil)
+	req, err := http.NewRequest(http.MethodGet, studiosJSONURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -393,21 +397,21 @@ func fetchThumbsList() (map[string]struct{}, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("failed to fetch thumbs list: status=" + strconv.Itoa(resp.StatusCode))
+		return nil, errors.New("failed to fetch studios json: status=" + strconv.Itoa(resp.StatusCode))
 	}
 
-	thumbs := map[string]struct{}{}
-	scanner := bufio.NewScanner(resp.Body)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" || strings.HasPrefix(line, "#") {
+	var entries []studioThumbEntry
+	if err := json.NewDecoder(resp.Body).Decode(&entries); err != nil {
+		return nil, err
+	}
+
+	thumbs := make(map[string]struct{}, len(entries))
+	for _, e := range entries {
+		name := strings.TrimSpace(e.Name)
+		if name == "" {
 			continue
 		}
-		thumbs[normalizeStudioName(line)] = struct{}{}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
+		thumbs[normalizeStudioName(name)] = struct{}{}
 	}
 
 	return thumbs, nil
