@@ -20,7 +20,7 @@ import { getServerUrl, saveServerUrl } from '@/utils/localstorageCredentials';
 import { useServerBranding } from '../../hooks/api/useServerBranding';
 import DOMPurify from 'dompurify';
 
-const DEMO_SERVER_URL = 'http://jellyfin.streamyfin.app';
+const DEMO_SERVER_URL = 'https://jellyfin.streamyfin.app';
 const DEMO_USERNAME = 'pelagica';
 
 const Disclaimer = ({ text }: { text: string | null | undefined }) => {
