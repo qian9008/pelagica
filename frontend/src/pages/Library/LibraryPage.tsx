@@ -35,17 +35,18 @@ import {
 import type { BaseItemDto, BaseItemKind, CollectionType, ItemSortBy, SortOrder } from '@jellyfin/sdk/lib/generated-client/models';
 import { ButtonGroup } from '@/components/ui/button-group';
 import LibraryItem from './LibraryItem';
+import HomeVideoGrid, { TARGET_ROW_HEIGHT } from './HomeVideoGrid';
 import { SUPPORTED_LIBRARY_COLLECTION_TYPES } from '@/utils/supportedLibraryCollectionTypes';
 import { getPrimaryImageUrl, type ImageSize } from '@/utils/jellyfinUrls';
 
 const ITEM_ROWS = 5;
+const HOME_VIDEO_PAGE_SIZE = 50;
 
 const DEFAULT_POSTER_SIZE = { width: 416, height: 640 };
 
 const ITEM_POSTER_SIZES: Partial<Record<CollectionType, ImageSize>> = {
     music: { width: 416, height: 416 },
     musicvideos: { width: 700, height: 394 },
-    homevideos: { width: 700, height: 394 },
 };
 
 const DEFAULT_POSTER_ASPECT_RATIO = '2/3';
@@ -53,7 +54,6 @@ const DEFAULT_POSTER_ASPECT_RATIO = '2/3';
 const ITEM_POSTER_ASPECT_RATIOS: Partial<Record<CollectionType, string>> = {
     music: 'square',
     musicvideos: '16/9',
-    homevideos: '16/9',
 };
 
 type GridConfig = { cols: string; breakpoints: [number, number][] };
@@ -68,10 +68,6 @@ const ITEM_GRID_CONFIG: Partial<Record<CollectionType, GridConfig>> = {
         cols: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6',
         breakpoints: [[1536, 6], [1280, 5], [1024, 4], [768, 3], [0, 2]],
     },
-    homevideos: {
-        cols: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6',
-        breakpoints: [[1536, 6], [1280, 5], [1024, 4], [768, 3], [0, 2]],
-    },
 };
 
 function getGridConfig(collectionType: CollectionType): GridConfig {
@@ -83,7 +79,12 @@ function getColumnCount(width: number, collectionType: CollectionType): number {
     return breakpoints.find(([minWidth]) => width >= minWidth)?.[1] ?? 2;
 }
 
-const DIRECT_PLAY_TYPES: CollectionType[] = ['musicvideos', 'homevideos'];
+function getPageSize(width: number, collectionType: CollectionType): number {
+    if (collectionType === 'homevideos') return HOME_VIDEO_PAGE_SIZE;
+    return getColumnCount(width, collectionType) * ITEM_ROWS;
+}
+
+const DIRECT_PLAY_TYPES: CollectionType[] = ['musicvideos'];
 
 const COLLECTION_ITEM_TYPES: Partial<Record<CollectionType, BaseItemKind[]>> = {
     movies: ['Movie'],
@@ -98,6 +99,8 @@ function getDetailLine(item: BaseItemDto): string | undefined {
     if (item.Type === 'MusicAlbum') return item.AlbumArtist || undefined;
     return item.PremiereDate ? new Date(item.PremiereDate).getFullYear().toString() : undefined;
 }
+
+const SKELETON_ASPECT_RATIOS = [1.5, 0.75, 1.78, 1, 1.33, 0.67, 2, 1.2, 1.5, 0.8, 1, 1.78];
 
 const LibraryContent = ({
     libraryId,
@@ -116,15 +119,17 @@ const LibraryContent = ({
 }) => {
     const { t } = useTranslation(['library', 'common']);
     const [pageSize, setPageSize] = useState(
-        () => getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640, collectionType) * ITEM_ROWS
+        () => getPageSize(typeof window !== 'undefined' ? window.innerWidth : 640, collectionType)
     );
 
     useEffect(() => {
         const handleResize = () => {
-            setPageSize(getColumnCount(window.innerWidth, collectionType) * ITEM_ROWS);
-            onPageChange(0);
+            setPageSize((prev) => {
+                const next = getPageSize(window.innerWidth, collectionType);
+                if (next !== prev) onPageChange(0);
+                return next;
+            });
         };
-
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, [onPageChange, collectionType]);
@@ -138,7 +143,7 @@ const LibraryContent = ({
     });
 
     const posterUrls = useMemo(() => {
-        if (!libraryData) return {};
+        if (!libraryData || collectionType === 'homevideos') return {};
         return libraryData.items.reduce(
             (acc, item) => {
                 acc[item.Id!] = getPrimaryImageUrl(
@@ -156,10 +161,11 @@ const LibraryContent = ({
     const gridCols = getGridConfig(collectionType).cols;
     const posterAspectRatio = ITEM_POSTER_ASPECT_RATIOS[collectionType] || DEFAULT_POSTER_ASPECT_RATIO;
     const isDirectPlay = DIRECT_PLAY_TYPES.includes(collectionType);
+    const isHomeVideos = collectionType === 'homevideos';
 
     return (
         <div className="mb-4">
-            {isLoading && (
+            {isLoading && !isHomeVideos && (
                 <div className={`w-full gap-4 mt-2 grid ${gridCols}`}>
                     {Array.from({ length: pageSize }).map((_, i) => (
                         <div key={i} className="p-0 m-0">
@@ -169,6 +175,17 @@ const LibraryContent = ({
                             <Skeleton className="mt-2 h-4 w-3/4" />
                             <Skeleton className="mt-1 h-3 w-1/4" />
                         </div>
+                    ))}
+                </div>
+            )}
+            {isLoading && isHomeVideos && (
+                <div className="flex flex-wrap mt-2" style={{ gap: 8 }}>
+                    {SKELETON_ASPECT_RATIOS.map((ar, i) => (
+                        <Skeleton
+                            key={i}
+                            style={{ height: TARGET_ROW_HEIGHT, width: Math.round(TARGET_ROW_HEIGHT * ar) }}
+                            className="rounded-md"
+                        />
                     ))}
                 </div>
             )}
@@ -185,19 +202,23 @@ const LibraryContent = ({
             )}
             {!isLoading && libraryData && libraryData.items && libraryData.items.length > 0 && (
                 <>
-                    <div className={`w-full gap-4 mt-2 grid ${gridCols}`}>
-                        {libraryData.items.map((item) => (
-                            <LibraryItem
-                                key={item.Id}
-                                item={item}
-                                posterUrl={posterUrls[item.Id!]}
-                                t={t}
-                                posterAspectRatio={posterAspectRatio}
-                                detailLine={getDetailLine(item)}
-                                isDirectPlay={isDirectPlay}
-                            />
-                        ))}
-                    </div>
+                    {isHomeVideos ? (
+                        <HomeVideoGrid items={libraryData.items} />
+                    ) : (
+                        <div className={`w-full gap-4 mt-2 grid ${gridCols}`}>
+                            {libraryData.items.map((item) => (
+                                <LibraryItem
+                                    key={item.Id}
+                                    item={item}
+                                    posterUrl={posterUrls[item.Id!]}
+                                    t={t}
+                                    posterAspectRatio={posterAspectRatio}
+                                    detailLine={getDetailLine(item)}
+                                    isDirectPlay={isDirectPlay}
+                                />
+                            ))}
+                        </div>
+                    )}
                     <ItemPagination
                         totalPages={totalPages}
                         currentPage={page}
