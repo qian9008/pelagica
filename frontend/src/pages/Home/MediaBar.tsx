@@ -96,7 +96,7 @@ const MediaBar = ({
                                 <div
                                     className={`rounded-md bg-cover bg-center flex flex-col items-start justify-end gap-4 overflow-hidden relative min-h-130 ${outerSize}`}
                                     style={{
-                                        backgroundImage: `url('${getBackdropUrl(item.Id!)}?maxWidth=1920&quality=75')`,
+                                        backgroundImage: `url('${getBackdropUrl(item.Id!, { maxWidth: 1920, quality: 75 })}')`,
                                     }}
                                 >
                                     <div className="absolute inset-0 bg-linear-to-r from-black/70 via-black/70 to-transparent pointer-events-none max-w-5xl" />

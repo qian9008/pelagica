@@ -23,6 +23,7 @@ import { TrailerButton } from '../../components/TrailerButton';
 import ItemDownloadButton from '../../components/ItemDownloadButton';
 import SourcePickerButton from '@/components/SourcePickerButton';
 import ShareDialog from '@/components/ShareDialog';
+import ExternalPlayerButton from '@/components/ExternalPlayerButton';
 
 interface MoviePageProps {
     item: BaseItemDto;
@@ -151,6 +152,7 @@ const MoviePage = ({ item, config }: MoviePageProps) => {
                             playLabel={t('play', '播放')}
                             playFromBeginningLabel={t('play_from_beginning', '重播')}
                         />
+                        <ExternalPlayerButton item={item} />
                         <TrailerButton item={item} />
                         <FavoriteButton
                             item={item}

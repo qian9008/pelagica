@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { getDetailLineText, getTitleLineText } from './continueWatchingLines';
 import { Dot, ImageOff, Play } from 'lucide-react';
-import { getPrimaryImageUrl, getThumbUrl } from '@/utils/jellyfinUrls';
+import { getPrimaryImageUrl, getThumbUrl, getBackdropUrl } from '@/utils/jellyfinUrls';
 import { Skeleton } from '@/components/ui/skeleton';
 import SectionScroller from '@/components/SectionScroller';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
@@ -30,8 +30,14 @@ export function BaseContinueRow({
     const navigate = useNavigate();
 
     const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-    const handleImageError = (itemId: string) => {
-        setImageErrors((prev) => ({ ...prev, [itemId]: true }));
+    const [failedThumbs, setFailedThumbs] = useState<Record<string, boolean>>({});
+
+    const handleImageError = (item: BaseItemDto) => {
+        if (!failedThumbs[item.Id!]) {
+            setFailedThumbs((prev) => ({ ...prev, [item.Id!]: true }));
+        } else {
+            setImageErrors((prev) => ({ ...prev, [item.Id!]: true }));
+        }
     };
 
     return (
@@ -69,28 +75,37 @@ export function BaseContinueRow({
                                                       <ImageOff className="w-12 h-12 text-muted-foreground" />
                                                   </div>
                                               ) : (
-                                                  <img
-                                                      src={
-                                                          item.SeriesId
-                                                              ? getPrimaryImageUrl(
-                                                                    item.Id!,
-                                                                    {
-                                                                        width: 416,
-                                                                    },
-                                                                    item.ImageTags?.Primary
-                                                                )
-                                                              : getThumbUrl(
-                                                                    item.Id!,
-                                                                    {
-                                                                        width: 416,
-                                                                    },
-                                                                    item.ImageTags?.Thumb
-                                                                )
+                                                  (() => {
+                                                      const hasFailedThumb = failedThumbs[item.Id!];
+                                                      let imageUrl = '';
+
+                                                      if (item.SeriesId) {
+                                                          if (!hasFailedThumb && item.ImageTags?.Primary) {
+                                                              imageUrl = getPrimaryImageUrl(item.Id!, { width: 416 }, item.ImageTags.Primary);
+                                                          } else if (item.ImageTags?.Backdrop) {
+                                                              imageUrl = getBackdropUrl(item.Id!, { width: 416 }, item.ImageTags.Backdrop);
+                                                          } else {
+                                                              imageUrl = getPrimaryImageUrl(item.Id!, { width: 416 }, item.ImageTags?.Primary);
+                                                          }
+                                                      } else {
+                                                          if (!hasFailedThumb && item.ImageTags?.Thumb) {
+                                                              imageUrl = getThumbUrl(item.Id!, { width: 416 }, item.ImageTags.Thumb);
+                                                          } else if (item.ImageTags?.Backdrop) {
+                                                              imageUrl = getBackdropUrl(item.Id!, { width: 416 }, item.ImageTags.Backdrop);
+                                                          } else {
+                                                              imageUrl = getPrimaryImageUrl(item.Id!, { width: 416 }, item.ImageTags?.Primary);
+                                                          }
                                                       }
-                                                      alt={item.Name || t('no_title')}
-                                                      className="w-full h-full object-cover rounded-md group-hover:opacity-75 transition-all group-hover:scale-105"
-                                                      onError={() => handleImageError(item.Id!)}
-                                                  />
+
+                                                      return (
+                                                          <img
+                                                              src={imageUrl}
+                                                              alt={item.Name || t('no_title')}
+                                                              className="w-full h-full object-cover rounded-md group-hover:opacity-75 transition-all group-hover:scale-105"
+                                                              onError={() => handleImageError(item)}
+                                                          />
+                                                      );
+                                                  })()
                                               )}
                                               {progress > 0 && (
                                                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700">

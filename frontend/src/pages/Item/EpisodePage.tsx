@@ -27,6 +27,7 @@ import ItemAdminButton from '@/components/ItemAdminButton';
 import ItemDownloadButton from '../../components/ItemDownloadButton';
 import SourcePickerButton from '@/components/SourcePickerButton';
 import { Link } from 'react-router';
+import ExternalPlayerButton from '@/components/ExternalPlayerButton';
 
 interface EpisodePageProps {
     item: BaseItemDto;
@@ -180,6 +181,7 @@ const EpisodePage = ({ item, config }: EpisodePageProps) => {
                             playLabel={t('play', '播放')}
                             playFromBeginningLabel={t('play_from_beginning', '重播')}
                         />
+                        <ExternalPlayerButton item={item} />
                         <FavoriteButton
                             item={item}
                             showFavoriteButton={

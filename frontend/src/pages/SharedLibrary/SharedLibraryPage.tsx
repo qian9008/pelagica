@@ -383,7 +383,8 @@ export default function SharedLibraryPage() {
                             </p>
                         ) : (
                             <div className="mt-4 space-y-3">
-                                <div className="overflow-x-auto rounded-lg border border-border/40">
+                                {/* 桌面端表格视图 */}
+                                <div className="hidden md:block overflow-x-auto rounded-lg border border-border/40">
                                     <table className="w-full border-collapse text-left text-sm text-muted-foreground">
                                         <thead className="bg-accent/40 text-foreground font-semibold border-b border-border/40">
                                             <tr>
@@ -400,8 +401,10 @@ export default function SharedLibraryPage() {
                                                     <td className="p-3 text-center font-medium text-muted-foreground">
                                                         {page * OUTGOING_PAGE_SIZE + index + 1}
                                                     </td>
-                                                    <td className="p-3 font-medium text-foreground break-all max-w-[200px] sm:max-w-xs">
-                                                        《{share.media_name || share.media_id}》
+                                                    <td className="p-3 font-medium text-foreground">
+                                                        <div className="overflow-x-auto whitespace-nowrap scrollbar-hide max-w-[200px] sm:max-w-xs md:max-w-md lg:max-w-xl py-1 cursor-ew-resize">
+                                                            《{share.media_name || share.media_id}》
+                                                        </div>
                                                     </td>
                                                     <td className="p-3">{share.target_username}</td>
                                                     <td className="p-3 text-xs">{share.created_at}</td>
@@ -421,6 +424,46 @@ export default function SharedLibraryPage() {
                                         </tbody>
                                     </table>
                                 </div>
+
+                                {/* 移动端卡片视图 */}
+                                <div className="block md:hidden space-y-3">
+                                    {myShares.map((share, index) => (
+                                        <div key={share.id} className="p-4 rounded-lg border border-border/40 bg-card flex flex-col gap-3">
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-semibold text-foreground bg-accent/60 px-2 py-0.5 rounded-full text-[10px]">
+                                                        #{page * OUTGOING_PAGE_SIZE + index + 1}
+                                                    </span>
+                                                    <span>{share.created_at}</span>
+                                                </div>
+                                                <div>
+                                                    {t('settings:shared_target_user', '分享给')}: <span className="font-medium text-foreground">{share.target_username}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[11px] text-muted-foreground">{t('settings:shared_media_name', '影片名称')}</span>
+                                                {/* 文件名只显示一部分，多余的可以横向滑动出来 */}
+                                                <div className="overflow-x-auto whitespace-nowrap scrollbar-hide font-medium text-foreground py-1 px-2 bg-accent/20 rounded-md text-sm cursor-ew-resize">
+                                                    《{share.media_name || share.media_id}》
+                                                </div>
+                                            </div>
+
+                                            <div className="flex justify-end border-t border-border/10 pt-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleCancelShare(share.id)}
+                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer w-full justify-center"
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-1" />
+                                                    {t('settings:cancel_share', '取消分享')}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
                                 {totalShares > OUTGOING_PAGE_SIZE && (
                                     <div className="mt-4">
                                         <ItemPagination
