@@ -56,12 +56,32 @@ const ITEM_POSTER_ASPECT_RATIOS: Partial<Record<CollectionType, string>> = {
     homevideos: '16/9',
 };
 
-const DEFAULT_GRID_COLS = "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-9";
+type GridConfig = { cols: string; breakpoints: [number, number][] };
 
-const ITEM_GRID_COLS: Partial<Record<CollectionType, string>> = {
-    musicvideos: "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6",
-    homevideos: "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6",
+const DEFAULT_GRID_CONFIG: GridConfig = {
+    cols: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-9',
+    breakpoints: [[1536, 9], [1280, 7], [1024, 5], [768, 4], [640, 3], [0, 2]],
 };
+
+const ITEM_GRID_CONFIG: Partial<Record<CollectionType, GridConfig>> = {
+    musicvideos: {
+        cols: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6',
+        breakpoints: [[1536, 6], [1280, 5], [1024, 4], [768, 3], [0, 2]],
+    },
+    homevideos: {
+        cols: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6',
+        breakpoints: [[1536, 6], [1280, 5], [1024, 4], [768, 3], [0, 2]],
+    },
+};
+
+function getGridConfig(collectionType: CollectionType): GridConfig {
+    return ITEM_GRID_CONFIG[collectionType] ?? DEFAULT_GRID_CONFIG;
+}
+
+function getColumnCount(width: number, collectionType: CollectionType): number {
+    const { breakpoints } = getGridConfig(collectionType);
+    return breakpoints.find(([minWidth]) => width >= minWidth)?.[1] ?? 2;
+}
 
 const DIRECT_PLAY_TYPES: CollectionType[] = ['musicvideos', 'homevideos'];
 
@@ -75,20 +95,8 @@ const COLLECTION_ITEM_TYPES: Partial<Record<CollectionType, BaseItemKind[]>> = {
 };
 
 function getDetailLine(item: BaseItemDto): string | undefined {
-    if (item.Type === 'MusicAlbum') {
-        return item.AlbumArtist || undefined;
-    }
-
+    if (item.Type === 'MusicAlbum') return item.AlbumArtist || undefined;
     return item.PremiereDate ? new Date(item.PremiereDate).getFullYear().toString() : undefined;
-}
-
-function getColumnCount(width: number): number {
-    if (width >= 1536) return 9; // 2xl
-    if (width >= 1280) return 7; // xl
-    if (width >= 1024) return 5; // lg
-    if (width >= 768) return 4; // md
-    if (width >= 640) return 3; // sm
-    return 2;
 }
 
 const LibraryContent = ({
@@ -108,19 +116,18 @@ const LibraryContent = ({
 }) => {
     const { t } = useTranslation(['library', 'common']);
     const [pageSize, setPageSize] = useState(
-        () => getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640) * ITEM_ROWS
+        () => getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640, collectionType) * ITEM_ROWS
     );
 
     useEffect(() => {
         const handleResize = () => {
-            const newPageSize = getColumnCount(window.innerWidth) * ITEM_ROWS;
-            setPageSize(newPageSize);
+            setPageSize(getColumnCount(window.innerWidth, collectionType) * ITEM_ROWS);
             onPageChange(0);
         };
 
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, [onPageChange]);
+    }, [onPageChange, collectionType]);
 
     const { data: libraryData, isLoading } = useLibraryItems(libraryId, {
         limit: pageSize,
@@ -146,14 +153,17 @@ const LibraryContent = ({
     }, [libraryData, collectionType]);
 
     const totalPages = libraryData?.totalCount ? Math.ceil(libraryData.totalCount / pageSize) : 0;
+    const gridCols = getGridConfig(collectionType).cols;
+    const posterAspectRatio = ITEM_POSTER_ASPECT_RATIOS[collectionType] || DEFAULT_POSTER_ASPECT_RATIO;
+    const isDirectPlay = DIRECT_PLAY_TYPES.includes(collectionType);
 
     return (
         <div className="mb-4">
             {isLoading && (
-                <div className={`w-full gap-4 mt-2 grid ${ITEM_GRID_COLS[collectionType] || DEFAULT_GRID_COLS}`}>
+                <div className={`w-full gap-4 mt-2 grid ${gridCols}`}>
                     {Array.from({ length: pageSize }).map((_, i) => (
                         <div key={i} className="p-0 m-0">
-                            <div className={`relative w-full ${ITEM_POSTER_ASPECT_RATIOS[collectionType] || DEFAULT_POSTER_ASPECT_RATIO} overflow-hidden rounded-md`}>
+                            <div className={`relative w-full ${posterAspectRatio} overflow-hidden rounded-md`}>
                                 <Skeleton className="w-full h-full" />
                             </div>
                             <Skeleton className="mt-2 h-4 w-3/4" />
@@ -175,16 +185,16 @@ const LibraryContent = ({
             )}
             {!isLoading && libraryData && libraryData.items && libraryData.items.length > 0 && (
                 <>
-                    <div className={`w-full gap-4 mt-2 grid ${ITEM_GRID_COLS[collectionType] || DEFAULT_GRID_COLS}`}>
+                    <div className={`w-full gap-4 mt-2 grid ${gridCols}`}>
                         {libraryData.items.map((item) => (
                             <LibraryItem
                                 key={item.Id}
                                 item={item}
                                 posterUrl={posterUrls[item.Id!]}
                                 t={t}
-                                posterAspectRatio={ITEM_POSTER_ASPECT_RATIOS[collectionType] || DEFAULT_POSTER_ASPECT_RATIO}
+                                posterAspectRatio={posterAspectRatio}
                                 detailLine={getDetailLine(item)}
-                                isDirectPlay={DIRECT_PLAY_TYPES.includes(collectionType)}
+                                isDirectPlay={isDirectPlay}
                             />
                         ))}
                     </div>
@@ -219,12 +229,7 @@ const LibraryPage = () => {
 
     const handleLibraryChange = (libraryId: string) => {
         setPage(0);
-        setSearchParams({
-            library: libraryId,
-            page: '0',
-            sortBy,
-            sortOrder,
-        });
+        setSearchParams({ library: libraryId, page: '0', sortBy, sortOrder });
     };
 
     const libraryItems = libraries?.Items?.filter((library) =>
@@ -242,11 +247,7 @@ const LibraryPage = () => {
 
     return (
         <Page title={t('title')} requiresAuth className="flex-1">
-            <Tabs
-                value={activeLibraryId}
-                onValueChange={handleLibraryChange}
-                className="w-full"
-            >
+            <Tabs value={activeLibraryId} onValueChange={handleLibraryChange} className="w-full">
                 <div className="flex flex-col sm:items-center sm:justify-between sm:flex-row gap-2">
                     <TabsList className="max-w-full overflow-auto">
                         {libraryItems?.map((library) => (
@@ -257,59 +258,31 @@ const LibraryPage = () => {
                         ))}
                     </TabsList>
                     <ButtonGroup>
-                        <Select
-                            onValueChange={(value) => setSortBy(value as ItemSortBy)}
-                            value={sortBy}
-                        >
+                        <Select onValueChange={(v) => setSortBy(v as ItemSortBy)} value={sortBy}>
                             <SelectTrigger size="sm">
                                 <SelectValue placeholder="Sort" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Name">
-                                    <CaseSensitive />
-                                    {t('sort_name')}
-                                </SelectItem>
-                                <SelectItem value="DateCreated">
-                                    <CalendarPlus />
-                                    {t('sort_date_added')}
-                                </SelectItem>
-                                <SelectItem value="PremiereDate">
-                                    <Calendar />
-                                    {t('sort_premiere_date')}
-                                </SelectItem>
-                                <SelectItem value="CommunityRating">
-                                    <Star />
-                                    {t('sort_community_rating')}
-                                </SelectItem>
-                                <SelectItem value="Runtime">
-                                    <Clock />
-                                    {t('sort_runtime')}
-                                </SelectItem>
+                                <SelectItem value="Name"><CaseSensitive />{t('sort_name')}</SelectItem>
+                                <SelectItem value="DateCreated"><CalendarPlus />{t('sort_date_added')}</SelectItem>
+                                <SelectItem value="PremiereDate"><Calendar />{t('sort_premiere_date')}</SelectItem>
+                                <SelectItem value="CommunityRating"><Star />{t('sort_community_rating')}</SelectItem>
+                                <SelectItem value="Runtime"><Clock />{t('sort_runtime')}</SelectItem>
                             </SelectContent>
                         </Select>
-                        <Select
-                            onValueChange={(value) => setSortOrder(value as SortOrder)}
-                            value={sortOrder}
-                        >
+                        <Select onValueChange={(v) => setSortOrder(v as SortOrder)} value={sortOrder}>
                             <SelectTrigger size="sm">
                                 <SelectValue placeholder="Order" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Ascending">
-                                    <ArrowUpNarrowWideIcon />
-                                    {t('ascending')}
-                                </SelectItem>
-                                <SelectItem value="Descending">
-                                    <ArrowDownWideNarrow />
-                                    {t('descending')}
-                                </SelectItem>
+                                <SelectItem value="Ascending"><ArrowUpNarrowWideIcon />{t('ascending')}</SelectItem>
+                                <SelectItem value="Descending"><ArrowDownWideNarrow />{t('descending')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </ButtonGroup>
                 </div>
                 {libraryItems?.map((library) => {
                     if (!library.Id) return null;
-
                     return (
                         <TabsContent key={library.Id} value={library.Id ?? ''}>
                             <LibraryContent
