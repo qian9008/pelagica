@@ -387,6 +387,7 @@ export default function SharedLibraryPage() {
                                     <table className="w-full border-collapse text-left text-sm text-muted-foreground">
                                         <thead className="bg-accent/40 text-foreground font-semibold border-b border-border/40">
                                             <tr>
+                                                <th className="p-3 w-12 text-center">#</th>
                                                 <th className="p-3">{t('settings:shared_media_name', '影片名称')}</th>
                                                 <th className="p-3">{t('settings:shared_target_user', '分享给')}</th>
                                                 <th className="p-3">{t('settings:shared_date', '分享时间')}</th>
@@ -394,8 +395,11 @@ export default function SharedLibraryPage() {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border/20">
-                                            {myShares.map((share) => (
+                                            {myShares.map((share, index) => (
                                                 <tr key={share.id} className="hover:bg-accent/10">
+                                                    <td className="p-3 text-center font-medium text-muted-foreground">
+                                                        {page * OUTGOING_PAGE_SIZE + index + 1}
+                                                    </td>
                                                     <td className="p-3 font-medium text-foreground break-all max-w-[200px] sm:max-w-xs">
                                                         《{share.media_name || share.media_id}》
                                                     </td>
