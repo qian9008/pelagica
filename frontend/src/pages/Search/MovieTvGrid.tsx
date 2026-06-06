@@ -14,7 +14,7 @@ interface MovieTvGridProps {
 const MovieTvItem = ({ item }: { item: BaseItemDto }) => {
     const { config } = useConfig();
     const [posterError, setPosterError] = useState(false);
-    const posterUrl = getPrimaryImageUrl(item.Id || '', undefined, item.ImageTags?.Primary);
+    const posterUrl = getPrimaryImageUrl(item.Id || '', { maxWidth: 416, maxHeight: 640, quality: 85 }, item.ImageTags?.Primary);
     const posterAspectRatio = '2/3';
 
     return (
@@ -26,7 +26,7 @@ const MovieTvItem = ({ item }: { item: BaseItemDto }) => {
                     <>
                         <img
                             key={item.Id}
-                            src={`${posterUrl}?maxWidth=416&maxHeight=640&quality=85`}
+                            src={posterUrl}
                             alt={item.Name || 'No Title'}
                             className="w-full h-full object-cover rounded-md group-hover:opacity-75 transition-all group-hover:scale-105 z-10"
                             loading="lazy"

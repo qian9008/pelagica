@@ -46,9 +46,17 @@ export function getAudioStreamUrl(itemId: string, userId?: string) {
     }
 }
 
+export interface ImageSizeOptions {
+    width?: number;
+    height?: number;
+    maxWidth?: number;
+    maxHeight?: number;
+    quality?: number;
+}
+
 export function getBackdropUrl(
     itemId: string,
-    size?: { width?: number; height?: number },
+    size?: ImageSizeOptions,
     tag?: string
 ) {
     try {
@@ -59,15 +67,25 @@ export function getBackdropUrl(
 
         const url = new URL(server);
         url.pathname = `/Items/${itemId}/Images/Backdrop/0`;
-        url.searchParams.append('tag', 'v1');
-        url.searchParams.append('quality', '90');
-        url.searchParams.append('token', token);
+        url.searchParams.set('tag', 'v1');
+        url.searchParams.set('quality', '90');
+        url.searchParams.set('api_key', token);
+        url.searchParams.set('token', token);
         if (tag) url.searchParams.set('tag', tag);
         if (size?.width) {
-            url.searchParams.append('width', size.width.toString());
+            url.searchParams.set('width', size.width.toString());
         }
         if (size?.height) {
-            url.searchParams.append('height', size.height.toString());
+            url.searchParams.set('height', size.height.toString());
+        }
+        if (size?.maxWidth) {
+            url.searchParams.set('maxWidth', size.maxWidth.toString());
+        }
+        if (size?.maxHeight) {
+            url.searchParams.set('maxHeight', size.maxHeight.toString());
+        }
+        if (size?.quality) {
+            url.searchParams.set('quality', size.quality.toString());
         }
 
         return url.toString();
@@ -78,7 +96,7 @@ export function getBackdropUrl(
 
 export function getLogoUrl(
     itemId: string,
-    size?: { width?: number; height?: number },
+    size?: ImageSizeOptions,
     tag?: string
 ) {
     try {
@@ -89,15 +107,25 @@ export function getLogoUrl(
 
         const url = new URL(server);
         url.pathname = `/Items/${itemId}/Images/Logo`;
-        url.searchParams.append('tag', 'v1');
-        url.searchParams.append('quality', '90');
-        url.searchParams.append('token', token);
+        url.searchParams.set('tag', 'v1');
+        url.searchParams.set('quality', '90');
+        url.searchParams.set('api_key', token);
+        url.searchParams.set('token', token);
         if (tag) url.searchParams.set('tag', tag);
         if (size?.width) {
-            url.searchParams.append('width', size.width.toString());
+            url.searchParams.set('width', size.width.toString());
         }
         if (size?.height) {
-            url.searchParams.append('height', size.height.toString());
+            url.searchParams.set('height', size.height.toString());
+        }
+        if (size?.maxWidth) {
+            url.searchParams.set('maxWidth', size.maxWidth.toString());
+        }
+        if (size?.maxHeight) {
+            url.searchParams.set('maxHeight', size.maxHeight.toString());
+        }
+        if (size?.quality) {
+            url.searchParams.set('quality', size.quality.toString());
         }
 
         return url.toString();
@@ -108,7 +136,7 @@ export function getLogoUrl(
 
 export function getThumbUrl(
     itemId: string,
-    size?: { width?: number; height?: number },
+    size?: ImageSizeOptions,
     tag?: string
 ) {
     try {
@@ -119,15 +147,25 @@ export function getThumbUrl(
 
         const url = new URL(server);
         url.pathname = `/Items/${itemId}/Images/Thumb`;
-        url.searchParams.append('tag', 'v1');
-        url.searchParams.append('quality', '90');
-        url.searchParams.append('token', token);
+        url.searchParams.set('tag', 'v1');
+        url.searchParams.set('quality', '90');
+        url.searchParams.set('api_key', token);
+        url.searchParams.set('token', token);
         if (tag) url.searchParams.set('tag', tag);
         if (size?.width) {
-            url.searchParams.append('width', size.width.toString());
+            url.searchParams.set('width', size.width.toString());
         }
         if (size?.height) {
-            url.searchParams.append('height', size.height.toString());
+            url.searchParams.set('height', size.height.toString());
+        }
+        if (size?.maxWidth) {
+            url.searchParams.set('maxWidth', size.maxWidth.toString());
+        }
+        if (size?.maxHeight) {
+            url.searchParams.set('maxHeight', size.maxHeight.toString());
+        }
+        if (size?.quality) {
+            url.searchParams.set('quality', size.quality.toString());
         }
 
         return url.toString();
@@ -242,7 +280,7 @@ export function getSubtitleUrl(
 
 export function getPrimaryImageUrl(
     itemId: string,
-    size?: { width?: number; height?: number },
+    size?: ImageSizeOptions,
     tag?: string
 ) {
     try {
@@ -253,15 +291,25 @@ export function getPrimaryImageUrl(
 
         const url = new URL(server);
         url.pathname = `/Items/${itemId}/Images/Primary/0`;
-        url.searchParams.append('tag', 'v1');
-        url.searchParams.append('quality', '90');
-        url.searchParams.append('token', token);
+        url.searchParams.set('tag', 'v1');
+        url.searchParams.set('quality', '90');
+        url.searchParams.set('api_key', token);
+        url.searchParams.set('token', token);
         if (tag) url.searchParams.set('tag', tag);
         if (size?.width) {
-            url.searchParams.append('width', size.width.toString());
+            url.searchParams.set('width', size.width.toString());
         }
         if (size?.height) {
-            url.searchParams.append('height', size.height.toString());
+            url.searchParams.set('height', size.height.toString());
+        }
+        if (size?.maxWidth) {
+            url.searchParams.set('maxWidth', size.maxWidth.toString());
+        }
+        if (size?.maxHeight) {
+            url.searchParams.set('maxHeight', size.maxHeight.toString());
+        }
+        if (size?.quality) {
+            url.searchParams.set('quality', size.quality.toString());
         }
 
         return url.toString();
@@ -303,6 +351,7 @@ export function getUserProfileImageUrl(userId: string): string {
         url.pathname = `/Users/${userId}/Images/Primary`;
         url.searchParams.append('tag', 'v1');
         url.searchParams.append('quality', '90');
+        url.searchParams.append('api_key', token);
         url.searchParams.append('token', token);
 
         return url.toString();
@@ -315,7 +364,7 @@ export function getItemImageUrl(
     itemId: string,
     imageType: string,
     index: number,
-    size?: { width?: number; height?: number },
+    size?: ImageSizeOptions,
     tag?: string
 ) {
     try {
@@ -326,15 +375,25 @@ export function getItemImageUrl(
 
         const url = new URL(server);
         url.pathname = `/Items/${itemId}/Images/${imageType}/${index}`;
-        url.searchParams.append('tag', 'v1');
-        url.searchParams.append('quality', '90');
-        url.searchParams.append('token', token);
+        url.searchParams.set('tag', 'v1');
+        url.searchParams.set('quality', '90');
+        url.searchParams.set('api_key', token);
+        url.searchParams.set('token', token);
         if (tag) url.searchParams.set('tag', tag);
         if (size?.width) {
-            url.searchParams.append('width', size.width.toString());
+            url.searchParams.set('width', size.width.toString());
         }
         if (size?.height) {
-            url.searchParams.append('height', size.height.toString());
+            url.searchParams.set('height', size.height.toString());
+        }
+        if (size?.maxWidth) {
+            url.searchParams.set('maxWidth', size.maxWidth.toString());
+        }
+        if (size?.maxHeight) {
+            url.searchParams.set('maxHeight', size.maxHeight.toString());
+        }
+        if (size?.quality) {
+            url.searchParams.set('quality', size.quality.toString());
         }
 
         return url.toString();
