@@ -9,5 +9,9 @@
     "sort_critic_rating": "Critic Rating",
     "sort_runtime": "Runtime",
     "ascending": "Ascending",
-    "descending": "Descending"
+    "descending": "Descending",
+    "scan_library": "Scan for new files",
+    "scanning_library": "Scanning...",
+    "scan_success": "Library scan started",
+    "scan_failed": "Failed to start scan"
 }

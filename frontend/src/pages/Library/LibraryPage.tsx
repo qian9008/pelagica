@@ -28,6 +28,7 @@ import {
     Image as ImageIcon,
     List,
     Folder,
+    RefreshCw,
 } from 'lucide-react';
 import JellyfinLibraryIcon from '@/components/JellyfinLibraryIcon';
 import {
@@ -38,10 +39,14 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import type { ItemSortBy, SortOrder } from '@jellyfin/sdk/lib/generated-client/models';
+import { MetadataRefreshMode } from '@jellyfin/sdk/lib/generated-client/models';
 import { ButtonGroup } from '@/components/ui/button-group';
 import LibraryItem from './LibraryItem';
 import { SUPPORTED_LIBRARY_COLLECTION_TYPES } from '@/utils/supportedLibraryCollectionTypes';
 import { getPrimaryImageUrl, getBackdropUrl } from '@/utils/jellyfinUrls';
+import { useCurrentUser } from '@/hooks/api/useCurrentUser';
+import { useRefreshItemMetadata } from '@/hooks/api/useRefreshItemMetadata';
+import { toast } from 'sonner';
 
 export type ViewMode = 'poster' | 'backdrop' | 'list' | 'folder';
 
@@ -346,6 +351,32 @@ const LibraryPage = () => {
     const pageRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation('library');
     const { data: libraries } = useUserViews();
+    const { data: currentUser } = useCurrentUser();
+    const { refreshItemMetadata, isRefreshing } = useRefreshItemMetadata();
+
+    const isAdmin = currentUser?.Policy?.IsAdministrator || false;
+
+    const handleScanLibrary = () => {
+        if (!activeLibraryId) return;
+
+        refreshItemMetadata(
+            {
+                itemId: activeLibraryId,
+                metadataRefreshMode: MetadataRefreshMode.Default,
+                imageRefreshMode: MetadataRefreshMode.Default,
+                recursive: true,
+            },
+            {
+                onSuccess: () => {
+                    toast.success(t('scan_success', '已启动媒体库扫描'));
+                },
+                onError: (err) => {
+                    console.error('Scan library failed:', err);
+                    toast.error(t('scan_failed', '启动扫描失败'));
+                },
+            }
+        );
+    };
     const [searchParams, setSearchParams] = useSearchParams();
     const sortByParam = (searchParams.get('sortBy') as ItemSortBy) || 'Name';
     const sortOrderParam = (searchParams.get('sortOrder') as SortOrder) || 'Ascending';
@@ -470,7 +501,7 @@ const LibraryPage = () => {
                             </TabsTrigger>
                         ))}
                     </TabsList>
-                    <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+                    <div className="flex items-center gap-2 self-end sm:self-auto flex-nowrap">
                         {/* 视图切换按钮组 */}
                         <ButtonGroup>
                             <Button
@@ -511,56 +542,66 @@ const LibraryPage = () => {
                             </Button>
                         </ButtonGroup>
 
-                        <ButtonGroup>
-                            <Select
-                                onValueChange={(value) => setSortBy(value as ItemSortBy)}
-                                value={sortBy}
-                            >
-                                <SelectTrigger size="sm" className="h-8">
-                                    <SelectValue placeholder="Sort" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Name">
-                                        <CaseSensitive />
-                                        {t('sort_name')}
-                                    </SelectItem>
-                                    <SelectItem value="DateCreated">
-                                        <CalendarPlus />
-                                        {t('sort_date_added')}
-                                    </SelectItem>
-                                    <SelectItem value="PremiereDate">
-                                        <Calendar />
-                                        {t('sort_premiere_date')}
-                                    </SelectItem>
-                                    <SelectItem value="CommunityRating">
-                                        <Star />
-                                        {t('sort_community_rating')}
-                                    </SelectItem>
-                                    <SelectItem value="Runtime">
-                                        <Clock />
-                                        {t('sort_runtime')}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Select
-                                onValueChange={(value) => setSortOrder(value as SortOrder)}
-                                value={sortOrder}
-                            >
-                                <SelectTrigger size="sm" className="h-8">
-                                    <SelectValue placeholder="Order" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Ascending">
-                                        <ArrowUpNarrowWideIcon />
-                                        {t('ascending')}
-                                    </SelectItem>
-                                    <SelectItem value="Descending">
-                                        <ArrowDownWideNarrow />
-                                        {t('descending')}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </ButtonGroup>
+                        <div className="flex items-center gap-1">
+                            <ButtonGroup>
+                                <Select
+                                    onValueChange={(value) => setSortBy(value as ItemSortBy)}
+                                    value={sortBy}
+                                >
+                                    <SelectTrigger size="sm" className="h-8 px-2">
+                                        <SelectValue placeholder="Sort" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Name">
+                                            <CaseSensitive />
+                                            {t('sort_name')}
+                                        </SelectItem>
+                                        <SelectItem value="DateCreated">
+                                            <CalendarPlus />
+                                            {t('sort_date_added')}
+                                        </SelectItem>
+                                        <SelectItem value="PremiereDate">
+                                            <Calendar />
+                                            {t('sort_premiere_date')}
+                                        </SelectItem>
+                                        <SelectItem value="CommunityRating">
+                                            <Star />
+                                            {t('sort_community_rating')}
+                                        </SelectItem>
+                                        <SelectItem value="Runtime">
+                                            <Clock />
+                                            {t('sort_runtime')}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSortOrder(prev => prev === 'Ascending' ? 'Descending' : 'Ascending')}
+                                    title={sortOrder === 'Ascending' ? t('ascending') : t('descending')}
+                                    className="h-8 px-2"
+                                >
+                                    {sortOrder === 'Ascending' ? (
+                                        <ArrowUpNarrowWideIcon className="h-4 w-4" />
+                                    ) : (
+                                        <ArrowDownWideNarrow className="h-4 w-4" />
+                                    )}
+                                </Button>
+                            </ButtonGroup>
+
+                            {isAdmin && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleScanLibrary}
+                                    disabled={isRefreshing}
+                                    title={t('scan_library', '扫描新文件')}
+                                    className="h-8 w-8 p-0"
+                                >
+                                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
                 {libraryItems?.map((library) => {
