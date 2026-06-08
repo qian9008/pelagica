@@ -289,6 +289,7 @@ const LibraryPage = () => {
         updateParams({
             page: String(p),
         });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     return (
