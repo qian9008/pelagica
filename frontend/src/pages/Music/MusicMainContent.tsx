@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 import { Search, Play } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -405,6 +405,13 @@ const SearchResults = ({ searchTerm }: { searchTerm: string }) => {
 const MusicMainContent = () => {
     const { t } = useTranslation('music');
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
     const { data: recentAlbums, isLoading: isLoadingRecent } = useRecentlyAddedAlbums(20);
     const { data: recentlyPlayed, isLoading: isLoadingPlayed } = useRecentlyPlayedSongs(10);
     const { data: frequentlyPlayed, isLoading: isLoadingFrequent } = useFrequentlyPlayedSongs(10);
@@ -428,7 +435,7 @@ const MusicMainContent = () => {
             </div>
 
             {isSearching ? (
-                <SearchResults searchTerm={searchTerm} />
+                <SearchResults searchTerm={debouncedSearch} />
             ) : (
                 <>
                     {recentAlbums && recentAlbums.length > 0 && (
