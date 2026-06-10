@@ -30,6 +30,7 @@ const PhotoViewerPage = lazy(() => import('./pages/PhotoViewer/PhotoViewerPage.t
 const MusicLayout = lazy(() => import('./pages/Music/MusicLayout.tsx'));
 const MusicMainContent = lazy(() => import('./pages/Music/MusicMainContent.tsx'));
 const MusicAlbumView = lazy(() => import('./pages/Music/MusicAlbumView.tsx'));
+const MusicPlaylistView = lazy(() => import('./pages/Music/MusicPlaylistView.tsx'));
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ createRoot(document.getElementById('root')!).render(
                                 <Route path="/music" element={<MusicLayout />}>
                                     <Route index element={<MusicMainContent />} />
                                     <Route path="album/:itemId" element={<MusicAlbumView />} />
+                                    <Route path="playlist/:itemId" element={<MusicPlaylistView />} />
                                 </Route>
                                 <Route path="*" element={<NotFoundPage />} />
                             </Routes>

@@ -129,7 +129,7 @@ const MusicLeftSidebar = () => {
                     playlists.map((playlist) => (
                         <SidebarItem
                             key={playlist.Id}
-                            to={`/item/${playlist.Id}`}
+                            to={`/music/playlist/${playlist.Id}`}
                             imageUrl={getPrimaryImageUrl(playlist.Id || '', {
                                 width: 64,
                                 height: 64,
@@ -137,7 +137,7 @@ const MusicLeftSidebar = () => {
                             name={playlist.Name || t('untitled')}
                             subtitle={
                                 playlist.ChildCount !== undefined
-                                    ? t('tracks_count', { count: playlist.ChildCount })
+                                    ? t('tracks_count', { count: playlist.ChildCount ?? 0 })
                                     : undefined
                             }
                         />

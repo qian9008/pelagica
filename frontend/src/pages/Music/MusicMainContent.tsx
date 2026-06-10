@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import { Search, Play } from 'lucide-react';
+import { Search, Play, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -263,7 +263,7 @@ const PlaylistsGrid = ({
     return (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3">
             {playlists.map((playlist) => (
-                <Link key={playlist.Id} to={`/item/${playlist.Id}`} className="group flex flex-col">
+                <Link key={playlist.Id} to={`/music/playlist/${playlist.Id}`} className="group flex flex-col">
                     <div className="relative aspect-square overflow-hidden rounded-md">
                         <img
                             src={getPrimaryImageUrl(playlist.Id || '', {
@@ -427,11 +427,19 @@ const MusicMainContent = () => {
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                    className="pl-9"
+                    className="pl-9 pr-9"
                     placeholder={t('search_placeholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                {searchTerm && (
+                    <button
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setSearchTerm('')}
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
+                )}
             </div>
 
             {isSearching ? (
