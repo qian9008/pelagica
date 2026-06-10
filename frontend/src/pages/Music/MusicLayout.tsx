@@ -1,11 +1,13 @@
 import { Outlet } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import Page from '../Page';
 import MusicLeftSidebar from './MusicLeftSidebar';
 import MusicQueueSidebar from './MusicQueueSidebar';
 
 const MusicLayout = () => {
+    const { t } = useTranslation('music');
     return (
-        <Page title="Music" requiresAuth pagePadding={false} showPlayerBar>
+        <Page title={t('title')} requiresAuth pagePadding={false} showPlayerBar>
             <div className="flex h-[calc(100dvh-4.5rem)] px-4 sm:px-12 py-4 gap-0">
                 <div className="border-r border-border pr-4">
                     <MusicLeftSidebar />

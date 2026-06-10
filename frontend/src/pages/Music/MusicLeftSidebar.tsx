@@ -6,6 +6,7 @@ import { useCurrentUser } from '@/hooks/api/useCurrentUser';
 import { useFavoriteArtists, useFavoriteAlbums, useFavoriteSongs } from '@/hooks/api/useMusicItems';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from 'react-i18next';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 
 const SidebarSection = ({
@@ -108,6 +109,7 @@ const FavoriteSongItem = ({ song }: { song: BaseItemDto }) => {
 };
 
 const MusicLeftSidebar = () => {
+    const { t } = useTranslation('music');
     const { data: currentUser } = useCurrentUser();
     const { data: playlists, isLoading: isLoadingPlaylists } = usePlaylists(currentUser?.Id);
     const { data: favoriteArtists, isLoading: isLoadingArtists } = useFavoriteArtists();
@@ -116,7 +118,7 @@ const MusicLeftSidebar = () => {
 
     return (
         <aside className="w-64 shrink-0 flex flex-col gap-4 overflow-y-auto h-full pr-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full">
-            <SidebarSection title="Playlists" icon={<ListMusic className="w-3.5 h-3.5" />}>
+            <SidebarSection title={t('playlists')} icon={<ListMusic className="w-3.5 h-3.5" />}>
                 {isLoadingPlaylists ? (
                     <div className="flex flex-col gap-1 px-3">
                         {[...Array(3)].map((_, i) => (
@@ -132,20 +134,20 @@ const MusicLeftSidebar = () => {
                                 width: 64,
                                 height: 64,
                             })}
-                            name={playlist.Name || 'Untitled'}
+                            name={playlist.Name || t('untitled')}
                             subtitle={
                                 playlist.ChildCount !== undefined
-                                    ? `${playlist.ChildCount} tracks`
+                                    ? t('tracks_count', { count: playlist.ChildCount })
                                     : undefined
                             }
                         />
                     ))
                 ) : (
-                    <span className="text-xs text-muted-foreground px-3">No playlists</span>
+                    <span className="text-xs text-muted-foreground px-3">{t('no_playlists')}</span>
                 )}
             </SidebarSection>
 
-            <SidebarSection title="Favorite Artists" icon={<Mic2 className="w-3.5 h-3.5" />}>
+            <SidebarSection title={t('favorite_artists')} icon={<Mic2 className="w-3.5 h-3.5" />}>
                 {isLoadingArtists ? (
                     <div className="flex flex-col gap-1 px-3">
                         {[...Array(3)].map((_, i) => (
@@ -165,11 +167,11 @@ const MusicLeftSidebar = () => {
                         />
                     ))
                 ) : (
-                    <span className="text-xs text-muted-foreground px-3">No favorites</span>
+                    <span className="text-xs text-muted-foreground px-3">{t('no_favorites')}</span>
                 )}
             </SidebarSection>
 
-            <SidebarSection title="Favorite Albums" icon={<Disc3 className="w-3.5 h-3.5" />}>
+            <SidebarSection title={t('favorite_albums')} icon={<Disc3 className="w-3.5 h-3.5" />}>
                 {isLoadingAlbums ? (
                     <div className="flex flex-col gap-1 px-3">
                         {[...Array(3)].map((_, i) => (
@@ -190,11 +192,11 @@ const MusicLeftSidebar = () => {
                         />
                     ))
                 ) : (
-                    <span className="text-xs text-muted-foreground px-3">No favorites</span>
+                    <span className="text-xs text-muted-foreground px-3">{t('no_favorites')}</span>
                 )}
             </SidebarSection>
 
-            <SidebarSection title="Favorite Songs" icon={<Heart className="w-3.5 h-3.5" />}>
+            <SidebarSection title={t('favorite_songs')} icon={<Heart className="w-3.5 h-3.5" />}>
                 {isLoadingSongs ? (
                     <div className="flex flex-col gap-1 px-3">
                         {[...Array(3)].map((_, i) => (
@@ -204,7 +206,7 @@ const MusicLeftSidebar = () => {
                 ) : favoriteSongs && favoriteSongs.length > 0 ? (
                     favoriteSongs.map((song) => <FavoriteSongItem key={song.Id} song={song} />)
                 ) : (
-                    <span className="text-xs text-muted-foreground px-3">No favorites</span>
+                    <span className="text-xs text-muted-foreground px-3">{t('no_favorites')}</span>
                 )}
             </SidebarSection>
         </aside>

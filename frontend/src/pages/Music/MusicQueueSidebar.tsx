@@ -1,9 +1,11 @@
 import { ListMusic } from 'lucide-react';
 import { getPrimaryImageUrl } from '@/utils/jellyfinUrls';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 
 const MusicQueueSidebar = () => {
+    const { t } = useTranslation('music');
     const { queue, currentIndex, loadQueue } = useMusicPlayback();
 
     if (queue.length === 0) {
@@ -11,10 +13,10 @@ const MusicQueueSidebar = () => {
             <aside className="w-72 shrink-0 flex flex-col h-full pl-2">
                 <div className="flex items-center gap-2 px-3 py-1.5 mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <ListMusic className="w-3.5 h-3.5" />
-                    Queue
+                    {t('queue')}
                 </div>
                 <div className="flex-1 flex items-center justify-center">
-                    <span className="text-sm text-muted-foreground">Queue is empty</span>
+                    <span className="text-sm text-muted-foreground">{t('queue_empty')}</span>
                 </div>
             </aside>
         );
@@ -25,7 +27,7 @@ const MusicQueueSidebar = () => {
             <div className="flex items-center justify-between px-3 py-1.5 mb-2">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     <ListMusic className="w-3.5 h-3.5" />
-                    Queue ({queue.length})
+                    {t('queue_count', { count: queue.length })}
                 </div>
             </div>
             <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full">

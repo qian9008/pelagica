@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getPrimaryImageUrl } from '@/utils/jellyfinUrls';
 import { ticksToReadableMusicTime } from '@/utils/timeConversion';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
+import { useTranslation } from 'react-i18next';
 import {
     useRecentlyAddedAlbums,
     useRecentlyPlayedSongs,
@@ -71,10 +72,12 @@ const SongRow = ({
 const SongList = ({
     songs,
     isLoading,
+    emptyMessage,
     showAlbum = false,
 }: {
     songs: BaseItemDto[] | undefined;
     isLoading: boolean;
+    emptyMessage: string;
     showAlbum?: boolean;
 }) => {
     const { loadQueue } = useMusicPlayback();
@@ -101,7 +104,7 @@ const SongList = ({
     }
 
     if (!songs || songs.length === 0) {
-        return <span className="text-sm text-muted-foreground px-3">No songs found</span>;
+        return <span className="text-sm text-muted-foreground px-3">{emptyMessage}</span>;
     }
 
     return (
@@ -122,9 +125,11 @@ const SongList = ({
 const AlbumsGrid = ({
     albums,
     isLoading,
+    emptyMessage,
 }: {
     albums: BaseItemDto[] | undefined;
     isLoading: boolean;
+    emptyMessage: string;
 }) => {
     if (isLoading) {
         return (
@@ -141,13 +146,17 @@ const AlbumsGrid = ({
     }
 
     if (!albums || albums.length === 0) {
-        return <span className="text-sm text-muted-foreground">No albums found</span>;
+        return <span className="text-sm text-muted-foreground">{emptyMessage}</span>;
     }
 
     return (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3">
             {albums.map((album) => (
-                <Link key={album.Id} to={`/music/album/${album.Id}`} className="group flex flex-col">
+                <Link
+                    key={album.Id}
+                    to={`/music/album/${album.Id}`}
+                    className="group flex flex-col"
+                >
                     <div className="relative aspect-square overflow-hidden rounded-md">
                         <img
                             src={getPrimaryImageUrl(album.Id || '', {
@@ -172,9 +181,11 @@ const AlbumsGrid = ({
 const ArtistsGrid = ({
     artists,
     isLoading,
+    emptyMessage,
 }: {
     artists: BaseItemDto[] | undefined;
     isLoading: boolean;
+    emptyMessage: string;
 }) => {
     if (isLoading) {
         return (
@@ -190,7 +201,7 @@ const ArtistsGrid = ({
     }
 
     if (!artists || artists.length === 0) {
-        return <span className="text-sm text-muted-foreground">No artists found</span>;
+        return <span className="text-sm text-muted-foreground">{emptyMessage}</span>;
     }
 
     return (
@@ -224,9 +235,13 @@ const ArtistsGrid = ({
 const PlaylistsGrid = ({
     playlists,
     isLoading,
+    emptyMessage,
+    tracksLabel,
 }: {
     playlists: BaseItemDto[] | undefined;
     isLoading: boolean;
+    emptyMessage: string;
+    tracksLabel: (count: number) => string;
 }) => {
     if (isLoading) {
         return (
@@ -242,7 +257,7 @@ const PlaylistsGrid = ({
     }
 
     if (!playlists || playlists.length === 0) {
-        return <span className="text-sm text-muted-foreground">No playlists found</span>;
+        return <span className="text-sm text-muted-foreground">{emptyMessage}</span>;
     }
 
     return (
@@ -263,7 +278,7 @@ const PlaylistsGrid = ({
                     <span className="text-sm mt-1.5 truncate">{playlist.Name}</span>
                     {playlist.ChildCount !== undefined && (
                         <span className="text-xs text-muted-foreground">
-                            {playlist.ChildCount} tracks
+                            {tracksLabel(playlist.ChildCount || 0)}
                         </span>
                     )}
                 </Link>
@@ -273,6 +288,7 @@ const PlaylistsGrid = ({
 };
 
 const SearchResults = ({ searchTerm }: { searchTerm: string }) => {
+    const { t } = useTranslation('music');
     const { data: results, isLoading } = useMusicSearch(searchTerm);
     const { loadQueue } = useMusicPlayback();
 
@@ -287,7 +303,7 @@ const SearchResults = ({ searchTerm }: { searchTerm: string }) => {
     }
 
     if (!results || results.length === 0) {
-        return <span className="text-sm text-muted-foreground">No results found</span>;
+        return <span className="text-sm text-muted-foreground">{t('no_results_found')}</span>;
     }
 
     const songs = results.filter((r) => r.Type === 'Audio');
@@ -309,7 +325,9 @@ const SearchResults = ({ searchTerm }: { searchTerm: string }) => {
         <div className="flex flex-col gap-6">
             {artists.length > 0 && (
                 <div>
-                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">Artists</h3>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">
+                        {t('artists')}
+                    </h3>
                     <div className="flex gap-4 overflow-x-auto">
                         {artists.map((artist) => (
                             <Link
@@ -335,7 +353,9 @@ const SearchResults = ({ searchTerm }: { searchTerm: string }) => {
             )}
             {albums.length > 0 && (
                 <div>
-                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">Albums</h3>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">
+                        {t('albums')}
+                    </h3>
                     <div className="flex gap-4 overflow-x-auto">
                         {albums.map((album) => (
                             <Link
@@ -362,7 +382,9 @@ const SearchResults = ({ searchTerm }: { searchTerm: string }) => {
             )}
             {songs.length > 0 && (
                 <div>
-                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">Songs</h3>
+                    <h3 className="text-sm font-semibold text-muted-foreground mb-2">
+                        {t('songs')}
+                    </h3>
                     <div className="flex flex-col gap-0.5">
                         {songs.map((song, index) => (
                             <SongRow
@@ -381,6 +403,7 @@ const SearchResults = ({ searchTerm }: { searchTerm: string }) => {
 };
 
 const MusicMainContent = () => {
+    const { t } = useTranslation('music');
     const [searchTerm, setSearchTerm] = useState('');
     const { data: recentAlbums, isLoading: isLoadingRecent } = useRecentlyAddedAlbums(20);
     const { data: recentlyPlayed, isLoading: isLoadingPlayed } = useRecentlyPlayedSongs(10);
@@ -398,7 +421,7 @@ const MusicMainContent = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                     className="pl-9"
-                    placeholder="Search music..."
+                    placeholder={t('search_placeholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -410,7 +433,11 @@ const MusicMainContent = () => {
                 <>
                     {recentAlbums && recentAlbums.length > 0 && (
                         <SectionScroller
-                            title={<h2 className="text-lg font-semibold">Recently Added Albums</h2>}
+                            title={
+                                <h2 className="text-lg font-semibold">
+                                    {t('recently_added_albums')}
+                                </h2>
+                            }
                             items={recentAlbums.map((album) => (
                                 <Link
                                     key={album.Id}
@@ -448,18 +475,20 @@ const MusicMainContent = () => {
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                            <h2 className="text-lg font-semibold">Recently Played</h2>
+                            <h2 className="text-lg font-semibold">{t('recently_played')}</h2>
                             <SongList
                                 songs={recentlyPlayed}
                                 isLoading={isLoadingPlayed}
+                                emptyMessage={t('no_songs_found')}
                                 showAlbum
                             />
                         </div>
                         <div className="flex flex-col gap-2">
-                            <h2 className="text-lg font-semibold">Frequently Played</h2>
+                            <h2 className="text-lg font-semibold">{t('frequently_played')}</h2>
                             <SongList
                                 songs={frequentlyPlayed}
                                 isLoading={isLoadingFrequent}
+                                emptyMessage={t('no_songs_found')}
                                 showAlbum
                             />
                         </div>
@@ -467,24 +496,31 @@ const MusicMainContent = () => {
 
                     <Tabs defaultValue="albums" className="w-full">
                         <TabsList>
-                            <TabsTrigger value="albums">Albums</TabsTrigger>
-                            <TabsTrigger value="artists">Artists</TabsTrigger>
-                            <TabsTrigger value="playlists">Playlists</TabsTrigger>
+                            <TabsTrigger value="albums">{t('albums')}</TabsTrigger>
+                            <TabsTrigger value="artists">{t('artists')}</TabsTrigger>
+                            <TabsTrigger value="playlists">{t('playlists')}</TabsTrigger>
                         </TabsList>
                         <TabsContent value="albums" className="mt-4">
                             <AlbumsGrid
                                 albums={allAlbumsData?.items}
                                 isLoading={isLoadingAllAlbums}
+                                emptyMessage={t('no_albums_found')}
                             />
                         </TabsContent>
                         <TabsContent value="artists" className="mt-4">
                             <ArtistsGrid
                                 artists={allArtistsData?.items}
                                 isLoading={isLoadingAllArtists}
+                                emptyMessage={t('no_artists_found')}
                             />
                         </TabsContent>
                         <TabsContent value="playlists" className="mt-4">
-                            <PlaylistsGrid playlists={playlists} isLoading={isLoadingPlaylists} />
+                            <PlaylistsGrid
+                                playlists={playlists}
+                                isLoading={isLoadingPlaylists}
+                                emptyMessage={t('no_playlists_found')}
+                                tracksLabel={(count) => t('tracks_count', { count })}
+                            />
                         </TabsContent>
                     </Tabs>
                 </>
