@@ -158,7 +158,7 @@ const MusicLeftSidebar = () => {
                     favoriteArtists.map((artist) => (
                         <SidebarItem
                             key={artist.Id}
-                            to={`/item/${artist.Id}`}
+                            to={`/music/artist/${artist.Id}`}
                             imageUrl={getPrimaryImageUrl(artist.Id || '', {
                                 width: 64,
                                 height: 64,

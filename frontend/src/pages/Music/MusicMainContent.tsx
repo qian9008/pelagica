@@ -209,7 +209,7 @@ const ArtistsGrid = ({
             {artists.map((artist) => (
                 <Link
                     key={artist.Id}
-                    to={`/item/${artist.Id}`}
+                    to={`/music/artist/${artist.Id}`}
                     className="group flex flex-col items-center"
                 >
                     <div className="relative aspect-square w-full overflow-hidden rounded-full">
@@ -263,7 +263,11 @@ const PlaylistsGrid = ({
     return (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3">
             {playlists.map((playlist) => (
-                <Link key={playlist.Id} to={`/music/playlist/${playlist.Id}`} className="group flex flex-col">
+                <Link
+                    key={playlist.Id}
+                    to={`/music/playlist/${playlist.Id}`}
+                    className="group flex flex-col"
+                >
                     <div className="relative aspect-square overflow-hidden rounded-md">
                         <img
                             src={getPrimaryImageUrl(playlist.Id || '', {
@@ -332,7 +336,7 @@ const SearchResults = ({ searchTerm }: { searchTerm: string }) => {
                         {artists.map((artist) => (
                             <Link
                                 key={artist.Id}
-                                to={`/item/${artist.Id}`}
+                                to={`/music/artist/${artist.Id}`}
                                 className="flex flex-col items-center shrink-0 group"
                             >
                                 <img

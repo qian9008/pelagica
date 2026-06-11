@@ -273,7 +273,7 @@ const BaseMusicListPage = ({
                                         (artist) => (
                                             <Link
                                                 key={artist.Id}
-                                                to={`/item/${artist.Id}`}
+                                                to={`/music/artist/${artist.Id}`}
                                                 className="bg-accent/20 rounded-full text-sm"
                                             >
                                                 {artist.Name}
