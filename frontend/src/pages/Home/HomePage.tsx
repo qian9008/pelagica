@@ -29,11 +29,16 @@ const HomePage = () => {
     const { data: userViews } = useUserViews();
     const { config } = useConfig();
 
+    const firstEnabledSection = config.homeScreenSections?.find(
+        (section) => section.enabled !== false
+    );
+    const firstSectionIsMediaBar = firstEnabledSection?.type === 'mediaBar';
+
     return (
         <Page
             title={config?.serverName || 'Pelagica'}
             requiresAuth={true}
-            overlayHeader={true}
+            overlayHeader={firstSectionIsMediaBar}
             pagePadding={false}
         >
             <div className="flex flex-col gap-4 pb-4">
@@ -106,7 +111,7 @@ const HomePage = () => {
                                     key={index}
                                     size={section.size}
                                     itemsConfig={section.items}
-                                    title={section.title}
+                                    title={index != 0 ? section.title : undefined}
                                     showFavoriteButton={section.showFavoriteButton}
                                     showWatchlistButton={section.showWatchlistButton}
                                     fadeTop={index != 0}
