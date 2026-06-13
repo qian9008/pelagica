@@ -140,7 +140,7 @@ const MediaBar = ({
                                             <img
                                                 src={getLogoUrl(
                                                     item.Id!,
-                                                    { maxHeight: 150 },
+                                                    { maxHeight: 400 },
                                                     item.ImageTags?.Logo
                                                 )}
                                                 alt={item.Name || 'Item Logo'}
