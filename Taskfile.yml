@@ -13,7 +13,7 @@ tasks:
       - install-frontend
     dir: frontend
     cmds:
-      - pnpm run dev -- --host
+      - pnpm exec vite --host {{if .MODE}}--mode {{.MODE}}{{end}}
 
   backend:
     desc: Start Go backend
@@ -49,3 +49,8 @@ tasks:
       - go.sum
     cmds:
       - go mod download
+      
+  stats:
+    desc: Count the amount of lines of code
+    cmds:
+      - cloc . --exclude-dir=dist,node_modules --not-match-f="(pnpm-lock|package-lock|yarn\.lock)"

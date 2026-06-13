@@ -17,7 +17,7 @@ export interface SectionItemsConfig {
     /** Filter items from a specific library by its ID */
     libraryId?: string;
     /** Filter by media types */
-    types?: ('Movie' | 'Series' | 'BoxSet' | 'MusicAlbum' | 'Playlist')[];
+    types?: BaseItemKind[];
     /** Filter by genre names */
     genres?: string[];
     /** Filter by tag names */
@@ -253,7 +253,7 @@ const DEFAULT_CONFIG: AppConfig = {
     homeScreenSections: [
         {
             type: 'mediaBar',
-            size: 'large',
+            size: 'xlarge',
             items: {
                 sortBy: ['Random'],
                 types: ['Movie', 'Series'],

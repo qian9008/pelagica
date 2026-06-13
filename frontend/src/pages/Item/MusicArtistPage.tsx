@@ -146,7 +146,7 @@ const MusicArtistPage = ({ item, config }: MusicArtistPageProps) => {
 
                     <div
                         className={cn(
-                            'flex min-h-0 min-w-0 flex-1 flex-col p-6 text-center md:h-full md:p-8 md:text-left !pb-2',
+                            'flex min-h-0 min-w-0 flex-1 flex-col p-6 text-center md:h-full md:p-8 md:text-left pb-2!',
                             onPalette && 'text-white'
                         )}
                     >
