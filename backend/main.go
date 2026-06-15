@@ -67,8 +67,10 @@ func main() {
 	api.Get("/stats-consent", handlers.GetStatsConsent)
 	api.Post("/stats-consent", handlers.PostStatsConsent)
 
-	slog.Info("Server starting", "port", getPort())
-	if err := app.Listen(getPort()); err != nil {
+	slog.Info("Server starting", "port", getPort(), "fiber", fiber.Version)
+	if err := app.Listen(getPort(), fiber.ListenConfig{
+		DisableStartupMessage: true,
+	}); err != nil {
 		slog.Error("Server failed", "error", err)
 		os.Exit(1)
 	}
