@@ -36,6 +36,8 @@ const EpisodeComponent = memo(
                   ? (watched / runtime) * 100
                   : 0;
 
+        console.log('Image tags: ', episode.ImageTags);
+
         return (
             <Link to={`/item/${episode.Id}`} key={episode.Id} className={'group ' + className}>
                 <div className="relative w-full aspect-video rounded-md overflow-hidden">
@@ -48,12 +50,20 @@ const EpisodeComponent = memo(
                             <img
                                 src={
                                     episode.SeriesId
-                                        ? getPrimaryImageUrl(episode.Id!, {
-                                              width: 416,
-                                          })
-                                        : getThumbUrl(episode.Id!, {
-                                              width: 416,
-                                          })
+                                        ? getPrimaryImageUrl(
+                                              episode.Id!,
+                                              {
+                                                  width: 416,
+                                              },
+                                              episode.ImageTags?.Primary
+                                          )
+                                        : getThumbUrl(
+                                              episode.Id!,
+                                              {
+                                                  width: 416,
+                                              },
+                                              episode.ImageTags?.Thumb
+                                          )
                                 }
                                 alt={episode.Name || t('no_title')}
                                 className="w-full h-full object-cover rounded-md group-hover:opacity-75 group-hover:scale-105 transition-opacity transition-transform duration-300 ease-out will-change-transform"
