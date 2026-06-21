@@ -358,6 +358,8 @@ export const useConfig = () => {
     const { data, isLoading, error } = useQuery({
         queryKey: CONFIG_QUERY_KEY,
         queryFn: fetchConfig,
+        staleTime: Infinity,
+        gcTime: 30 * 60 * 1000, // 30 minutes
     });
 
     return {
