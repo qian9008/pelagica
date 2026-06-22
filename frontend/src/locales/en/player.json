@@ -24,7 +24,6 @@
         "bassBoost": "Bass Boost",
         "vocalBoost": "Vocal Boost",
         "podcast": "Podcast",
-        "nightListening": "Night Listening",
         "sleep": "Sleep"
     },
     "sleepFade": "Gradual fade (20 min)",

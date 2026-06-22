@@ -12,7 +12,6 @@ export type BuiltInEqualizerPresetId =
     | 'bassBoost'
     | 'vocalBoost'
     | 'podcast'
-    | 'nightListening'
     | 'sleep';
 
 /** @deprecated Use BuiltInEqualizerPresetId or EqualizerSelection */
@@ -38,7 +37,6 @@ export const BUILT_IN_PRESET_IDS: BuiltInEqualizerPresetId[] = [
     'bassBoost',
     'vocalBoost',
     'podcast',
-    'nightListening',
     'sleep',
 ];
 
@@ -80,13 +78,6 @@ export const EQUALIZER_PRESETS: Record<BuiltInEqualizerPresetId, EqualizerBand[]
         { type: 'peaking', frequency: 2500, gain: 5, Q: 1.2 },
         { type: 'peaking', frequency: 5000, gain: 2, Q: 1 },
         { type: 'highshelf', frequency: 12000, gain: 0, Q: 0.7 },
-    ],
-    nightListening: [
-        { type: 'lowshelf', frequency: 100, gain: -4, Q: 0.7 },
-        { type: 'peaking', frequency: 250, gain: 0, Q: 1 },
-        { type: 'peaking', frequency: 1000, gain: 0, Q: 1 },
-        { type: 'peaking', frequency: 4000, gain: 0, Q: 1 },
-        { type: 'highshelf', frequency: 8000, gain: -3, Q: 0.7 },
     ],
     sleep: [
         { type: 'lowshelf', frequency: 80, gain: -3, Q: 0.7 },

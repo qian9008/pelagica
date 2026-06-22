@@ -17,7 +17,6 @@
         "bassBoost": "低音ブースト",
         "vocalBoost": "ボーカルブースト",
         "podcast": "ポッドキャスト",
-        "nightListening": "ナイトリスニング",
         "sleep": "スリープ"
     },
     "sleepFade": "段階的フェード（20分）",

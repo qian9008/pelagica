@@ -15,7 +15,6 @@ export const BUILT_IN_PRESET_ICONS: Record<BuiltInEqualizerPresetId, LucideIcon>
     bassBoost: Volume1,
     vocalBoost: Mic2,
     podcast: Podcast,
-    nightListening: Moon,
     sleep: MoonStar,
 };
 
