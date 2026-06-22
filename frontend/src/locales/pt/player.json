@@ -29,6 +29,7 @@
     "customPresetName": "Nome do preset",
     "customPresetNamePlaceholder": "Digite o nome do preset",
     "customPresetEditor": "Preset personalizado",
+    "customPresetLivePreview": "As alterações são reproduzidas ao vivo enquanto você ajusta.",
     "customPresetSave": "Salvar",
     "customPresetCancel": "Cancelar",
     "customPresetEdit": "Editar preset",

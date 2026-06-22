@@ -36,6 +36,7 @@
   "customPresetName": "Nom du préréglage",
   "customPresetNamePlaceholder": "Entrer un nom",
   "customPresetEditor": "Préréglage personnalisé",
+  "customPresetLivePreview": "Les modifications sont prévisualisées en direct pendant l'ajustement.",
   "customPresetSave": "Enregistrer",
   "customPresetCancel": "Annuler",
   "customPresetEdit": "Modifier le préréglage",

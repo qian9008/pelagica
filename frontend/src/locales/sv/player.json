@@ -36,6 +36,7 @@
   "customPresetName": "Förvalnamn",
   "customPresetNamePlaceholder": "Ange förvalnamn",
   "customPresetEditor": "Anpassat förval",
+  "customPresetLivePreview": "Ändringar förhandsgranskas live medan du justerar.",
   "customPresetSave": "Spara",
   "customPresetCancel": "Avbryt",
   "customPresetEdit": "Redigera förval",

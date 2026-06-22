@@ -29,6 +29,7 @@
     "customPresetName": "プリセット名",
     "customPresetNamePlaceholder": "プリセット名を入力",
     "customPresetEditor": "カスタムプリセット",
+    "customPresetLivePreview": "調整中に変更がライブでプレビューされます。",
     "customPresetSave": "保存",
     "customPresetCancel": "キャンセル",
     "customPresetEdit": "プリセットを編集",

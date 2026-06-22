@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, Pencil, Plus, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -10,6 +10,7 @@ import {
     createCustomPresetSelection,
     createDefaultCustomPreset,
     type CustomEqualizerPreset,
+    type EqualizerBand,
     type EqualizerSelection,
 } from './presets';
 import { BUILT_IN_PRESET_ICONS, CUSTOM_PRESET_ICON } from './presetIcons';
@@ -21,6 +22,7 @@ interface EqualizerPopoverProps {
     customPresets: CustomEqualizerPreset[];
     onSaveCustomPreset: (preset: CustomEqualizerPreset) => void;
     onDeleteCustomPreset: (id: string) => void;
+    onPreviewBandsChange: (bands: EqualizerBand[] | null) => void;
     sleepFadeEnabled: boolean;
     onSleepFadeChange: (enabled: boolean) => void;
     equalizerAvailable: boolean;
@@ -37,6 +39,7 @@ const EqualizerPopover = ({
     customPresets,
     onSaveCustomPreset,
     onDeleteCustomPreset,
+    onPreviewBandsChange,
     sleepFadeEnabled,
     onSleepFadeChange,
     equalizerAvailable,
@@ -46,17 +49,31 @@ const EqualizerPopover = ({
     const [editorState, setEditorState] = useState<EditorState | null>(null);
     const isActive = preset !== 'flat' || sleepFadeEnabled;
 
+    useEffect(() => {
+        if (!editorState) {
+            onPreviewBandsChange(null);
+            return;
+        }
+
+        onPreviewBandsChange(editorState.preset.bands);
+    }, [editorState, onPreviewBandsChange]);
+
+    const closeEditor = () => {
+        setEditorState(null);
+        onPreviewBandsChange(null);
+    };
+
     const handleSaveEditor = () => {
         if (!editorState) return;
         onSaveCustomPreset(editorState.preset);
         onPresetChange(createCustomPresetSelection(editorState.preset.id));
-        setEditorState(null);
+        closeEditor();
     };
 
     return (
         <Popover
             onOpenChange={(open) => {
-                if (!open) setEditorState(null);
+                if (!open) closeEditor();
             }}
         >
             <PopoverTrigger asChild>
@@ -87,7 +104,7 @@ const EqualizerPopover = ({
                             setEditorState({ mode: editorState.mode, preset: nextPreset })
                         }
                         onSave={handleSaveEditor}
-                        onCancel={() => setEditorState(null)}
+                        onCancel={closeEditor}
                     />
                 ) : (
                     <>

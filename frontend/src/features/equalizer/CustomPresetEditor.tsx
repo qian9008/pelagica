@@ -31,7 +31,10 @@ const CustomPresetEditor = ({ preset, onChange, onSave, onCancel }: CustomPreset
 
     return (
         <div className="space-y-3">
-            <p className="text-sm font-medium">{t('customPresetEditor')}</p>
+            <div>
+                <p className="text-sm font-medium">{t('customPresetEditor')}</p>
+                <p className="text-xs text-muted-foreground">{t('customPresetLivePreview')}</p>
+            </div>
             <Input
                 value={preset.name}
                 onChange={(event) => onChange({ ...preset, name: event.target.value })}

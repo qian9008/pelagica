@@ -58,6 +58,7 @@ const MusicPlayerBar = () => {
         customEqualizerPresets,
         saveCustomEqualizerPreset,
         deleteCustomEqualizerPreset,
+        setEqualizerPreviewBands,
         sleepFadeEnabled,
         setSleepFadeEnabled,
         equalizerAvailable,
@@ -248,6 +249,7 @@ const MusicPlayerBar = () => {
                             customPresets={customEqualizerPresets}
                             onSaveCustomPreset={saveCustomEqualizerPreset}
                             onDeleteCustomPreset={deleteCustomEqualizerPreset}
+                            onPreviewBandsChange={setEqualizerPreviewBands}
                             sleepFadeEnabled={sleepFadeEnabled}
                             onSleepFadeChange={setSleepFadeEnabled}
                             equalizerAvailable={equalizerAvailable}
@@ -362,6 +364,7 @@ const MusicPlayerBar = () => {
                             customPresets={customEqualizerPresets}
                             onSaveCustomPreset={saveCustomEqualizerPreset}
                             onDeleteCustomPreset={deleteCustomEqualizerPreset}
+                            onPreviewBandsChange={setEqualizerPreviewBands}
                             sleepFadeEnabled={sleepFadeEnabled}
                             onSleepFadeChange={setSleepFadeEnabled}
                             equalizerAvailable={equalizerAvailable}

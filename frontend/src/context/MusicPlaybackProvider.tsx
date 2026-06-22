@@ -20,6 +20,7 @@ import {
     resolvePresetBands,
     saveCustomPresets,
     type CustomEqualizerPreset,
+    type EqualizerBand,
     type EqualizerSelection,
 } from '@/features/equalizer/presets';
 import { useAudioEqualizer } from '@/features/equalizer/useAudioEqualizer';
@@ -49,6 +50,7 @@ export const MusicPlaybackProvider = ({ children }: PropsWithChildren) => {
         loadStoredPreset(loadStoredCustomPresets())
     );
     const [sleepFadeEnabled, setSleepFadeEnabledState] = useState(loadStoredSleepFadeEnabled);
+    const [equalizerPreviewBands, setEqualizerPreviewBands] = useState<EqualizerBand[] | null>(null);
     const [shuffle, setShuffle] = useState(false);
     const [repeat, setRepeat] = useState(false);
     const [queue, setQueue] = useState<MusicPlaybackTrack[]>([]);
@@ -116,11 +118,11 @@ export const MusicPlaybackProvider = ({ children }: PropsWithChildren) => {
         });
     }, [queue, currentIndex, currentTrack, shuffleArray]);
 
-    const activeEqualizerBands = useMemo(
-        () => resolvePresetBands(equalizerPreset, customEqualizerPresets),
-        [equalizerPreset, customEqualizerPresets]
-    );
-    const isSleepPreset = equalizerPreset === 'sleep';
+    const activeEqualizerBands = useMemo(() => {
+        if (equalizerPreviewBands) return equalizerPreviewBands;
+        return resolvePresetBands(equalizerPreset, customEqualizerPresets);
+    }, [equalizerPreviewBands, equalizerPreset, customEqualizerPresets]);
+    const isSleepPreset = equalizerPreset === 'sleep' && !equalizerPreviewBands;
 
     const { equalizerAvailable, resumeContext, resetSleepFadeSession } = useAudioEqualizer({
         audioRef,
@@ -402,6 +404,7 @@ export const MusicPlaybackProvider = ({ children }: PropsWithChildren) => {
         customEqualizerPresets,
         saveCustomEqualizerPreset,
         deleteCustomEqualizerPreset,
+        setEqualizerPreviewBands,
         sleepFadeEnabled,
         setSleepFadeEnabled,
         equalizerAvailable,

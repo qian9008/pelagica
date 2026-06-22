@@ -1,6 +1,7 @@
 import { createContext } from 'react';
 import type {
     CustomEqualizerPreset,
+    EqualizerBand,
     EqualizerSelection,
 } from '@/features/equalizer/presets';
 
@@ -31,6 +32,7 @@ export interface MusicPlaybackContextType {
     customEqualizerPresets: CustomEqualizerPreset[];
     saveCustomEqualizerPreset: (preset: CustomEqualizerPreset) => void;
     deleteCustomEqualizerPreset: (id: string) => void;
+    setEqualizerPreviewBands: (bands: EqualizerBand[] | null) => void;
     sleepFadeEnabled: boolean;
     setSleepFadeEnabled: (enabled: boolean) => void;
     equalizerAvailable: boolean;

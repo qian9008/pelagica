@@ -36,6 +36,7 @@
     "customPresetName": "Preset name",
     "customPresetNamePlaceholder": "Enter preset name",
     "customPresetEditor": "Custom preset",
+    "customPresetLivePreview": "Changes preview live while you adjust.",
     "customPresetSave": "Save",
     "customPresetCancel": "Cancel",
     "customPresetEdit": "Edit preset",

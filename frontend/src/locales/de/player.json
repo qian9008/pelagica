@@ -36,6 +36,7 @@
   "customPresetName": "Preset-Name",
   "customPresetNamePlaceholder": "Preset-Namen eingeben",
   "customPresetEditor": "Eigenes Preset",
+  "customPresetLivePreview": "Änderungen werden live während der Anpassung wiedergegeben.",
   "customPresetSave": "Speichern",
   "customPresetCancel": "Abbrechen",
   "customPresetEdit": "Preset bearbeiten",
