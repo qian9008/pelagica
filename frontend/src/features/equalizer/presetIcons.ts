@@ -1,7 +1,6 @@
 import {
     AudioLines,
     Mic2,
-    Moon,
     MoonStar,
     Podcast,
     SlidersHorizontal,

@@ -47,9 +47,10 @@ export function useAudioEqualizer({
     const graphRef = useRef<EqualizerGraph | null>(null);
     const sleepFadeStartedAtRef = useRef<number | null>(null);
     const fadeFrameRef = useRef<number | null>(null);
+    const initAttemptedRef = useRef(false);
     const [equalizerAvailable, setEqualizerAvailable] = useState(true);
 
-    const initGraph = useCallback(() => {
+    const initGraph = useCallback((): EqualizerGraph | null => {
         if (graphRef.current) return graphRef.current;
 
         const audio = audioRef.current;
@@ -67,7 +68,6 @@ export function useAudioEqualizer({
             sleepLowPass.Q.value = 0.7;
 
             const gainNode = context.createGain();
-            gainNode.gain.value = volume;
 
             source.connect(filters[0]!);
             for (let i = 0; i < filters.length - 1; i++) {
@@ -87,21 +87,28 @@ export function useAudioEqualizer({
                 gainNode,
             };
             graphRef.current = graph;
-            setEqualizerAvailable(true);
             return graph;
         } catch (error) {
             console.warn('Audio equalizer unavailable, falling back to direct playback:', error);
-            setEqualizerAvailable(false);
             return null;
         }
     }, [audioRef]);
 
+    const ensureGraph = useCallback(() => {
+        const graph = initGraph();
+        if (!initAttemptedRef.current) {
+            initAttemptedRef.current = true;
+            setEqualizerAvailable(graph !== null);
+        }
+        return graph;
+    }, [initGraph]);
+
     const resumeContext = useCallback(async () => {
-        const graph = graphRef.current ?? initGraph();
+        const graph = ensureGraph();
         if (graph && graph.context.state === 'suspended') {
             await graph.context.resume();
         }
-    }, [initGraph]);
+    }, [ensureGraph]);
 
     const applyBands = useCallback(
         (activeBands: EqualizerBand[], fadeProgress = 0) => {
@@ -185,10 +192,6 @@ export function useAudioEqualizer({
     }, []);
 
     useEffect(() => {
-        initGraph();
-    }, [initGraph]);
-
-    useEffect(() => {
         if (isSleepPreset && sleepFadeEnabled) {
             if (sleepFadeStartedAtRef.current === null) {
                 startSleepFadeSession();
@@ -199,10 +202,11 @@ export function useAudioEqualizer({
     }, [isSleepPreset, sleepFadeEnabled, resetSleepFadeSession, startSleepFadeSession]);
 
     useEffect(() => {
+        initGraph();
         const progress = isSleepPreset && sleepFadeEnabled ? getFadeProgress() : 0;
         applyBands(bands, progress);
         applyVolume(progress);
-    }, [bands, isSleepPreset, sleepFadeEnabled, volume, applyBands, applyVolume, getFadeProgress]);
+    }, [bands, isSleepPreset, sleepFadeEnabled, volume, applyBands, applyVolume, getFadeProgress, initGraph]);
 
     useEffect(() => {
         if (!isPlaying || !isSleepPreset || !sleepFadeEnabled) {
