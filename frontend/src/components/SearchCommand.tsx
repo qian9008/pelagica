@@ -20,7 +20,7 @@ import type { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models/bas
 import { getPrimaryImageUrl } from '../utils/jellyfinUrls';
 import { getItemUrl } from '@/utils/itemUrl';
 import { cn } from '@/lib/utils';
-import { getItemFallbackIcon } from '@/utils/itemFallbackIcon';
+import { renderItemFallbackIcon } from '@/utils/itemFallbackIcon';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -85,12 +85,14 @@ const SearchResultImage = ({
     className: string;
 }) => {
     const [imageError, setImageError] = useState(false);
-    const FallbackIcon = getItemFallbackIcon(type);
 
     if (imageError || !src) {
         return (
             <div className={cn(className, 'bg-muted flex items-center justify-center rounded-md')}>
-                <FallbackIcon className="w-1/2 h-1/2 text-muted-foreground" strokeWidth={1.5} />
+                {renderItemFallbackIcon(type, {
+                    className: 'w-1/2 h-1/2 text-muted-foreground',
+                    strokeWidth: 1.5,
+                })}
             </div>
         );
     }

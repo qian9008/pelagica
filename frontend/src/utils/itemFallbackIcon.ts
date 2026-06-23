@@ -1,5 +1,6 @@
+import { createElement } from 'react';
 import { Clapperboard, Disc3, Folder, MonitorPlay, UserRound } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import type { LucideIcon, LucideProps } from 'lucide-react';
 
 const ITEM_FALLBACK_ICONS: Record<string, LucideIcon> = {
     MusicAlbum: Disc3,
@@ -10,6 +11,7 @@ const ITEM_FALLBACK_ICONS: Record<string, LucideIcon> = {
     Series: MonitorPlay,
 };
 
-export function getItemFallbackIcon(type: string | undefined): LucideIcon {
-    return ITEM_FALLBACK_ICONS[type || ''] || Folder;
+export function renderItemFallbackIcon(type: string | undefined, props?: LucideProps) {
+    const Icon = ITEM_FALLBACK_ICONS[type || ''] || Folder;
+    return createElement(Icon, props);
 }

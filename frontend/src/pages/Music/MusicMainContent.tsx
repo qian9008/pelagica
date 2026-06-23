@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPrimaryImageUrl } from '@/utils/jellyfinUrls';
-import { getItemFallbackIcon } from '@/utils/itemFallbackIcon';
+import { renderItemFallbackIcon } from '@/utils/itemFallbackIcon';
 import { getItemUrl } from '@/utils/itemUrl';
 import { ticksToReadableMusicTime } from '@/utils/timeConversion';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
@@ -126,12 +126,14 @@ const SongList = ({
 
 const AlbumCover = ({ album }: { album: BaseItemDto }) => {
     const [imageError, setImageError] = useState(false);
-    const FallbackIcon = getItemFallbackIcon(album.Type);
 
     if (imageError) {
         return (
             <div className="relative aspect-square overflow-hidden rounded-md bg-muted flex items-center justify-center">
-                <FallbackIcon className="w-1/2 h-1/2 text-muted-foreground" strokeWidth={1.5} />
+                {renderItemFallbackIcon(album.Type, {
+                    className: 'w-1/2 h-1/2 text-muted-foreground',
+                    strokeWidth: 1.5,
+                })}
             </div>
         );
     }
@@ -200,12 +202,14 @@ const AlbumsGrid = ({
 
 const ArtistAvatar = ({ artist }: { artist: BaseItemDto }) => {
     const [imageError, setImageError] = useState(false);
-    const FallbackIcon = getItemFallbackIcon(artist.Type);
 
     if (imageError) {
         return (
             <div className="relative aspect-square w-full overflow-hidden rounded-full bg-muted flex items-center justify-center">
-                <FallbackIcon className="w-1/2 h-1/2 text-muted-foreground" strokeWidth={1.5} />
+                {renderItemFallbackIcon(artist.Type, {
+                    className: 'w-1/2 h-1/2 text-muted-foreground',
+                    strokeWidth: 1.5,
+                })}
             </div>
         );
     }
