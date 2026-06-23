@@ -1,5 +1,5 @@
 import type { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models';
-import { Clapperboard, Folder, MonitorPlay, Music } from 'lucide-react';
+import { Clapperboard, Folder, MicVocal, MonitorPlay, Music } from 'lucide-react';
 
 const JellyfinItemKindIcon = ({
     kind,
@@ -16,6 +16,8 @@ const JellyfinItemKindIcon = ({
         case 'MusicAlbum':
         case 'Audio':
             return <Music className={className} />;
+        case 'MusicArtist':
+            return <MicVocal className={className} />;
         default:
             return <Folder className={className} />;
     }
