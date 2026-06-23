@@ -2,6 +2,8 @@
   "title": "Rechercher un média",
   "description": "Rechercher des films, des séries et d'autres contenus multimédias",
   "input_placeholder": "Rechercher des médias...",
+  "input_placeholder_movies_tv": "Rechercher des films et séries...",
+  "input_placeholder_music": "Rechercher des artistes, albums et titres...",
   "failed_search": "Échec de la recherche",
   "start_typing": "Saisissez  du texte pour effectuer une recherche...",
   "no_results": "Aucun résultat trouvé",
