@@ -37,6 +37,7 @@ export interface MusicPlaybackContextType {
     startSleepFade: (minutes: number) => void;
     stopSleepFade: () => void;
     sleepFadeDurationMinutes: number;
+    sleepFadeStartedAt: number | null;
     equalizerAvailable: boolean;
     shuffle: boolean;
     toggleShuffle: () => void;

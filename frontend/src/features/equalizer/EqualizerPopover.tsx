@@ -30,6 +30,7 @@ interface EqualizerPopoverProps {
     onStartSleepFade: (minutes: number) => void;
     onStopSleepFade: () => void;
     sleepFadeDurationMinutes: number;
+    sleepFadeStartedAt: number | null;
     equalizerAvailable: boolean;
     className?: string;
 }
@@ -49,6 +50,7 @@ const EqualizerPopover = ({
     onStartSleepFade,
     onStopSleepFade,
     sleepFadeDurationMinutes,
+    sleepFadeStartedAt,
     equalizerAvailable,
     className,
 }: EqualizerPopoverProps) => {
@@ -148,7 +150,9 @@ const EqualizerPopover = ({
                 ) : sleepPanelOpen ? (
                     <SleepModePanel
                         durationMinutes={sleepDraftMinutes}
+                        activeDurationMinutes={sleepFadeDurationMinutes}
                         isRunning={isSleepRunning}
+                        sleepFadeStartedAt={sleepFadeStartedAt}
                         onDurationChange={setSleepDraftMinutes}
                         onStart={handleStartSleepFade}
                         onStop={onStopSleepFade}

@@ -32,6 +32,7 @@
   "sleepFadeDurationUnit": "min",
   "sleepFadeStart": "Démarrer le minuteur",
   "sleepFadeStop": "Arrêter le minuteur",
+  "sleepFadeRemaining": "{{time}} restantes",
   "sleepFadeBack": "Retour aux préréglages",
   "equalizerUnavailable": "Égaliseur indisponible pour ce flux. Le fondu de volume reste actif.",
   "customPresets": "Personnalisés",

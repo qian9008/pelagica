@@ -25,6 +25,7 @@
     "sleepFadeDurationUnit": "min",
     "sleepFadeStart": "Iniciar timer",
     "sleepFadeStop": "Parar timer",
+    "sleepFadeRemaining": "{{time}} restantes",
     "sleepFadeBack": "Voltar aos presets",
     "equalizerUnavailable": "Equalizador indisponível para este stream. O fade de volume ainda se aplica.",
     "customPresets": "Personalizados",

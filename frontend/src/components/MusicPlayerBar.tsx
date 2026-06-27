@@ -63,6 +63,7 @@ const MusicPlayerBar = () => {
         startSleepFade,
         stopSleepFade,
         sleepFadeDurationMinutes,
+        sleepFadeStartedAt,
         equalizerAvailable,
         clearPlayback,
     } = useMusicPlayback();
@@ -256,6 +257,7 @@ const MusicPlayerBar = () => {
                             onStartSleepFade={startSleepFade}
                             onStopSleepFade={stopSleepFade}
                             sleepFadeDurationMinutes={sleepFadeDurationMinutes}
+                            sleepFadeStartedAt={sleepFadeStartedAt}
                             equalizerAvailable={equalizerAvailable}
                         />
                     </div>
@@ -373,6 +375,7 @@ const MusicPlayerBar = () => {
                             onStartSleepFade={startSleepFade}
                             onStopSleepFade={stopSleepFade}
                             sleepFadeDurationMinutes={sleepFadeDurationMinutes}
+                            sleepFadeStartedAt={sleepFadeStartedAt}
                             equalizerAvailable={equalizerAvailable}
                         />
                         <Button

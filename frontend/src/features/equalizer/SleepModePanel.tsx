@@ -7,11 +7,15 @@ import {
     MAX_SLEEP_FADE_DURATION_MINUTES,
     MIN_SLEEP_FADE_DURATION_MINUTES,
     clampSleepFadeDurationMinutes,
+    sleepFadeMinutesToMs,
 } from './presets';
+import { formatSleepFadeRemaining, useSleepFadeRemainingMs } from './sleepFadeTime';
 
 interface SleepModePanelProps {
     durationMinutes: number;
+    activeDurationMinutes: number;
     isRunning: boolean;
+    sleepFadeStartedAt: number | null;
     onDurationChange: (minutes: number) => void;
     onStart: () => void;
     onStop: () => void;
@@ -20,13 +24,25 @@ interface SleepModePanelProps {
 
 const SleepModePanel = ({
     durationMinutes,
+    activeDurationMinutes,
     isRunning,
+    sleepFadeStartedAt,
     onDurationChange,
     onStart,
     onStop,
     onBack,
 }: SleepModePanelProps) => {
     const { t } = useTranslation('player');
+    const durationMs = sleepFadeMinutesToMs(
+        isRunning ? activeDurationMinutes : durationMinutes
+    );
+    const remainingMs = useSleepFadeRemainingMs(
+        sleepFadeStartedAt,
+        durationMs,
+        isRunning
+    );
+    const remainingLabel =
+        remainingMs !== null ? formatSleepFadeRemaining(remainingMs) : null;
 
     return (
         <div className="space-y-4">
@@ -52,7 +68,7 @@ const SleepModePanel = ({
                 <label htmlFor="sleep-fade-duration" className="text-sm font-medium">
                     {t('sleepFadeDuration')}
                 </label>
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2">
                     <Input
                         id="sleep-fade-duration"
                         type="number"
@@ -80,11 +96,20 @@ const SleepModePanel = ({
                     <span className="text-sm text-muted-foreground">
                         {t('sleepFadeDurationUnit')}
                     </span>
+                    {isRunning && remainingLabel && (
+                        <span
+                            className="ml-auto tabular-nums text-sm font-medium text-primary"
+                            aria-live="polite"
+                            aria-label={t('sleepFadeRemaining', { time: remainingLabel })}
+                        >
+                            {remainingLabel}
+                        </span>
+                    )}
                     {isRunning ? (
                         <Button
                             variant="outline"
                             size="icon"
-                            className="ml-auto shrink-0"
+                            className="shrink-0"
                             onClick={onStop}
                             aria-label={t('sleepFadeStop')}
                             title={t('sleepFadeStop')}

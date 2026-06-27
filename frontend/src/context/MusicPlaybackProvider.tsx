@@ -57,6 +57,9 @@ export const MusicPlaybackProvider = ({ children }: PropsWithChildren) => {
     const [sleepFadeDurationMinutes, setSleepFadeDurationMinutesState] = useState(
         loadStoredSleepFadeDurationMinutes
     );
+    const [sleepFadeStartedAt, setSleepFadeStartedAt] = useState<number | null>(() =>
+        loadStoredSleepFadeEnabled() ? Date.now() : null
+    );
     const [equalizerPreviewBands, setEqualizerPreviewBands] = useState<EqualizerBand[] | null>(
         null
     );
@@ -135,6 +138,9 @@ export const MusicPlaybackProvider = ({ children }: PropsWithChildren) => {
 
     const pauseRef = useRef<() => void>(() => {});
     const onSleepFadeComplete = useCallback(() => {
+        setSleepFadeStartedAt(null);
+        setSleepFadeEnabledState(false);
+        localStorage.setItem(SLEEP_FADE_STORAGE_KEY, 'false');
         pauseRef.current();
     }, []);
 
@@ -148,6 +154,7 @@ export const MusicPlaybackProvider = ({ children }: PropsWithChildren) => {
         bands: activeEqualizerBands,
         isSleepPreset,
         sleepFadeEnabled,
+        sleepFadeStartedAt,
         sleepFadeDurationMs,
         volume,
         isPlaying,
@@ -207,13 +214,26 @@ export const MusicPlaybackProvider = ({ children }: PropsWithChildren) => {
             setEqualizerPresetState('sleep');
             localStorage.setItem(EQUALIZER_PRESET_STORAGE_KEY, 'sleep');
             setSleepFadeEnabled(true);
+            setSleepFadeStartedAt(Date.now());
         },
         [setSleepFadeEnabled]
     );
 
     const stopSleepFade = useCallback(() => {
         setSleepFadeEnabled(false);
+        setSleepFadeStartedAt(null);
     }, [setSleepFadeEnabled]);
+
+    const prevSleepFadeDurationMsRef = useRef(sleepFadeDurationMs);
+    useEffect(() => {
+        if (
+            sleepFadeEnabled &&
+            prevSleepFadeDurationMsRef.current !== sleepFadeDurationMs
+        ) {
+            setSleepFadeStartedAt(Date.now());
+        }
+        prevSleepFadeDurationMsRef.current = sleepFadeDurationMs;
+    }, [sleepFadeDurationMs, sleepFadeEnabled]);
 
     const internalLoadTrack = useCallback(
         (track: MusicPlaybackTrack, autoPlay = false) => {
@@ -440,7 +460,9 @@ export const MusicPlaybackProvider = ({ children }: PropsWithChildren) => {
         setCurrentIndex(-1);
         originalQueueRef.current = [];
         resetSleepFadeSession();
-    }, [currentTrack, currentTime, stopPlayback, resetSleepFadeSession]);
+        setSleepFadeStartedAt(null);
+        setSleepFadeEnabled(false);
+    }, [currentTrack, currentTime, stopPlayback, resetSleepFadeSession, setSleepFadeEnabled]);
 
     useMediaSession({
         track: currentTrack,
@@ -475,6 +497,7 @@ export const MusicPlaybackProvider = ({ children }: PropsWithChildren) => {
         startSleepFade,
         stopSleepFade,
         sleepFadeDurationMinutes,
+        sleepFadeStartedAt,
         equalizerAvailable,
         shuffle,
         toggleShuffle,

@@ -13,6 +13,7 @@ interface UseAudioEqualizerOptions {
     bands: EqualizerBand[];
     isSleepPreset: boolean;
     sleepFadeEnabled: boolean;
+    sleepFadeStartedAt: number | null;
     sleepFadeDurationMs: number;
     volume: number;
     isPlaying: boolean;
@@ -41,13 +42,13 @@ export function useAudioEqualizer({
     bands,
     isSleepPreset,
     sleepFadeEnabled,
+    sleepFadeStartedAt,
     sleepFadeDurationMs,
     volume,
     isPlaying,
     onSleepFadeComplete,
 }: UseAudioEqualizerOptions) {
     const graphRef = useRef<EqualizerGraph | null>(null);
-    const sleepFadeStartedAtRef = useRef<number | null>(null);
     const sleepFadeCompletedRef = useRef(false);
     const fadeFrameRef = useRef<number | null>(null);
     const initAttemptedRef = useRef(false);
@@ -169,23 +170,17 @@ export function useAudioEqualizer({
     );
 
     const getFadeProgress = useCallback(() => {
-        if (!sleepFadeStartedAtRef.current) return 0;
-        const elapsed = Date.now() - sleepFadeStartedAtRef.current;
+        if (!sleepFadeStartedAt) return 0;
+        const elapsed = Date.now() - sleepFadeStartedAt;
         return Math.min(1, elapsed / sleepFadeDurationMs);
-    }, [sleepFadeDurationMs]);
+    }, [sleepFadeDurationMs, sleepFadeStartedAt]);
 
     const resetSleepFadeSession = useCallback(() => {
-        sleepFadeStartedAtRef.current = null;
         sleepFadeCompletedRef.current = false;
         if (fadeFrameRef.current !== null) {
             cancelAnimationFrame(fadeFrameRef.current);
             fadeFrameRef.current = null;
         }
-    }, []);
-
-    const startSleepFadeSession = useCallback(() => {
-        sleepFadeCompletedRef.current = false;
-        sleepFadeStartedAtRef.current = Date.now();
     }, []);
 
     const updateSleepFade = useCallback(() => {
@@ -208,26 +203,10 @@ export function useAudioEqualizer({
     ]);
 
     useEffect(() => {
-        if (isSleepPreset && sleepFadeEnabled) {
-            if (sleepFadeStartedAtRef.current === null) {
-                startSleepFadeSession();
-            }
-        } else {
+        if (!sleepFadeEnabled) {
             resetSleepFadeSession();
         }
-    }, [isSleepPreset, sleepFadeEnabled, resetSleepFadeSession, startSleepFadeSession]);
-
-    useEffect(() => {
-        if (!isSleepPreset || !sleepFadeEnabled) return;
-        resetSleepFadeSession();
-        startSleepFadeSession();
-    }, [
-        sleepFadeDurationMs,
-        isSleepPreset,
-        sleepFadeEnabled,
-        resetSleepFadeSession,
-        startSleepFadeSession,
-    ]);
+    }, [sleepFadeEnabled, resetSleepFadeSession]);
 
     useEffect(() => {
         initGraph();
@@ -238,6 +217,7 @@ export function useAudioEqualizer({
         bands,
         isSleepPreset,
         sleepFadeEnabled,
+        sleepFadeStartedAt,
         volume,
         applyBands,
         applyVolume,
@@ -246,7 +226,7 @@ export function useAudioEqualizer({
     ]);
 
     useEffect(() => {
-        if (!isPlaying || !isSleepPreset || !sleepFadeEnabled) {
+        if (!isPlaying || !isSleepPreset || !sleepFadeEnabled || !sleepFadeStartedAt) {
             if (fadeFrameRef.current !== null) {
                 cancelAnimationFrame(fadeFrameRef.current);
                 fadeFrameRef.current = null;
@@ -267,7 +247,7 @@ export function useAudioEqualizer({
                 fadeFrameRef.current = null;
             }
         };
-    }, [isPlaying, isSleepPreset, sleepFadeEnabled, updateSleepFade]);
+    }, [isPlaying, isSleepPreset, sleepFadeEnabled, sleepFadeStartedAt, updateSleepFade]);
 
     return {
         equalizerAvailable,
