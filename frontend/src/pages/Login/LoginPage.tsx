@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@radix-ui/react-label';
-import { Server, TriangleAlert, User } from 'lucide-react';
+import { Info, Server, TriangleAlert, User } from 'lucide-react';
 import { jellyfin } from '@/api/jellyfinClient';
 import { useLogin } from '@/hooks/api/useLogin';
 import {
@@ -20,6 +20,9 @@ import { getServerUrl, saveServerUrl } from '@/utils/localstorageCredentials';
 import { useServerBranding } from '../../hooks/api/useServerBranding';
 import DOMPurify from 'dompurify';
 
+const DEMO_SERVER_URL = 'https://jellyfin.streamyfin.app';
+const DEMO_USERNAME = 'pelagica';
+
 const Disclaimer = ({ text }: { text: string | null | undefined }) => {
     if (!text) return null;
     const sanitized = DOMPurify.sanitize(text);
@@ -32,8 +35,12 @@ const Disclaimer = ({ text }: { text: string | null | undefined }) => {
 };
 
 const LoginPage = () => {
+    const isDemo = import.meta.env.VITE_IS_DEMO === 'true';
+
     const { config } = useConfig();
-    const [serverUrl, setServerUrl] = useState<string>(() => getServerUrl() || '');
+    const [serverUrl, setServerUrl] = useState<string>(() =>
+        isDemo ? DEMO_SERVER_URL : getServerUrl() || ''
+    );
     const { data: branding } = useServerBranding(serverUrl);
     const navigate = useNavigate();
     const { t } = useTranslation('login');
@@ -66,7 +73,14 @@ const LoginPage = () => {
     const [splashScreenUrl, setSplashScreenUrl] = useState<string | null>(serverUrl);
 
     useEffect(() => {
+        if (isDemo) {
+            saveServerUrl(DEMO_SERVER_URL);
+        }
+    }, [isDemo]);
+
+    useEffect(() => {
         if (!serverUrl) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSplashScreenUrl(null);
             return;
         }
@@ -87,6 +101,7 @@ const LoginPage = () => {
                 return;
             }
             saveServerUrl(config.serverAddress);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setServerUrl(config.serverAddress);
             setStep('login');
             setServerCheckError(null);
@@ -96,7 +111,7 @@ const LoginPage = () => {
     const initiateQuickConnect = useCallback(async () => {
         setQuickConnectError(null);
         try {
-            const server = serverUrl || '';
+            const server = getServerUrl() || '';
             const result = await quickConnectInitiate.mutateAsync(server);
 
             if (result.Code && result.Secret) {
@@ -121,7 +136,7 @@ const LoginPage = () => {
         setLoggingIn(true);
 
         try {
-            const server = serverUrl || '';
+            const server = getServerUrl() || '';
             await quickConnectAuthenticate.mutateAsync({ server, secret: quickConnectSecret });
 
             console.log('Quick Connect login successful');
@@ -132,14 +147,7 @@ const LoginPage = () => {
             setQuickConnectApproved(false);
             setLoggingIn(false);
         }
-    }, [
-        quickConnectSecret,
-        quickConnectApproved,
-        serverUrl,
-        quickConnectAuthenticate,
-        navigate,
-        t,
-    ]);
+    }, [quickConnectSecret, quickConnectApproved, quickConnectAuthenticate, navigate, t]);
 
     useEffect(() => {
         if (step === 'quickconnect' && !quickConnectCode && !initiatingQuickConnectRef.current) {
@@ -152,6 +160,7 @@ const LoginPage = () => {
 
     useEffect(() => {
         if (quickConnectStatus.data?.Authenticated) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             handleQuickConnectAuthenticated();
         }
     }, [quickConnectStatus.data, handleQuickConnectAuthenticated]);
@@ -253,6 +262,7 @@ const LoginPage = () => {
                     </div>
                 ) : undefined
             }
+            showHeader={false}
         >
             {step === 'server' && (
                 <Card className="max-w-md w-full mx-auto -translate-y-12">
@@ -313,6 +323,12 @@ const LoginPage = () => {
                         <CardDescription>{t('enter_credentials')}</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        {isDemo && (
+                            <div className="mb-4 flex items-start gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                                <Info size={16} className="mt-0.5 shrink-0" />
+                                <p className="text-sm">{t('demo_warning')}</p>
+                            </div>
+                        )}
                         <form onSubmit={onSubmitLogin}>
                             <Label htmlFor="username" className="mb-2 block font-medium">
                                 {t('username')}
@@ -323,6 +339,7 @@ const LoginPage = () => {
                                 placeholder={t('username')}
                                 className="mb-4 w-full"
                                 autoFocus
+                                defaultValue={isDemo ? DEMO_USERNAME : undefined}
                             />
                             <Label htmlFor="password" className="mb-2 block font-medium">
                                 {t('password')}
@@ -360,7 +377,6 @@ const LoginPage = () => {
                                 {t('back_to_server')}
                             </Button>
                         </form>
-
                         <Disclaimer text={branding?.LoginDisclaimer} />
                     </CardContent>
                 </Card>

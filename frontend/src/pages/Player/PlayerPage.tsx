@@ -6,8 +6,8 @@ import { useParams } from 'react-router';
 import VideoPlayer, { type SubtitleTrack } from '@/pages/Player/VideoPlayer';
 import PlayerControls from '@/pages/Player/PlayerControls';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getPrimaryImageUrl, getVideoStreamUrl, getSubtitleUrl, getStaticStreamUrl } from '@/utils/jellyfinUrls';
-import { generateRandomId } from '@/utils/idGenerator';
+import { getPrimaryImageUrl, getSubtitleUrl, getPlaybackStreamUrl } from '@/utils/jellyfinUrls';
+import { usePlaybackInfo } from '@/hooks/api/usePlaybackInfo';
 import { useMediaSegments } from '@/hooks/api/useMediaSegments';
 import { useAdjacentItems } from '@/hooks/api/useAdjacentItems';
 import { getUserId } from '@/utils/localstorageCredentials';
@@ -84,7 +84,6 @@ const PlayerPage = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const progressReportingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
     const lastPositionRef = useRef<number>(0);
-    const [playSessionId, setPlaySessionId] = useState<string>(generateRandomId());
     const isAudioSwitchRef = useRef(false);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const {
@@ -97,6 +96,26 @@ const PlayerPage = () => {
         isLoading: isLoadingMediaSegments,
         error: mediaSegmentsError,
     } = useMediaSegments(itemId);
+    const {
+        data: playbackInfo,
+        isLoading: isLoadingPlaybackInfo,
+        error: playbackInfoError,
+    } = usePlaybackInfo(itemId, getUserId() || undefined, audioTrackIndex);
+
+    const playSessionId = playbackInfo?.playSessionId || '';
+
+    const streamResult = useMemo(() => {
+        if (!itemId || !playbackInfo) return null;
+
+        return getPlaybackStreamUrl(itemId, playbackInfo.playMethod, {
+            playSessionId: playbackInfo.playSessionId,
+            audioStreamIndex: audioTrackIndex,
+            mediaSourceId: playbackInfo.mediaSource.Id || undefined,
+            container: playbackInfo.mediaSource.Container?.split(',')[0] || undefined,
+            transcodingUrl: playbackInfo.mediaSource.TranscodingUrl,
+        });
+    }, [itemId, playbackInfo, audioTrackIndex]);
+
     const { reportProgress } = useReportPlaybackProgress();
     const { startPlayback } = usePlaybackStart();
     const { stopPlayback } = usePlaybackStop();
@@ -113,10 +132,6 @@ const PlayerPage = () => {
         };
     }, []);
 
-    useEffect(() => {
-        console.log('Subtitle track index:', subtitleTrackIndex);
-    }, [subtitleTrackIndex]);
-
     // Reset everything when navigating to a new item
     useEffect(() => {
         queueMicrotask(() => {
@@ -127,7 +142,6 @@ const PlayerPage = () => {
             setPlayer(null);
             setAudioTrackIndex(resolvedAudio.index);
             setSubtitleTrackIndex(resolvedSubtitleTrackIndex);
-            setPlaySessionId(generateRandomId());
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [itemId]);
@@ -139,6 +153,7 @@ const PlayerPage = () => {
         // Don't enable subtitles if the audio matched preferred language
         if (resolvedAudio.matchedPreferred) return;
 
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSubtitleTrackIndex(resolvedSubtitleTrackIndex);
     }, [resolvedSubtitleTrackIndex, resolvedAudio.matchedPreferred]);
 
@@ -234,7 +249,6 @@ const PlayerPage = () => {
     const handleAudioTrackChange = (index: number) => {
         isAudioSwitchRef.current = true;
         hasUserSelectedAudioRef.current = true;
-        setPlaySessionId(generateRandomId());
         setAudioTrackIndex(index);
     };
 
@@ -274,54 +288,36 @@ const PlayerPage = () => {
         );
     }, [item]);
 
-    const videoSrc = useMemo(() => {
-        if (!item) return '';
-
-        const mediaSource = item.MediaSources?.[0];
-        const isStrm = !!(
-            item.Path?.toLowerCase().endsWith('.strm') ||
-            mediaSource?.Path?.toLowerCase().endsWith('.strm')
-        );
-
-        // 网盘挂载资源（以 .strm 结尾）强制启用 Static 直链免转码播放，
-        // 对于本地存储的常规视频（.mkv/.mp4 等），仍遵循原厂判定是否支持直连（优先原画，不兼容时自动转码）
-        const supportsDirect = mediaSource
-            ? (isStrm ? true : (mediaSource.SupportsDirectPlay || mediaSource.SupportsDirectStream))
-            : false;
-
-        if (supportsDirect) {
-            return getStaticStreamUrl(itemId!);
-        }
-
-        // 不支持直连的原常规本地视频，走原装的 getVideoStreamUrl 接口由 Emby 进行自适应转码切片
-        return getVideoStreamUrl(itemId!, {
-            audioStreamIndex: audioTrackIndex,
-            playSessionId: playSessionId,
-        });
-    }, [item, itemId, audioTrackIndex, playSessionId]);
-
     if (
         isLoading ||
         isLoadingMediaSegments ||
         isLoadingAdjacentItems ||
-        isLoadingUserConfiguration
+        isLoadingUserConfiguration ||
+        isLoadingPlaybackInfo
     ) {
         return <p>Loading...</p>;
     }
 
-    if (error || mediaSegmentsError || adjacentItemsError || userConfigurationError) {
+    if (
+        error ||
+        mediaSegmentsError ||
+        adjacentItemsError ||
+        userConfigurationError ||
+        playbackInfoError
+    ) {
         return (
             <p>
                 Error loading item:{' '}
                 {error?.message ||
                     mediaSegmentsError?.message ||
                     adjacentItemsError?.message ||
-                    userConfigurationError?.message}
+                    userConfigurationError?.message ||
+                    playbackInfoError?.message}
             </p>
         );
     }
 
-    if (!item) {
+    if (!item || !streamResult) {
         return <p>Item not found</p>;
     }
 
@@ -329,7 +325,8 @@ const PlayerPage = () => {
         <div ref={containerRef} className="relative w-full h-screen bg-black flex overflow-hidden">
             <VideoPlayer
                 key={itemId}
-                src={videoSrc}
+                src={streamResult.url}
+                srcType={streamResult.mimeType}
                 poster={posterUrl}
                 onReady={setPlayer}
                 startTicks={item.UserData?.PlaybackPositionTicks || 0}
@@ -349,7 +346,7 @@ const PlayerPage = () => {
                 mediaSegments={mediaSegments}
                 previousItem={adjacentItems?.previousItem}
                 nextItem={adjacentItems?.nextItem}
-                srcUrl={videoSrc}
+                srcUrl={streamResult.url}
                 containerRef={containerRef}
             />
         </div>

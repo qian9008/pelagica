@@ -9,12 +9,13 @@ import {
 import { useSearch } from '@/context/SearchContext';
 import { useSearchItems } from '@/hooks/api/useSearchItems';
 import { useNavigate } from 'react-router';
-import { getPrimaryImageUrl } from '@/utils/jellyfinUrls';
+
 import { Skeleton } from './ui/skeleton';
 import { Calendar, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import JellyfinItemKindIcon from './JellyfinItemKindIcon';
 import { Badge } from './ui/badge';
+import { getPrimaryImageUrl } from '../utils/jellyfinUrls';
 
 export const SearchCommand = () => {
     const { t } = useTranslation('search');
@@ -54,17 +55,23 @@ export const SearchCommand = () => {
 
     const posterUrls = useMemo(() => {
         if (!results) return {};
-        return results.reduce(
-            (acc, item) => {
-                acc[item.Id!] = getPrimaryImageUrl(
-                    item.Id!,
-                    { maxWidth: 96, maxHeight: 144, quality: 85 },
-                    item.ImageTags?.Primary
-                );
-                return acc;
-            },
-            {} as Record<string, string>
-        );
+        try {
+            return results.reduce(
+                (acc, item) => {
+                    acc[item.Id!] =
+                        getPrimaryImageUrl(
+                            item.Id!,
+                            { maxWidth: 96, maxHeight: 144, quality: 85 },
+                            item.ImageTags?.Primary
+                        ) || '';
+                    return acc;
+                },
+                {} as Record<string, string>
+            );
+        } catch {
+            // if not authenticated return empty object
+            return {};
+        }
     }, [results]);
 
     return (

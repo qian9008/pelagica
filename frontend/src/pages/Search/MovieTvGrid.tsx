@@ -14,7 +14,15 @@ interface MovieTvGridProps {
 const MovieTvItem = ({ item }: { item: BaseItemDto }) => {
     const { config } = useConfig();
     const [posterError, setPosterError] = useState(false);
-    const posterUrl = getPrimaryImageUrl(item.Id || '', { maxWidth: 416, maxHeight: 640, quality: 85 }, item.ImageTags?.Primary);
+    const posterUrl = getPrimaryImageUrl(
+        item.Id || '',
+        {
+            maxWidth: 416,
+            maxHeight: 640,
+        },
+        item.ImageTags?.Primary,
+        85
+    );
     const posterAspectRatio = '2/3';
 
     return (
@@ -40,6 +48,7 @@ const MovieTvItem = ({ item }: { item: BaseItemDto }) => {
                     </div>
                 )}
                 <WatchedStateBadge item={item} show={config?.watchedStateBadgeSearch || false} />
+                <div className="absolute inset-0 rounded-md pointer-events-none poster-card-outline z-20" />
             </div>
             <p className="mt-2 text-sm line-clamp-1 text-ellipsis break-all">
                 {item.Name || 'No Title'}

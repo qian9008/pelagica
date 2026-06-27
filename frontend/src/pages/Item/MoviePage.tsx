@@ -1,9 +1,7 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 import BaseMediaPage from './BaseMediaPage';
-import { useTitleDisplayMode, getItemDisplayName } from '@/hooks/useTitleDisplayMode';
-import DescriptionItem from './DescriptionItem';
-import { getPrimaryImageUrl } from '@/utils/jellyfinUrls';
-import { ImageOff, Play, Share2 } from 'lucide-react';
+import { getPrimaryImageUrl, getLogoUrl } from '@/utils/jellyfinUrls';
+import { ImageOff, Share2 } from 'lucide-react';
 import PeopleRow from './PeopleRow';
 import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
@@ -24,6 +22,8 @@ import ItemDownloadButton from '../../components/ItemDownloadButton';
 import SourcePickerButton from '@/components/SourcePickerButton';
 import ShareDialog from '@/components/ShareDialog';
 import ExternalPlayerButton from '@/components/ExternalPlayerButton';
+import ItemMetadataBadges from './ItemMetadataBadges';
+import Overview from './Overview';
 
 interface MoviePageProps {
     item: BaseItemDto;
@@ -34,16 +34,8 @@ const MoviePage = ({ item, config }: MoviePageProps) => {
     const { t } = useTranslation('item');
     const [postersFailed, setPostersFailed] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
-    const [titleMode] = useTitleDisplayMode();
-
-    const writers =
-        item.People?.filter((person) => person.Type === 'Writer').filter((person) => person.Name) ||
-        [];
-    const directors =
-        item.People?.filter((person) => person.Type === 'Director').filter(
-            (person) => person.Name
-        ) || [];
-    const studios = item.Studios?.filter((studio) => studio.Name) || [];
+    const [isPosterLoaded, setIsPosterLoaded] = useState(false);
+    const [failedLogo, setFailedLogo] = useState(false);
 
     const watched = item.UserData?.PlaybackPositionTicks ?? 0;
     const runtime = item.RunTimeTicks ?? 0;
@@ -76,6 +68,7 @@ const MoviePage = ({ item, config }: MoviePageProps) => {
     const isLandscape = item.PrimaryImageAspectRatio && item.PrimaryImageAspectRatio > 1;
 
     return (
+<<<<<<< HEAD
         <BaseMediaPage itemId={item.Id || ''} name={item.Name || ''}>
             <div className="flex flex-col md:flex-row gap-6 max-w-7xl">
                 {!postersFailed ? (
@@ -235,26 +228,116 @@ const MoviePage = ({ item, config }: MoviePageProps) => {
                         label={t('directors')}
                         items={directors.map((person) => ({
                             link: `/person/${person.Id}`,
-                            name: person.Name!,
-                        }))}
-                    />
-                    <DescriptionItem
-                        label={t('studios')}
-                        items={studios.map((studio) => ({
-                            link: `/item/${studio.Id}`,
-                            name: studio.Name!,
-                        }))}
-                    />
+        <BaseMediaPage
+            itemId={item.Id || ''}
+            name={item.Name || ''}
+            showLogo={false}
+            topPadding={false}
+        >
+            <div className="pt-24 sm:pt-32 pb-12 mx-auto w-full flex flex-col gap-12">
+                <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start relative z-10 w-full">
+                    {/* Left Column (Poster) */}
+                    <div className="w-48 sm:w-64 md:w-72 lg:w-80 shrink-0 mx-auto lg:mx-0">
+                        <div className="relative aspect-2/3 w-full rounded-xl overflow-hidden shadow-2xl shadow-black/85 border border-white/10 bg-muted flex items-center justify-center">
+                            {!postersFailed ? (
+                                <>
+                                    <Skeleton className="absolute inset-0 w-full h-full rounded-xl" />
+                                    <img
+                                        src={getPrimaryImageUrl(
+                                            item.Id || '',
+                                            { width: 640, height: 960 },
+                                            item.ImageTags?.Primary
+                                        )}
+                                        alt={item.Name + ' Primary'}
+                                        className={[
+                                            'object-cover rounded-xl w-full h-full relative z-10',
+                                            'transition-[filter,opacity] duration-700 ease-out',
+                                            isPosterLoaded
+                                                ? 'blur-0 opacity-100'
+                                                : 'blur-md opacity-0',
+                                        ].join(' ')}
+                                        onLoad={() => setIsPosterLoaded(true)}
+                                        onError={() => setPostersFailed(true)}
+                                    />
+                                </>
+                            ) : (
+                                <ImageOff className="text-muted-foreground w-12 h-12" />
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Right Column (Details) */}
+                    <div className="flex-1 flex flex-col gap-5 w-full text-left">
+                        {/* Title Logo / Text */}
+                        {!failedLogo && item.Id ? (
+                            <img
+                                src={getLogoUrl(item.Id, { maxHeight: 150 }, item.ImageTags?.Logo)}
+                                alt={item.Name || ''}
+                                className="h-16 sm:h-24 md:h-28 max-w-[85%] object-contain object-left mb-2"
+                                onError={() => setFailedLogo(true)}
+                            />
+                        ) : (
+                            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-2 text-wrap balance">
+                                {item.Name}
+                            </h1>
+                        )}
+
+                        {/* Badges */}
+                        <DetailBadges item={item} appConfig={config} />
+
+                        {/* Actions */}
+                        <div className="flex flex-wrap gap-2.5 items-center mt-2">
+                            <SourcePickerButton
+                                itemId={item.Id || ''}
+                                mediaSources={item.MediaSources}
+                                isCurrentlyPlaying={Boolean(isCurrentlyPlaying)}
+                                playLabel={t('play')}
+                                resumeLabel={t('resume')}
+                            />
+                            <ExternalPlayerButton item={item} />
+                            <TrailerButton item={item} />
+                            <FavoriteButton
+                                item={item}
+                                showFavoriteButton={
+                                    item.Type &&
+                                    config.itemPage?.favoriteButton?.includes(item.Type)
+                                }
+                            />
+                            <WatchListButton
+                                item={item}
+                                showWatchlistButton={config.itemPage?.showWatchlistButton}
+                            />
+                            <PlayStateButton itemId={item.Id || ''} userId={getUserId() || ''} />
+                            <ItemDownloadButton
+                                item={item}
+                                showDownloadButton={config.itemPage?.showDownloadButton}
+                            />
+                            <Button
+                                size={'icon-lg'}
+                                variant={'outline'}
+                                onClick={() => setShareOpen(true)}
+                            >
+                                <Share2 />
+                            </Button>
+                            <MediaInfoDialog streams={item.MediaStreams || []} path={item.Path} />
+                            <ItemAdminButton item={item} showSubtitlesButton={true} />
+                        </div>
+
+                        <Overview text={item.Overview || ''} />
+
+                        <ItemMetadataBadges item={item} />
+                    </div>
                 </div>
+
+                <PeopleRow
+                    title={<h3 className="text-3xl font-bold">{t('cast_and_crew')}</h3>}
+                    people={item.People || []}
+                />
+                <MoreLikeThisRow
+                    title={<h3 className="text-3xl font-bold">{t('more_like_this')}</h3>}
+                    itemId={item.Id || ''}
+                />
             </div>
-            <PeopleRow
-                title={<h3 className="text-3xl font-bold">{t('cast_and_crew')}</h3>}
-                people={item.People || []}
-            />
-            <MoreLikeThisRow
-                title={<h3 className="text-3xl font-bold">{t('cast_and_crew')}</h3>}
-                itemId={item.Id || ''}
-            />
             <ShareDialog
                 open={shareOpen}
                 onOpenChange={setShareOpen}
