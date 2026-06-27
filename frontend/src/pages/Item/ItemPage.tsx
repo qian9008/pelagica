@@ -85,7 +85,7 @@ const ItemPageSkeleton = memo(() => {
 
 ItemPageSkeleton.displayName = 'ItemPageSkeleton';
 
-const FULL_PAGE_ITEM_TYPES: BaseItemKind[] = ['Movie', 'Series', 'Episode', 'Season', 'BoxSet'];
+const FULL_PAGE_ITEM_TYPES: BaseItemKind[] = ['Movie', 'Series', 'Episode', 'Season', 'BoxSet', 'Video', 'MusicVideo'];
 
 const REDIRECT_ITEM_TYPES: Partial<Record<BaseItemKind, string>> = {
     Person: '/person',
@@ -124,6 +124,8 @@ const ItemPage = () => {
                 (() => {
                     switch (item.Type) {
                         case 'Movie':
+                        case 'Video':
+                        case 'MusicVideo':
                             return <MoviePage item={item} config={config} />;
                         case 'Series':
                             return <SeriesPage item={item} config={config} />;
