@@ -42,7 +42,7 @@ import type { ItemSortBy, SortOrder } from '@jellyfin/sdk/lib/generated-client/m
 import { MetadataRefreshMode } from '@jellyfin/sdk/lib/generated-client/models';
 import { ButtonGroup } from '@/components/ui/button-group';
 import LibraryItem from './LibraryItem';
-import { SUPPORTED_LIBRARY_COLLECTION_TYPES } from '@/utils/supportedLibraryCollectionTypes';
+import { SUPPORTED_LIBRARY_COLLECTION_TYPES } from '@/utils/itemTypes';
 import { getPrimaryImageUrl, getBackdropUrl } from '@/utils/jellyfinUrls';
 import { useCurrentUser } from '@/hooks/api/useCurrentUser';
 import { useRefreshItemMetadata } from '@/hooks/api/useRefreshItemMetadata';

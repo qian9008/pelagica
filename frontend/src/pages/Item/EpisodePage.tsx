@@ -25,12 +25,9 @@ import ItemAdminButton from '@/components/ItemAdminButton';
 import ItemDownloadButton from '../../components/ItemDownloadButton';
 import SourcePickerButton from '@/components/SourcePickerButton';
 import { Link } from 'react-router';
-<<<<<<< HEAD
 import ExternalPlayerButton from '@/components/ExternalPlayerButton';
-=======
 import { Skeleton } from '@/components/ui/skeleton';
 import Overview from './Overview';
->>>>>>> upstream/main
 
 interface EpisodePageProps {
     item: BaseItemDto;
