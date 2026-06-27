@@ -124,6 +124,7 @@ const PlayerControls = ({
 }: PlayerControlsProps) => {
     const { t } = useTranslation('player');
     const [isPlaying, setIsPlaying] = useState(false);
+    const [playbackRate, setPlaybackRate] = useState(1);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(() => {
         return item.RunTimeTicks ? ticksToSeconds(item.RunTimeTicks) : 0;
@@ -253,6 +254,10 @@ const PlayerControls = ({
             navigate(buildPlayerUrl(nextItem.Id!, backUrl ?? undefined));
         };
 
+        const handleRateChange = () => {
+            setPlaybackRate(player.playbackRate() || 1);
+        };
+
         // PiP event listeners
         const videoEl = player.el()?.querySelector('video');
         const handleEnterPiP = () => setIsPiP(true);
@@ -271,6 +276,7 @@ const PlayerControls = ({
         player.on('progress', updateBuffered);
         player.on('volumechange', updateMuted);
         player.on('ended', handleEnded);
+        player.on('ratechange', handleRateChange);
 
         return () => {
             player.off('play', updatePlayState);
@@ -282,6 +288,7 @@ const PlayerControls = ({
             player.off('progress', updateBuffered);
             player.off('volumechange', updateMuted);
             player.off('ended', handleEnded);
+            player.off('ratechange', handleRateChange);
 
             if (videoEl) {
                 videoEl.removeEventListener('enterpictureinpicture', handleEnterPiP);
@@ -297,6 +304,7 @@ const PlayerControls = ({
         navigate,
         markItemAsCompleted,
         backUrl,
+        playbackRate,
     ]);
 
     const togglePlay = useCallback(() => {

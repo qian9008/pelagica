@@ -61,8 +61,9 @@ export const SearchCommand = () => {
                     acc[item.Id!] =
                         getPrimaryImageUrl(
                             item.Id!,
-                            { maxWidth: 96, maxHeight: 144, quality: 85 },
-                            item.ImageTags?.Primary
+                            { maxWidth: 96, maxHeight: 144 },
+                            item.ImageTags?.Primary,
+                            85
                         ) || '';
                     return acc;
                 },

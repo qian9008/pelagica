@@ -1,9 +1,8 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 import BaseMediaPage from './BaseMediaPage';
+import PeopleRow from './PeopleRow';
 import { getPrimaryImageUrl, getLogoUrl } from '@/utils/jellyfinUrls';
 import { ImageOff, Share2 } from 'lucide-react';
-import PeopleRow from './PeopleRow';
-import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,33 +38,7 @@ const MoviePage = ({ item, config }: MoviePageProps) => {
 
     const watched = item.UserData?.PlaybackPositionTicks ?? 0;
     const runtime = item.RunTimeTicks ?? 0;
-    const progress = runtime > 0 ? (watched / runtime) * 100 : 0;
     const isCurrentlyPlaying = watched > 0 && runtime > 0 && watched < runtime;
-
-    const getFilename = (path?: string | null) => {
-        if (!path) return '';
-        const parts = path.split(/[/\\]/);
-        return parts[parts.length - 1];
-    };
-
-    const formatSize = (bytes?: number | null) => {
-        if (!bytes) return '';
-        if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(2)} GB`;
-        return `${(bytes / 1e6).toFixed(1)} MB`;
-    };
-
-    const formatBitrate = (bitrate?: number | null) => {
-        if (!bitrate) return '';
-        return `${(bitrate / 1e6).toFixed(1)} Mbps`;
-    };
-
-    const filename = getFilename(item.Path || item.MediaSources?.[0]?.Path);
-    const videoSize = formatSize(item.MediaSources?.[0]?.Size);
-    const bitrateStr = formatBitrate(item.MediaSources?.[0]?.Bitrate);
-    const videoCodec = item.MediaStreams?.find((s) => s.Type === 'Video')?.Codec?.toUpperCase() || '';
-    const container = item.MediaSources?.[0]?.Container?.toUpperCase() || '';
-
-    const isLandscape = item.PrimaryImageAspectRatio && item.PrimaryImageAspectRatio > 1;
 
     return (
         <BaseMediaPage

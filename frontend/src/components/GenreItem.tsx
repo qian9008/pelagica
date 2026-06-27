@@ -15,11 +15,15 @@ const GenreItem = ({
     titleClassName?: string;
 }) => {
     const [posterError, setPosterError] = useState(false);
-    const posterUrl = getPrimaryImageUrl(genreWithItem.item?.Id || '', {
-        maxWidth: 416,
-        maxHeight: 640,
-        quality: 85,
-    });
+    const posterUrl = getPrimaryImageUrl(
+        genreWithItem.item?.Id || '',
+        {
+            maxWidth: 416,
+            maxHeight: 640,
+        },
+        undefined,
+        85
+    );
 
     return (
         <Link
