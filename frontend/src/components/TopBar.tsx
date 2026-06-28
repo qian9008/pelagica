@@ -573,7 +573,7 @@ const TopBar = ({ overlay = false }: { overlay?: boolean }) => {
             >
                 {/* Logo */}
                 <Link to="/" className="flex items-center gap-2 shrink-0">
-                    <Avatar className="h-7 w-7 p-0.5 rounded-md">
+                    <Avatar className="h-6 w-6 p-0.5 rounded-md">
                         <AvatarImage src={logoSrc} alt="logo" />
                         <AvatarFallback className="rounded-md text-xs">PE</AvatarFallback>
                     </Avatar>
