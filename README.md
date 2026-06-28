@@ -60,12 +60,12 @@ If you want to suggest new features or report bugs, please use the [GitHub Issue
       <img src="./.github/assets/library.webp" />
     </td>
     <td>
-      <img src="./.github/assets/series_page.webp" />
+      <img src="./.github/assets/series.webp" />
     </td>
   </tr>
   <tr>
     <td>
-      <img src="./.github/assets/episode_page.webp" />
+      <img src="./.github/assets/episode.webp" />
     </td>
     <td>
       <img src="./.github/assets/music.webp" />
