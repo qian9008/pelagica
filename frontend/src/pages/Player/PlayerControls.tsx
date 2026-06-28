@@ -770,6 +770,7 @@ const PlayerControls = ({
                                     </div>
                                 </div>
                             );
+                        })()}
                 </div>
                 {/* 进度条下方的两端时间显示 */}
                 <div className="flex justify-between items-center text-xs text-gray-400 mt-1.5 px-0.5 font-medium select-none pointer-events-none">
