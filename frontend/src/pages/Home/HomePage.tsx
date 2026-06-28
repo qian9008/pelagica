@@ -115,6 +115,7 @@ const HomePage = () => {
                                     title={index != 0 ? section.title : undefined}
                                     showFavoriteButton={section.showFavoriteButton}
                                     showWatchlistButton={section.showWatchlistButton}
+                                    autoPlayTrailers={section.autoPlayTrailers}
                                     fadeTop={index != 0}
                                 />
                             );

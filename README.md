@@ -219,6 +219,8 @@ task --list
 Issues and pull requests are welcome.
 Please open an issue to discuss larger changes before submitting a PR.
 
+> **Note:** All pull requests should be made against the `develop` branch, not `main`.
+
 ## What does that name mean?
 
 You might be wondering about the name "Pelagica". Since I didn't want to call it the usual "\*fin" or "jelly\*" names, I looked for synonyms related to the sea. "Pelagic" refers to living in the deep ocean, which felt fitting for a Jellyfin frontend.

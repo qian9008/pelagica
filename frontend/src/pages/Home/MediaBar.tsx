@@ -11,22 +11,24 @@ import {
 } from '@/components/ui/carousel';
 import { Skeleton } from '@/components/ui/skeleton';
 import WatchListButton from '@/components/WatchlistButton';
-import type { SectionItemsConfig } from '@/hooks/api/useConfig';
+import type { MediabarSize, SectionItemsConfig } from '@/hooks/api/useConfig';
 import { useMediaBarItems } from '@/hooks/api/useMediaBarItems';
 import { getBackdropUrl, getLogoUrl } from '@/utils/jellyfinUrls';
 import { getEndsAt, ticksToReadableTime } from '@/utils/timeConversion';
 import { Play, Star } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
+import { MediaBarTrailerControls, MediaBarTrailerVideo } from './MediaBarTrailer';
 
 interface MediaBarProps {
     className?: string;
     title?: string;
-    size?: 'small' | 'medium' | 'large' | 'xlarge';
+    size?: MediabarSize;
     itemsConfig?: SectionItemsConfig;
     showFavoriteButton?: boolean;
     showWatchlistButton?: boolean;
+    autoPlayTrailers?: boolean;
     fadeTop?: boolean;
 }
 
@@ -37,10 +39,14 @@ const MediaBar = ({
     title,
     showFavoriteButton,
     showWatchlistButton,
+    autoPlayTrailers,
     fadeTop,
 }: MediaBarProps) => {
     const { t } = useTranslation('home');
     const { data: mediabarItems, isLoading, isError } = useMediaBarItems(itemsConfig);
+    const [trailerPlaying, setTrailerPlaying] = useState(true);
+    const [trailerMuted, setTrailerMuted] = useState(true);
+    const [trailerReady, setTrailerReady] = useState<Set<string>>(new Set());
     const [logoErrors, setLogoErrors] = useState<Set<string>>(new Set());
     const [api, setApi] = useState<CarouselApi>();
     const [activeIndex, setActiveIndex] = useState(0);
@@ -57,6 +63,15 @@ const MediaBar = ({
     const handleLogoError = (itemId: string) => {
         setLogoErrors((prev) => new Set([...prev, itemId]));
     };
+
+    const handleTrailerCanPlay = useCallback((itemId: string, ready: boolean) => {
+        setTrailerReady((prev) => {
+            const next = new Set(prev);
+            if (ready) next.add(itemId);
+            else next.delete(itemId);
+            return next;
+        });
+    }, []);
 
     const outerSize =
         size === 'small'
@@ -87,12 +102,26 @@ const MediaBar = ({
                 {mediabarItems?.map((item, i) => (
                     <div
                         key={item.Id}
-                        className="absolute inset-0 bg-cover bg-center transition-opacity duration-700"
-                        style={{
-                            backgroundImage: `url('${getBackdropUrl(item.Id!, { maxWidth: 2560 }, item.ImageTags?.Backdrop)}')`,
-                            opacity: i === activeIndex ? 1 : 0,
-                        }}
-                    />
+                        className="absolute inset-0 transition-opacity duration-700"
+                        style={{ opacity: i === activeIndex ? 1 : 0 }}
+                    >
+                        <div
+                            className="absolute inset-0 bg-cover bg-center"
+                            style={{
+                                backgroundImage: `url('${getBackdropUrl(item.Id!, { maxWidth: 2560 }, item.ImageTags?.Backdrop)}')`,
+                            }}
+                        />
+                        {(item.LocalTrailerCount ?? 0) > 0 && autoPlayTrailers && (
+                            <MediaBarTrailerVideo
+                                item={item}
+                                active={i === activeIndex}
+                                playing={trailerPlaying}
+                                muted={trailerMuted}
+                                onMutedChange={setTrailerMuted}
+                                onCanPlayChange={(ready) => handleTrailerCanPlay(item.Id!, ready)}
+                            />
+                        )}
+                    </div>
                 ))}
 
                 {/* Side vignette */}
@@ -140,7 +169,14 @@ const MediaBar = ({
                                             <img
                                                 src={getLogoUrl(
                                                     item.Id!,
-                                                    { maxHeight: 400 },
+                                                    {
+                                                        fillWidth: Math.ceil(
+                                                            672 * window.devicePixelRatio
+                                                        ),
+                                                        fillHeight: Math.ceil(
+                                                            288 * window.devicePixelRatio
+                                                        ),
+                                                    },
                                                     item.ImageTags?.Logo
                                                 )}
                                                 alt={item.Name || 'Item Logo'}
@@ -242,6 +278,14 @@ const MediaBar = ({
                                                     item={item}
                                                     size={'icon-lg'}
                                                     variant={'outline'}
+                                                />
+                                            )}
+                                            {trailerReady.has(item.Id!) && autoPlayTrailers && (
+                                                <MediaBarTrailerControls
+                                                    playing={trailerPlaying}
+                                                    muted={trailerMuted}
+                                                    onPlayingChange={setTrailerPlaying}
+                                                    onMutedChange={setTrailerMuted}
                                                 />
                                             )}
                                         </div>
