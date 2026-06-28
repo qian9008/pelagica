@@ -150,7 +150,7 @@ export default function SharedLibraryPage() {
     }, [activeTab, page]);
 
     // 取消分享处理
-    const handleCancelShare = async (id: number) => {
+    const handleCancelShare = async (id: string | number) => {
         try {
             const res = await deleteShare(id);
             if (res.success) {

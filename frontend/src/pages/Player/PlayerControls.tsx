@@ -135,6 +135,7 @@ const PlayerControls = ({
         return saved ? parseFloat(saved) : 1;
     });
     const [isMuted, setIsMuted] = useState(false);
+    const [showVolumeBar, setShowVolumeBar] = useState(false);
     const [hoverTime, setHoverTime] = useState<number | null>(null);
     const [hoverPosition, setHoverPosition] = useState<number>(0);
     const [showControls, setShowControls] = useState(true);
@@ -769,7 +770,11 @@ const PlayerControls = ({
                                     </div>
                                 </div>
                             );
-                        })()}
+                </div>
+                {/* 进度条下方的两端时间显示 */}
+                <div className="flex justify-between items-center text-xs text-gray-400 mt-1.5 px-0.5 font-medium select-none pointer-events-none">
+                    <span className="tabular-nums">{formatPlayTime(clampedCurrentTime)}</span>
+                    <span className="tabular-nums">{formatPlayTime(duration)}</span>
                 </div>
 
                 {/* Controls */}
@@ -809,9 +814,6 @@ const PlayerControls = ({
                                 </Link>
                             </Button>
                         )}
-                        <div className="text-sm ml-2">
-                            {formatPlayTime(clampedCurrentTime)} / {formatPlayTime(duration)}
-                        </div>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -890,22 +892,81 @@ const PlayerControls = ({
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )}
-                        <Button
-                            variant={'ghost'}
-                            size={'icon-lg'}
-                            onClick={toggleMute}
-                            className="cursor-pointer"
+                        {/* 音量控制组合区域：支持悬停/触摸滑出音量条，音量条显示时点击图标切换静音 */}
+                        <div
+                            className="flex items-center h-10"
+                            onMouseEnter={() => setShowVolumeBar(true)}
+                            onMouseLeave={() => setShowVolumeBar(false)}
                         >
-                            {isMuted ? <VolumeX /> : <Volume2 />}
-                        </Button>
-                        <Slider
-                            min={0}
-                            max={1}
-                            step={0.1}
-                            value={isMuted ? [0] : [volume]}
-                            onValueChange={handleVolumeChange}
-                            className="w-25 cursor-pointer mr-2"
-                        />
+                            <Button
+                                variant={'ghost'}
+                                size={'icon-lg'}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (showVolumeBar) {
+                                        toggleMute();
+                                    } else {
+                                        setShowVolumeBar(true);
+                                    }
+                                }}
+                                className="cursor-pointer"
+                            >
+                                {isMuted ? <VolumeX /> : <Volume2 />}
+                            </Button>
+                            <div
+                                className={`flex items-center transition-all duration-300 ease-in-out ${
+                                    showVolumeBar
+                                        ? 'w-24 opacity-100 ml-2'
+                                        : 'w-0 opacity-0 overflow-hidden pointer-events-none'
+                                }`}
+                            >
+                                <Slider
+                                    min={0}
+                                    max={1}
+                                    step={0.1}
+                                    value={isMuted ? [0] : [volume]}
+                                    onValueChange={handleVolumeChange}
+                                    className="w-24 cursor-pointer mr-2"
+                                />
+                            </div>
+                        </div>
+                        {/* 播放速度控制 */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant={'ghost'}
+                                    size={'icon-lg'}
+                                    className="cursor-pointer text-sm font-semibold select-none"
+                                    title="播放速度"
+                                >
+                                    <span className="text-[13px]">{playbackRate}x</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-40 z-50">
+                                <DropdownMenuLabel>播放速度</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuRadioGroup
+                                    value={playbackRate.toString()}
+                                    onValueChange={(val) => setPlaybackRate(parseFloat(val))}
+                                >
+                                    <DropdownMenuRadioItem value="0.5">0.5x</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="0.75">
+                                        0.75x
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1">
+                                        1.0x (正常)
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1.25">
+                                        1.25x
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1.5">1.5x</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1.75">
+                                        1.75x
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="2">2.0x</DropdownMenuRadioItem>
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                         {document.pictureInPictureEnabled && (
                             <Button
                                 variant={'ghost'}

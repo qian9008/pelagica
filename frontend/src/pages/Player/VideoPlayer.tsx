@@ -48,13 +48,32 @@ const VideoPlayer = ({
             responsive: false,
             fluid: false,
             html5: {
-                nativeControlsForTouch: true,
+                nativeControlsForTouch: false,
                 hls: { overrideNative: true },
                 nativeTextTracks: false, // Force video.js to render text tracks
             },
         });
 
         playerRef.current = player;
+
+        // 自动隐藏大括号包裹的字幕样式代码（例如 {\fnMicrosoft YaHei...} 或 {\fnmirasoftyahei}）
+        player.textTracks().on('addtrack', (e: any) => {
+            const track = e.track;
+            if (track.kind === 'subtitles' || track.kind === 'captions') {
+                track.on('cuechange', () => {
+                    const activeCues = track.activeCues;
+                    if (activeCues) {
+                        for (let i = 0; i < activeCues.length; i++) {
+                            const cue = activeCues[i];
+                            if (cue && !(cue as any).cleaned) {
+                                cue.text = cue.text.replace(/\{[^}]+\}/g, '');
+                                (cue as any).cleaned = true;
+                            }
+                        }
+                    }
+                });
+            }
+        });
 
         player.ready(() => {
             onReady?.(player);
@@ -207,10 +226,38 @@ const VideoPlayer = ({
                 ref={videoRef}
                 className="video-js vjs-default-skin"
                 data-testid="video-player"
+                playsInline
+                webkit-playsinline="true"
                 style={{ maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' }}
             >
                 <track kind="captions" srcLang="en" label="English" />
             </video>
+            {/* 注入自定义字幕样式：透明背景，洋红描边与黑色深邃阴影 */}
+            <style>{`
+                .vjs-text-track-cue {
+                    background-color: transparent !important;
+                }
+                .vjs-text-track-cue > div {
+                    background-color: transparent !important;
+                    background: transparent !important;
+                    color: #ffffff !important;
+                    text-shadow: 
+                        -1.5px -1.5px 0 #ff00ff,  
+                         1.5px -1.5px 0 #ff00ff,
+                        -1.5px  1.5px 0 #ff00ff,
+                         1.5px  1.5px 0 #ff00ff,
+                        -2px  0px 1px #ff00ff,
+                         2px  0px 1px #ff00ff,
+                         0px -2px 1px #ff00ff,
+                         0px  2px 1px #ff00ff,
+                         2px  2px 3px rgba(0, 0, 0, 0.95),
+                        -2px  2px 3px rgba(0, 0, 0, 0.95),
+                         2px -2px 3px rgba(0, 0, 0, 0.95),
+                        -2px -2px 3px rgba(0, 0, 0, 0.95) !important;
+                    font-weight: bold !important;
+                    font-family: 'Microsoft YaHei', sans-serif !important;
+                }
+            `}</style>
         </div>
     );
 };

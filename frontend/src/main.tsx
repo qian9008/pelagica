@@ -27,6 +27,7 @@ const SearchPage = lazy(() => import('./pages/Search/SearchPage.tsx'));
 const ThemeBrowserPage = lazy(() => import('./pages/ThemeBrowser/ThemeBrowserPage.tsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFound/NotFoundPage.tsx'));
 const PhotoViewerPage = lazy(() => import('./pages/PhotoViewer/PhotoViewerPage.tsx'));
+const SharedLibraryPage = lazy(() => import('./pages/SharedLibrary/SharedLibraryPage.tsx'));
 const MusicLayout = lazy(() => import('./pages/Music/MusicLayout.tsx'));
 const MusicMainContent = lazy(() => import('./pages/Music/MusicMainContent.tsx'));
 const MusicAlbumView = lazy(() => import('./pages/Music/MusicAlbumView.tsx'));
@@ -52,6 +53,7 @@ createRoot(document.getElementById('root')!).render(
                             <Routes>
                                 <Route path="/" element={<HomePage />} />
                                 <Route path="/library" element={<LibraryPage />} />
+                                <Route path="/shared-library" element={<SharedLibraryPage />} />
                                 <Route path="/item/:itemId" element={<ItemPage />} />
                                 <Route path="/person/:itemId" element={<PersonPage />} />
                                 <Route path="/genre/:itemId" element={<GenrePage />} />

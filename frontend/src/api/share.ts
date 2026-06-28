@@ -7,7 +7,7 @@ export interface ShareUser {
 }
 
 export interface ShareItem {
-    id: number;
+    id: string;
     media_id: string;
     media_name: string;
     owner_user_id: string;
@@ -95,7 +95,9 @@ export async function fetchMyShares(startIndex = 0, limit = 20): Promise<PagedRe
         if (!response.ok) {
             throw new Error(`Failed to fetch my shares: ${response.statusText}`);
         }
-        return await response.json();
+        const text = await response.text();
+        const sanitized = text.replace(/"id":\s*(\d+)/g, '"id": "$1"');
+        return JSON.parse(sanitized);
     } catch (error) {
         console.warn('Failed to fetch my shares from backend:', error);
         return { TotalRecordCount: 0, Items: [] };
@@ -120,7 +122,7 @@ export async function fetchSharedWithMe(startIndex = 0, limit = 20): Promise<Pag
 }
 
 // 5. 取消分享
-export async function deleteShare(id: number): Promise<SimpleResponse> {
+export async function deleteShare(id: number | string): Promise<SimpleResponse> {
     try {
         const server = (getServerUrl() || '').replace(/\/$/, '');
         const response = await fetch(`${server}/api/share/${id}`, {

@@ -1,10 +1,12 @@
-import { Navigate, useParams } from 'react-router';
+import { Navigate, useParams, useNavigate } from 'react-router';
 import Page from '../Page';
 import { useItem } from '@/hooks/api/useItem';
 import MoviePage from './MoviePage';
 import SeriesPage from './SeriesPage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Fragment, memo } from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { useConfig } from '@/hooks/api/useConfig';
 import EpisodePage from './EpisodePage';
@@ -99,9 +101,60 @@ const ItemPage = () => {
     const { t } = useTranslation('item');
     const params = useParams<{ itemId: string }>();
     const itemId = params.itemId;
+    const navigate = useNavigate();
 
     const { config, loading: configLoading } = useConfig();
     const { data: item, isLoading, error } = useItem(itemId, true, getUserId() || undefined);
+
+    const handleBack = () => {
+        if (window.history.state && window.history.state.idx > 0) {
+            navigate(-1);
+            return;
+        }
+
+        if (!item) {
+            navigate(-1);
+            return;
+        }
+
+        // 智能的“返回上级”导航，作为无浏览器历史时的兜底
+        switch (item.Type) {
+            case 'Episode':
+                if (item.ParentId) {
+                    navigate(`/item/${item.ParentId}`);
+                } else if (item.SeriesId) {
+                    navigate(`/item/${item.SeriesId}`);
+                } else {
+                    navigate('/');
+                }
+                break;
+            case 'Season':
+                if (item.SeriesId) {
+                    navigate(`/item/${item.SeriesId}`);
+                } else if (item.ParentId) {
+                    navigate(`/item/${item.ParentId}`);
+                } else {
+                    navigate('/');
+                }
+                break;
+            case 'Movie':
+            case 'Series':
+            case 'MusicAlbum':
+            case 'Playlist':
+            case 'BoxSet':
+            case 'Folder':
+            case 'Video':
+                if (item.ParentId) {
+                    navigate(`/library?library=${item.ParentId}`);
+                } else {
+                    navigate('/library');
+                }
+                break;
+            default:
+                navigate(-1);
+                break;
+        }
+    };
 
     const redirectPath =
         item?.Type && REDIRECT_ITEM_TYPES[item.Type]
@@ -114,10 +167,21 @@ const ItemPage = () => {
     return (
         <Page
             title={item ? `${item.Name}` : isLoading ? t('loading') : t('item_not_found')}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col relative"
             overlayHeader={isFullPageItem}
             pagePadding={!isFullPageItem}
         >
+            {/* 返回按钮 */}
+            <div className="absolute top-4 left-4 z-50">
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full h-10 w-10 bg-background/30 backdrop-blur-md border border-border/50 hover:bg-background/80 hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer flex items-center justify-center animate-fade-in"
+                    onClick={handleBack}
+                >
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+            </div>
             {(isLoading || configLoading) && <ItemPageSkeleton />}
             {error && <p>Error loading item details.</p>}
             {item &&

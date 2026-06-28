@@ -21,6 +21,7 @@ import {
     Settings2,
     Sun,
     TriangleAlert,
+    Users,
     X,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -603,6 +604,13 @@ const TopBar = ({ overlay = false }: { overlay?: boolean }) => {
                         </Link>
                     </Button>
 
+                    <Button asChild variant="ghost" size="sm">
+                        <Link to="/shared-library">
+                            <Users className="h-4 w-4" />
+                            {t('shared_library', '共享库')}
+                        </Link>
+                    </Button>
+
                     {hasMusicLibrary && (
                         <Button asChild variant="ghost" size="sm">
                             <Link to="/music">
@@ -704,6 +712,17 @@ const TopBar = ({ overlay = false }: { overlay?: boolean }) => {
                             </Link>
                         </Button>
                     ))}
+                    <Button
+                        asChild
+                        variant="ghost"
+                        className="justify-start"
+                        onClick={() => setMobileOpen(false)}
+                    >
+                        <Link to="/shared-library">
+                            <Users className="h-4 w-4" />
+                            {t('shared_library', '共享库')}
+                        </Link>
+                    </Button>
                     <Button
                         asChild
                         variant="ghost"

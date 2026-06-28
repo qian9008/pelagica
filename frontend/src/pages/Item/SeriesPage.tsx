@@ -41,11 +41,13 @@ interface SeriesPageProps {
 const SeriesPage = ({ item, config }: SeriesPageProps) => {
     const { t } = useTranslation('item');
     const location = useLocation();
-    const [selectedSeason, setSelectedSeason] = useState<string | null>(null);
     const { data: seasons, isLoading, error } = useSeasons(item.Id || '');
     const [posterFailed, setPosterFailed] = useState(false);
     const [isPosterLoaded, setIsPosterLoaded] = useState(false);
+    const [selectedSeason, setSelectedSeason] = useState('');
     const [failedLogo, setFailedLogo] = useState(false);
+
+    const isLandscape = item.PrimaryImageAspectRatio && item.PrimaryImageAspectRatio > 1;
 
     const { data: upcomingEpisodes } = useUpcomingEpisodes(item.Id || '');
 
@@ -76,33 +78,40 @@ const SeriesPage = ({ item, config }: SeriesPageProps) => {
             <div className="pt-24 sm:pt-32 pb-12 mx-auto w-full flex flex-col gap-12">
                 <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start relative z-10 w-full">
                     {/* Left Column (Poster) */}
-                    <div className="w-48 sm:w-64 md:w-72 lg:w-80 shrink-0 mx-auto lg:mx-0">
-                        <div className="relative aspect-2/3 w-full rounded-xl overflow-hidden shadow-2xl shadow-black/85 border border-white/10 bg-muted flex items-center justify-center">
-                            {!posterFailed ? (
-                                <>
-                                    <Skeleton className="absolute inset-0 w-full h-full rounded-xl" />
-                                    <img
-                                        src={getPrimaryImageUrl(
-                                            item.Id || '',
-                                            { width: 640, height: 960 },
-                                            item.ImageTags?.Primary
-                                        )}
-                                        alt={item.Name + ' Primary'}
-                                        className={[
-                                            'object-cover rounded-xl w-full h-full relative z-10',
-                                            'transition-[filter,opacity] duration-700 ease-out',
-                                            isPosterLoaded
-                                                ? 'blur-0 opacity-100'
-                                                : 'blur-md opacity-0',
-                                        ].join(' ')}
-                                        onLoad={() => setIsPosterLoaded(true)}
-                                        onError={() => setPosterFailed(true)}
-                                    />
-                                </>
-                            ) : (
+                    <div
+                        className={
+                            isLandscape
+                                ? 'relative w-full max-w-[18rem] md:max-w-[24rem] mx-auto lg:mx-0 shadow-lg rounded-xl overflow-hidden group shrink-0'
+                                : 'relative w-48 min-w-[12rem] h-72 md:w-72 md:min-w-[18rem] md:h-108 mx-auto lg:mx-0 shadow-lg rounded-xl overflow-hidden group shrink-0'
+                        }
+                        style={isLandscape ? { aspectRatio: item.PrimaryImageAspectRatio ?? undefined } : undefined}
+                    >
+                        {!posterFailed ? (
+                            <>
+                                <Skeleton className="absolute inset-0 w-full h-full rounded-xl" />
+                                <img
+                                    src={getPrimaryImageUrl(
+                                        item.Id || '',
+                                        undefined,
+                                        item.ImageTags?.Primary
+                                    )}
+                                    alt={item.Name + ' Primary'}
+                                    className={[
+                                        'object-cover rounded-xl w-full h-full relative z-10',
+                                        'transition-[filter,opacity] duration-700 ease-out',
+                                        isPosterLoaded
+                                            ? 'blur-0 opacity-100'
+                                            : 'blur-md opacity-0',
+                                    ].join(' ')}
+                                    onLoad={() => setIsPosterLoaded(true)}
+                                    onError={() => setPosterFailed(true)}
+                                />
+                            </>
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-muted rounded-xl">
                                 <ImageOff className="text-muted-foreground w-12 h-12" />
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Column (Details) */}
