@@ -35,6 +35,7 @@ const VideoPlayer = ({
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const playerRef = useRef<VideoJsPlayer | null>(null);
     const hasSeekedRef = useRef(false);
+    const indicatorRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!videoRef.current) return;
@@ -47,7 +48,7 @@ const VideoPlayer = ({
             responsive: false,
             fluid: false,
             html5: {
-                nativeControlsForTouch: true,
+                nativeControlsForTouch: false,
                 hls: { overrideNative: true },
                 nativeTextTracks: false, // Force video.js to render text tracks
             },
@@ -55,10 +56,70 @@ const VideoPlayer = ({
 
         playerRef.current = player;
 
+        // 自动隐藏大括号包裹的字幕样式代码（例如 {\fnMicrosoft YaHei...} 或 {\fnmirasoftyahei}）
+        player.textTracks().on('addtrack', (e: any) => {
+            const track = e.track;
+            if (track.kind === 'subtitles' || track.kind === 'captions') {
+                track.on('cuechange', () => {
+                    const activeCues = track.activeCues;
+                    if (activeCues) {
+                        for (let i = 0; i < activeCues.length; i++) {
+                            const cue = activeCues[i];
+                            if (cue && !(cue as any).cleaned) {
+                                cue.text = cue.text.replace(/\{[^}]+\}/g, '');
+                                (cue as any).cleaned = true;
+                            }
+                        }
+                    }
+                });
+            }
+        });
+
         player.ready(() => {
             onReady?.(player);
             player.play()?.catch((error) => {
                 console.error('Error attempting to play:', error);
+            });
+
+            // 监听元数据加载，通过分辨率探测软硬解能力
+            player.on('loadedmetadata', async () => {
+                if (!videoRef.current) return;
+                const video = videoRef.current;
+                const width = video.videoWidth || 1920;
+                const height = video.videoHeight || 1080;
+
+                // 假设常见的 H.264 高画质配置以探测硬件支持情况
+                const contentType = 'video/mp4; codecs="avc1.640028"'; 
+
+                if ('mediaCapabilities' in navigator) {
+                    try {
+                        const info = await navigator.mediaCapabilities.decodingInfo({
+                            type: 'file',
+                            video: {
+                                contentType: contentType,
+                                width: width,
+                                height: height,
+                                bitrate: 2500000,
+                                framerate: 30
+                            }
+                        });
+                        const isHw = info.powerEfficient;
+                        if (indicatorRef.current) {
+                            indicatorRef.current.style.display = 'flex';
+                            indicatorRef.current.innerHTML = `
+                                <div class="w-1.5 h-1.5 rounded-full ${isHw ? 'bg-emerald-400' : 'bg-orange-400'} animate-pulse"></div>
+                                <span class="tracking-wider">${isHw ? 'HW' : 'SW'}</span>
+                            `;
+                            indicatorRef.current.className = `absolute top-6 right-6 px-3 py-1.5 text-xs font-bold rounded-md shadow-xl backdrop-blur-md z-50 transition-all duration-500 flex items-center gap-2 pointer-events-none opacity-60 group-hover:opacity-100 ${
+                                isHw 
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                    : 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
+                            }`;
+                        }
+                    } catch (error) {
+                        console.warn('获取解码能力失败:', error);
+                    }
+                }
             });
         });
 
@@ -157,17 +218,46 @@ const VideoPlayer = ({
 
     return (
         <div
-            className="w-full h-full overflow-hidden"
+            className="w-full h-full overflow-hidden relative group"
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
+            <div ref={indicatorRef} style={{ display: 'none' }}></div>
             <video
                 ref={videoRef}
                 className="video-js vjs-default-skin"
                 data-testid="video-player"
+                playsInline
+                webkit-playsinline="true"
                 style={{ maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' }}
             >
                 <track kind="captions" srcLang="en" label="English" />
             </video>
+            {/* 注入自定义字幕样式：透明背景，洋红描边与黑色深邃阴影 */}
+            <style>{`
+                .vjs-text-track-cue {
+                    background-color: transparent !important;
+                }
+                .vjs-text-track-cue > div {
+                    background-color: transparent !important;
+                    background: transparent !important;
+                    color: #ffffff !important;
+                    text-shadow: 
+                        -1.5px -1.5px 0 #ff00ff,  
+                         1.5px -1.5px 0 #ff00ff,
+                        -1.5px  1.5px 0 #ff00ff,
+                         1.5px  1.5px 0 #ff00ff,
+                        -2px  0px 1px #ff00ff,
+                         2px  0px 1px #ff00ff,
+                         0px -2px 1px #ff00ff,
+                         0px  2px 1px #ff00ff,
+                         2px  2px 3px rgba(0, 0, 0, 0.95),
+                        -2px  2px 3px rgba(0, 0, 0, 0.95),
+                         2px -2px 3px rgba(0, 0, 0, 0.95),
+                        -2px -2px 3px rgba(0, 0, 0, 0.95) !important;
+                    font-weight: bold !important;
+                    font-family: 'Microsoft YaHei', sans-serif !important;
+                }
+            `}</style>
         </div>
     );
 };
