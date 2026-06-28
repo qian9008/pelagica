@@ -189,6 +189,16 @@ export const SectionEditor = ({
                                     })
                                 }
                             />
+                            <BooleanInput
+                                label={t('autoplay_trailers')}
+                                checked={(editedSection as any).autoPlayTrailers || false}
+                                onChange={(value) =>
+                                    setEditedSection({
+                                        ...editedSection,
+                                        autoPlayTrailers: value,
+                                    })
+                                }
+                            />
                         </>
                     )}
 

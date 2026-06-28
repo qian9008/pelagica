@@ -36,6 +36,7 @@ type HomeScreenSection struct {
 	Items               *SectionItemsConfig `json:"items,omitempty"`
 	ShowFavoriteButton  *bool               `json:"showFavoriteButton,omitempty"`
 	ShowWatchlistButton *bool               `json:"showWatchlistButton,omitempty"`
+	AutoPlayTrailers    *bool               `json:"autoPlayTrailers,omitempty"`
 	Size                string              `json:"size,omitempty"`
 
 	// RecentlyAdded

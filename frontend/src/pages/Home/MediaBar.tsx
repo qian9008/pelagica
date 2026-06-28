@@ -28,6 +28,7 @@ interface MediaBarProps {
     itemsConfig?: SectionItemsConfig;
     showFavoriteButton?: boolean;
     showWatchlistButton?: boolean;
+    autoPlayTrailers?: boolean;
     fadeTop?: boolean;
 }
 
@@ -38,6 +39,7 @@ const MediaBar = ({
     title,
     showFavoriteButton,
     showWatchlistButton,
+    autoPlayTrailers,
     fadeTop,
 }: MediaBarProps) => {
     const { t } = useTranslation('home');
@@ -109,7 +111,7 @@ const MediaBar = ({
                                 backgroundImage: `url('${getBackdropUrl(item.Id!, { maxWidth: 2560 }, item.ImageTags?.Backdrop)}')`,
                             }}
                         />
-                        {(item.LocalTrailerCount ?? 0) > 0 && (
+                        {(item.LocalTrailerCount ?? 0) > 0 && autoPlayTrailers && (
                             <MediaBarTrailerVideo
                                 item={item}
                                 active={i === activeIndex}
@@ -278,7 +280,7 @@ const MediaBar = ({
                                                     variant={'outline'}
                                                 />
                                             )}
-                                            {trailerReady.has(item.Id!) && (
+                                            {trailerReady.has(item.Id!) && autoPlayTrailers && (
                                                 <MediaBarTrailerControls
                                                     playing={trailerPlaying}
                                                     muted={trailerMuted}

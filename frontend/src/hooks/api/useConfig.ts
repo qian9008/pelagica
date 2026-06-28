@@ -49,6 +49,8 @@ export interface MediaBarSection extends BaseHomeScreenSection {
     showFavoriteButton?: boolean;
     /** Whether to show the watchlist button on the media bar items */
     showWatchlistButton?: boolean;
+    /** Whether to play trailers automatically */
+    autoPlayTrailers?: boolean;
 }
 
 /** A section showing recently added items */
@@ -269,6 +271,7 @@ const DEFAULT_CONFIG: AppConfig = {
             },
             showFavoriteButton: true,
             showWatchlistButton: true,
+            autoPlayTrailers: true,
         },
         {
             type: 'continueWatching',
