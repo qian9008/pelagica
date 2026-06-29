@@ -51,7 +51,7 @@ func getInstanceIdFile() string {
 		if info, err := os.Stat("/config"); err == nil && info.IsDir() {
 			return "/config/instance-id.txt"
 		}
-		return "./instance-id.txt"
+		return "./instance-id.wawwtxt"
 	}
 	return file
 }
