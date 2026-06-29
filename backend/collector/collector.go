@@ -46,11 +46,25 @@ func getVersion() string {
 }
 
 func getInstanceIdFile() string {
-	return os.Getenv("COLLECTOR_INSTANCE_ID_FILE")
+	file := os.Getenv("COLLECTOR_INSTANCE_ID_FILE")
+	if file == "" {
+		if info, err := os.Stat("/config"); err == nil && info.IsDir() {
+			return "/config/instance-id.txt"
+		}
+		return "./instance-id.txt"
+	}
+	return file
 }
 
 func getStatsConsentFile() string {
-	return os.Getenv("COLLECTOR_STATS_CONSENT_FILE")
+	file := os.Getenv("COLLECTOR_STATS_CONSENT_FILE")
+	if file == "" {
+		if info, err := os.Stat("/config"); err == nil && info.IsDir() {
+			return "/config/stats-consent.txt"
+		}
+		return "./stats-consent.txt"
+	}
+	return file
 }
 
 // hasStatsConsent determines whether the user has consented to anonymous statistics collection
