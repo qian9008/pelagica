@@ -28,13 +28,15 @@ import { Link } from 'react-router';
 import ExternalPlayerButton from '@/components/ExternalPlayerButton';
 import { Skeleton } from '@/components/ui/skeleton';
 import Overview from './Overview';
+import ItemBackButton from './ItemBackButton';
 
 interface EpisodePageProps {
     item: BaseItemDto;
     config: AppConfig;
+    onBack?: () => void;
 }
 
-const EpisodePage = ({ item, config }: EpisodePageProps) => {
+const EpisodePage = ({ item, config, onBack }: EpisodePageProps) => {
     const { t } = useTranslation('item');
     const [imageError, setImageError] = useState<boolean>(false);
     const [isImageLoaded, setIsImageLoaded] = useState<boolean>(false);
@@ -113,6 +115,7 @@ const EpisodePage = ({ item, config }: EpisodePageProps) => {
                                     />
                                 </div>
                             )}
+                            {onBack && <ItemBackButton onClick={onBack} />}
                         </div>
                     </div>
 

@@ -5,8 +5,6 @@ import MoviePage from './MoviePage';
 import SeriesPage from './SeriesPage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Fragment, memo } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { useConfig } from '@/hooks/api/useConfig';
 import EpisodePage from './EpisodePage';
@@ -171,17 +169,6 @@ const ItemPage = () => {
             overlayHeader={isFullPageItem}
             pagePadding={!isFullPageItem}
         >
-            {/* 返回按钮 */}
-            <div className="absolute top-4 left-4 z-50">
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="rounded-full h-10 w-10 bg-background/30 backdrop-blur-md border border-border/50 hover:bg-background/80 hover:scale-105 active:scale-95 transition-all shadow-md cursor-pointer flex items-center justify-center animate-fade-in"
-                    onClick={handleBack}
-                >
-                    <ArrowLeft className="h-5 w-5" />
-                </Button>
-            </div>
             {(isLoading || configLoading) && <ItemPageSkeleton />}
             {error && <p>Error loading item details.</p>}
             {item &&
@@ -190,15 +177,15 @@ const ItemPage = () => {
                         case 'Movie':
                         case 'Video':
                         case 'MusicVideo':
-                            return <MoviePage item={item} config={config} />;
+                            return <MoviePage item={item} config={config} onBack={handleBack} />;
                         case 'Series':
-                            return <SeriesPage item={item} config={config} />;
+                            return <SeriesPage item={item} config={config} onBack={handleBack} />;
                         case 'Episode':
-                            return <EpisodePage item={item} config={config} />;
+                            return <EpisodePage item={item} config={config} onBack={handleBack} />;
                         case 'Season':
-                            return <SeasonPage item={item} config={config} />;
+                            return <SeasonPage item={item} config={config} onBack={handleBack} />;
                         case 'BoxSet':
-                            return <BoxSetPage item={item} config={config} />;
+                            return <BoxSetPage item={item} config={config} onBack={handleBack} />;
                         case 'Studio':
                             return <StudioPage item={item} />;
                         default:

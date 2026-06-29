@@ -265,6 +265,7 @@ const BROWSER_PLAYABLE_CONTAINERS: Record<string, string> = {
     mp4: 'video/mp4',
     webm: 'video/webm',
     mov: 'video/mp4',
+    mkv: 'video/x-matroska',
 };
 
 export function getPlaybackStreamUrl(
