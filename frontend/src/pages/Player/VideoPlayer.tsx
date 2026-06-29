@@ -60,7 +60,7 @@ const VideoPlayer = ({
         player.textTracks().on('addtrack', (e: unknown) => {
             const track = (e as { track: TextTrack }).track;
             if (track.kind === 'subtitles' || track.kind === 'captions') {
-                track.on('cuechange', () => {
+                track.addEventListener('cuechange', () => {
                     const activeCues = track.activeCues;
                     if (activeCues) {
                         for (let i = 0; i < activeCues.length; i++) {
