@@ -221,7 +221,7 @@ const SeriesPage = ({ item, config, onBack }: SeriesPageProps) => {
                                 {seasons && seasons.length > 1 && (
                                     <Select
                                         value={effectiveSelectedSeason || ''}
-                                        onValueChange={(value) => setSelectedSeason(value || null)}
+                                        onValueChange={(value) => setSelectedSeason(value || '')}
                                         disabled={isLoading || !seasons || seasons.length === 0}
                                     >
                                         <SelectTrigger>

@@ -150,7 +150,7 @@ const LibraryItem = ({
         : (!played && watched > 0 && runtime > 0 ? (watched / runtime) * 100 : 0);
 
     // 渲染媒体进度条 (z-20 确保覆盖在图片 z-10 之上)
-    const ProgressBar = () => {
+    const renderProgressBar = () => {
         if (progress <= 0) return null;
         return (
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/40 z-20 overflow-hidden">
@@ -171,7 +171,7 @@ const LibraryItem = ({
     };
 
     // 渲染高精圆角文件夹封套 (文件夹模式下永远作为默认的卡片外观展现，不显示视频海报封面)
-    const FolderWrapper = () => (
+    const renderFolderWrapper = () => (
         <div className="w-full h-full bg-gradient-to-tr from-accent/40 via-accent/20 to-background flex flex-col items-center justify-center rounded-md border border-accent/20 group-hover:border-primary/50 transition-all duration-300">
             <FolderClosed className="text-4xl text-amber-500 fill-amber-500/10 group-hover:scale-105 transition-transform duration-300" />
             <span className="text-xs text-muted-foreground mt-2 font-medium">
@@ -181,7 +181,7 @@ const LibraryItem = ({
     );
 
     // 物理文件夹或合集封面左上角的精美微型指示器
-    const FolderCornerIndicator = () => (
+    const renderFolderCornerIndicator = () => (
         <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-md p-1.5 flex items-center justify-center z-20 shadow-md">
             <FolderClosed className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
         </div>
@@ -209,7 +209,7 @@ const LibraryItem = ({
                     className="relative w-[140px] sm:w-[180px] shrink-0 h-auto overflow-hidden rounded-md group-hover:opacity-90 transition-opacity"
                 >
                     {shouldRenderFolderIcon ? (
-                        <FolderWrapper />
+                        renderFolderWrapper()
                     ) : !posterError && finalPosterUrl ? (
                         <>
                             <img
@@ -226,7 +226,7 @@ const LibraryItem = ({
                     ) : (
                         // 如果加载失败，物理文件夹仍然退回 FolderWrapper，普通视频显示 ImageOff
                         isFolder ? (
-                            <FolderWrapper />
+                            renderFolderWrapper()
                         ) : (
                             <div className="w-full h-full bg-muted flex items-center justify-center rounded-md">
                                 <ImageOff className="text-2xl text-muted-foreground" />
@@ -234,8 +234,8 @@ const LibraryItem = ({
                         )
                     )}
                     <WatchedStateBadge item={item} show={!isFolder} />
-                    {!shouldRenderFolderIcon && isFolder && <FolderCornerIndicator />}
-                    <ProgressBar />
+                    {!shouldRenderFolderIcon && isFolder && renderFolderCornerIndicator()}
+                    {renderProgressBar()}
                 </div>
 
                 {/* 右侧详细信息 */}
@@ -246,9 +246,9 @@ const LibraryItem = ({
                     
                     {/* 属性标签（年份、评分、时长） */}
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
-                        {(item as any).ShareOwnerName && (
+                        {(item as BaseItemDto & { ShareOwnerName?: string }).ShareOwnerName && (
                             <span className="font-semibold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded text-[10px]">
-                                {t('shared_by', '由')} {(item as any).ShareOwnerName} {t('share', '分享')}
+                                {t('shared_by', '由')} {(item as BaseItemDto & { ShareOwnerName?: string }).ShareOwnerName} {t('share', '分享')}
                             </span>
                         )}
                         {isFolder ? (
@@ -302,7 +302,7 @@ const LibraryItem = ({
                 className="relative w-full h-auto overflow-hidden rounded-md group"
             >
                 {shouldRenderFolderIcon ? (
-                    <FolderWrapper />
+                    renderFolderWrapper()
                 ) : !posterError && finalPosterUrl ? (
                     <>
                         <img
@@ -319,7 +319,7 @@ const LibraryItem = ({
                 ) : (
                     // 如果加载失败，物理文件夹仍然退回 FolderWrapper，普通视频显示 ImageOff
                     isFolder ? (
-                        <FolderWrapper />
+                        renderFolderWrapper()
                     ) : (
                         <div className="w-full h-full bg-muted flex items-center justify-center rounded-md">
                             <ImageOff className="text-4xl text-muted-foreground" />
@@ -327,8 +327,8 @@ const LibraryItem = ({
                     )
                 )}
                 <WatchedStateBadge item={item} show={!isFolder} />
-                {!shouldRenderFolderIcon && isFolder && <FolderCornerIndicator />}
-                <ProgressBar />
+                {!shouldRenderFolderIcon && isFolder && renderFolderCornerIndicator()}
+                {renderProgressBar()}
             </div>
             <p className="mt-2 text-sm line-clamp-1 text-ellipsis break-all">
                 {getItemDisplayName(item, titleMode) || t('library:no_title')}
@@ -337,9 +337,9 @@ const LibraryItem = ({
                 <span className="text-xs text-muted-foreground mr-2 line-clamp-1">
                     {isFolder ? t('library:folder', '文件夹') : detailLine}
                 </span>
-                {(item as any).ShareOwnerName && (
+                {(item as BaseItemDto & { ShareOwnerName?: string }).ShareOwnerName && (
                     <span className="text-[10px] text-primary font-medium bg-primary/10 border border-primary/25 px-1.5 py-0.5 rounded-full truncate">
-                        {(item as any).ShareOwnerName}
+                        {(item as BaseItemDto & { ShareOwnerName?: string }).ShareOwnerName}
                     </span>
                 )}
             </div>

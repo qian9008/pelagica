@@ -1,5 +1,5 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ExternalLink, Copy, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -121,21 +121,21 @@ const PLAYER_OPTIONS: PlayerOption[] = [
         id: 'ios-infuse',
         name: 'Infuse',
         platforms: ['ios'],
-        getUrl: (url, subUrl, _title, _pos) =>
+        getUrl: (url, subUrl) =>
             `infuse://x-callback-url/play?url=${encodeURIComponent(url)}${subUrl ? `&sub=${encodeURIComponent(subUrl)}` : ''}`,
     },
     {
         id: 'ios-vlc',
         name: 'VLC for iOS',
         platforms: ['ios'],
-        getUrl: (url, subUrl, _title, _pos) =>
+        getUrl: (url, subUrl) =>
             `vlc-x-callback://x-callback-url/stream?url=${encodeURIComponent(url)}${subUrl ? `&sub=${encodeURIComponent(subUrl)}` : ''}`,
     },
     {
         id: 'ios-nplayer',
         name: 'nPlayer',
         platforms: ['ios'],
-        getUrl: (url, _subUrl, _title, _pos) => {
+        getUrl: (url) => {
             const noProto = url.replace(/^https?:\/\//, '');
             const isHttps = url.startsWith('https://');
             return `nplayer-${isHttps ? 'https' : 'http'}://${noProto}`;
@@ -145,14 +145,14 @@ const PLAYER_OPTIONS: PlayerOption[] = [
         id: 'ios-fileball',
         name: 'Fileball',
         platforms: ['ios'],
-        getUrl: (url, _subUrl, _title, _pos) =>
+        getUrl: (url) =>
             `filebox://play?url=${encodeURIComponent(url)}`,
     },
     {
         id: 'ios-senplayer',
         name: 'SenPlayer',
         platforms: ['ios'],
-        getUrl: (url, _subUrl, _title, _pos) =>
+        getUrl: (url) =>
             `SenPlayer://x-callback-url/play?url=${encodeURIComponent(url)}`,
     },
 
@@ -171,7 +171,7 @@ const PLAYER_OPTIONS: PlayerOption[] = [
         id: 'windows-vlc',
         name: 'VLC Media Player',
         platforms: ['windows'],
-        getUrl: (url, _subUrl, _title, _pos) => `vlc://${encodeURI(url)}`,
+        getUrl: (url) => `vlc://${encodeURI(url)}`,
     },
 
     // --- macOS 平台播放器 ---
@@ -179,30 +179,31 @@ const PLAYER_OPTIONS: PlayerOption[] = [
         id: 'macos-iina',
         name: 'IINA',
         platforms: ['macos'],
-        getUrl: (url, _subUrl, _title, _pos) => `iina://weblink?url=${encodeURIComponent(url)}&new_window=1`,
+        getUrl: (url) => `iina://weblink?url=${encodeURIComponent(url)}&new_window=1`,
     },
     {
         id: 'macos-nplayer',
         name: 'nPlayer for Mac',
         platforms: ['macos'],
-        getUrl: (url, _subUrl, _title, _pos) => `nplayer-mac://weblink?url=${encodeURIComponent(url)}&new_window=1`,
+        getUrl: (url) => `nplayer-mac://weblink?url=${encodeURIComponent(url)}&new_window=1`,
     },
     {
         id: 'macos-vlc',
         name: 'VLC for Mac',
         platforms: ['macos'],
-        getUrl: (url, _subUrl, _title, _pos) => `vlc://${encodeURI(url)}`,
+        getUrl: (url) => `vlc://${encodeURI(url)}`,
     },
 ];
 
 export default function ExternalPlayerButton({ item, mediaSourceId, className }: ExternalPlayerButtonProps) {
     const { t } = useTranslation('item');
-    const [os, setOs] = useState<'android' | 'ios' | 'windows' | 'macos' | 'other'>('other');
+    const [os] = useState<'android' | 'ios' | 'windows' | 'macos' | 'other'>(() => {
+        if (typeof window !== 'undefined') {
+            return getOS();
+        }
+        return 'other';
+    });
     const [copied, setCopied] = useState(false);
-
-    useEffect(() => {
-        setOs(getOS());
-    }, []);
 
     // 智能选取第一个外置中文（或任意首个外置）字幕并转成 SRT/VTT 流直链
     const getExternalSubtitle = (targetMediaSourceId: string) => {

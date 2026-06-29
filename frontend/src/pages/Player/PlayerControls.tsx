@@ -302,6 +302,7 @@ const PlayerControls = ({
         nextItem,
         dismissedNextItemPrompt,
         item.Id,
+        item.RunTimeTicks,
         navigate,
         markItemAsCompleted,
         backUrl,

@@ -33,13 +33,6 @@ export default function ShareDialog({
     const [isLoadingUsers, setIsLoadingUsers] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => {
-        if (open) {
-            loadUsers();
-            setSelectedUserIds([]);
-        }
-    }, [open]);
-
     async function loadUsers() {
         setIsLoadingUsers(true);
         try {
@@ -52,6 +45,15 @@ export default function ShareDialog({
             setIsLoadingUsers(false);
         }
     }
+
+    useEffect(() => {
+        if (open) {
+            setTimeout(() => {
+                loadUsers();
+                setSelectedUserIds([]);
+            }, 0);
+        }
+    }, [open]);
 
     async function handleShare() {
         if (selectedUserIds.length === 0) {

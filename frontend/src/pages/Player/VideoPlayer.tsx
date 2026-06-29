@@ -57,17 +57,17 @@ const VideoPlayer = ({
         playerRef.current = player;
 
         // 自动隐藏大括号包裹的字幕样式代码（例如 {\fnMicrosoft YaHei...} 或 {\fnmirasoftyahei}）
-        player.textTracks().on('addtrack', (e: any) => {
-            const track = e.track;
+        player.textTracks().on('addtrack', (e: unknown) => {
+            const track = (e as { track: TextTrack }).track;
             if (track.kind === 'subtitles' || track.kind === 'captions') {
                 track.on('cuechange', () => {
                     const activeCues = track.activeCues;
                     if (activeCues) {
                         for (let i = 0; i < activeCues.length; i++) {
-                            const cue = activeCues[i];
-                            if (cue && !(cue as any).cleaned) {
+                            const cue = activeCues[i] as VTTCue;
+                            if (cue && !(cue as VTTCue & { cleaned?: boolean }).cleaned) {
                                 cue.text = cue.text.replace(/\{[^}]+\}/g, '');
-                                (cue as any).cleaned = true;
+                                (cue as VTTCue & { cleaned?: boolean }).cleaned = true;
                             }
                         }
                     }

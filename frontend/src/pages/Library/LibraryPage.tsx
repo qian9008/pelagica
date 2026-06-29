@@ -114,8 +114,10 @@ const LibraryContent = ({
     // 监听视图切换以即时更新列数和重新分页
     useEffect(() => {
         const newPageSize = getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640, viewMode) * ITEM_ROWS;
-        setPageSize(newPageSize);
-        onPageChange(0);
+        setTimeout(() => {
+            setPageSize(newPageSize);
+            onPageChange(0);
+        }, 0);
     }, [viewMode, onPageChange]);
 
     const isFolderMode = viewMode === 'folder';
@@ -462,7 +464,7 @@ const LibraryPage = () => {
 
     // 将状态同步到 URL 的 searchParams 中
     useEffect(() => {
-        const nextParams: any = {
+        const nextParams: Record<string, string> = {
             library: activeLibraryId,
             page: String(page),
             sortBy,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import Page from '../Page';
@@ -95,8 +95,10 @@ export default function SharedLibraryPage() {
 
     useEffect(() => {
         const newPageSize = getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640, viewMode) * ITEM_ROWS;
-        setPageSize(newPageSize);
-        setPage(0);
+        setTimeout(() => {
+            setPageSize(newPageSize);
+            setPage(0);
+        }, 0);
     }, [viewMode]);
 
     // 请求“共享给我的”数据
@@ -128,7 +130,7 @@ export default function SharedLibraryPage() {
     }, [page, pageSize, activeTab]);
 
     // 请求“我发起的分享”数据
-    const loadMyShares = async () => {
+    const loadMyShares = useCallback(async () => {
         setIsLoadingShares(true);
         try {
             const res = await fetchMyShares(page * OUTGOING_PAGE_SIZE, OUTGOING_PAGE_SIZE);
@@ -141,13 +143,15 @@ export default function SharedLibraryPage() {
         } finally {
             setIsLoadingShares(false);
         }
-    };
+    }, [page]);
 
     useEffect(() => {
         if (activeTab === 'outgoing') {
-            loadMyShares();
+            setTimeout(() => {
+                loadMyShares();
+            }, 0);
         }
-    }, [activeTab, page]);
+    }, [activeTab, loadMyShares]);
 
     // 取消分享处理
     const handleCancelShare = async (id: string | number) => {
