@@ -555,6 +555,10 @@ export function NavUser() {
                                         {t('pelagica_config')}
                                     </Link>
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => window.open('/ge2o/web/', '_blank')}>
+                                    <Globe className="text-muted-foreground" />
+                                    {'官方管理后台 (更新/日志)'}
+                                </DropdownMenuItem>
                             </>
                         )}
                         <DropdownMenuSeparator />
