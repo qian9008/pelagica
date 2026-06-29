@@ -24,7 +24,11 @@ const StatsConsentModal = () => {
     const open = statsConsent === 'unknown' && !dismissed;
 
     const handleConsent = (consent: boolean) => {
-        setStatsConsent.mutate(consent);
+        setStatsConsent.mutate(consent, {
+            onSettled: () => {
+                setDismissed(true);
+            },
+        });
     };
 
     return (
