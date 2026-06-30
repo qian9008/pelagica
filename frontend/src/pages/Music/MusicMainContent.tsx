@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import { Search, Play, X, UserRound, Disc3 } from 'lucide-react';
+import { Search, Play, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPrimaryImageUrl } from '@/utils/jellyfinUrls';
+import { renderItemFallbackIcon } from '@/utils/itemFallbackIcon';
+import { getItemUrl } from '@/utils/itemUrl';
 import { ticksToReadableMusicTime } from '@/utils/timeConversion';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
 import { useTranslation } from 'react-i18next';
@@ -128,7 +130,10 @@ const AlbumCover = ({ album }: { album: BaseItemDto }) => {
     if (imageError) {
         return (
             <div className="relative aspect-square overflow-hidden rounded-md bg-muted flex items-center justify-center">
-                <Disc3 className="w-1/2 h-1/2 text-muted-foreground" strokeWidth={1.5} />
+                {renderItemFallbackIcon(album.Type, {
+                    className: 'w-1/2 h-1/2 text-muted-foreground',
+                    strokeWidth: 1.5,
+                })}
             </div>
         );
     }
@@ -181,7 +186,7 @@ const AlbumsGrid = ({
             {albums.map((album) => (
                 <Link
                     key={album.Id}
-                    to={`/music/album/${album.Id}`}
+                    to={getItemUrl(album.Type, album.Id)}
                     className="group flex flex-col"
                 >
                     <AlbumCover album={album} />
@@ -201,7 +206,10 @@ const ArtistAvatar = ({ artist }: { artist: BaseItemDto }) => {
     if (imageError) {
         return (
             <div className="relative aspect-square w-full overflow-hidden rounded-full bg-muted flex items-center justify-center">
-                <UserRound className="w-1/2 h-1/2 text-muted-foreground" strokeWidth={1.5} />
+                {renderItemFallbackIcon(artist.Type, {
+                    className: 'w-1/2 h-1/2 text-muted-foreground',
+                    strokeWidth: 1.5,
+                })}
             </div>
         );
     }
@@ -253,7 +261,7 @@ const ArtistsGrid = ({
             {artists.map((artist) => (
                 <Link
                     key={artist.Id}
-                    to={`/music/artist/${artist.Id}`}
+                    to={getItemUrl(artist.Type, artist.Id)}
                     className="group flex flex-col items-center"
                 >
                     <ArtistAvatar artist={artist} />
@@ -368,7 +376,7 @@ const SearchResults = ({ searchTerm }: { searchTerm: string }) => {
                         {artists.map((artist) => (
                             <Link
                                 key={artist.Id}
-                                to={`/music/artist/${artist.Id}`}
+                                to={getItemUrl(artist.Type, artist.Id)}
                                 className="flex flex-col items-center shrink-0 group"
                             >
                                 <img
@@ -396,7 +404,7 @@ const SearchResults = ({ searchTerm }: { searchTerm: string }) => {
                         {albums.map((album) => (
                             <Link
                                 key={album.Id}
-                                to={`/music/album/${album.Id}`}
+                                to={getItemUrl(album.Type, album.Id)}
                                 className="flex flex-col shrink-0 group"
                             >
                                 <img
@@ -494,7 +502,7 @@ const MusicMainContent = () => {
                             items={recentAlbums.map((album) => (
                                 <Link
                                     key={album.Id}
-                                    to={`/music/album/${album.Id}`}
+                                    to={getItemUrl(album.Type, album.Id)}
                                     className="group flex flex-col shrink-0"
                                 >
                                     <div className="relative w-36 h-36 overflow-hidden rounded-md">

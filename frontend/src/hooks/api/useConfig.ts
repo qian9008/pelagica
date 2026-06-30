@@ -49,6 +49,8 @@ export interface MediaBarSection extends BaseHomeScreenSection {
     showFavoriteButton?: boolean;
     /** Whether to show the watchlist button on the media bar items */
     showWatchlistButton?: boolean;
+    /** Whether to play trailers automatically */
+    autoPlayTrailers?: boolean;
 }
 
 /** A section showing recently added items */
@@ -236,6 +238,8 @@ export interface AppConfig {
     logoDarkUrl?: string;
     /** Links to display in the UI */
     links?: ConfigLink[];
+    /** Whether to show the logo in the top bar */
+    showLogoInTopBar?: boolean;
 }
 
 const DEFAULT_ITEM_PAGE_SETTINGS: ItemPageSettings = {
@@ -253,6 +257,7 @@ const DEFAULT_CONFIG: AppConfig = {
     watchedStateBadgeGenre: false,
     watchedStateBadgeSearch: false,
     links: [],
+    showLogoInTopBar: true,
     serverName: 'Pelagica',
     logoLightUrl: '',
     logoDarkUrl: '',
@@ -266,6 +271,7 @@ const DEFAULT_CONFIG: AppConfig = {
             },
             showFavoriteButton: true,
             showWatchlistButton: true,
+            autoPlayTrailers: true,
         },
         {
             type: 'continueWatching',

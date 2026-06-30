@@ -1,8 +1,12 @@
 import { createContext, useContext } from 'react';
 
+export type SearchMode = 'movies-tv' | 'music';
+
 interface SearchContextType {
     isOpen: boolean;
-    openSearch: () => void;
+    searchMode: SearchMode;
+    openSearch: (mode?: SearchMode) => void;
+    setSearchMode: (mode: SearchMode) => void;
     closeSearch: () => void;
 }
 
