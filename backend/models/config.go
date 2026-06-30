@@ -15,6 +15,7 @@ type AppConfig struct {
 	WatchedStateBadgeSearch     *bool               `json:"watchedStateBadgeSearch,omitempty"`
 	ServerThemeId               string              `json:"serverThemeId,omitempty"`
 	ServerName                  string              `json:"serverName,omitempty"`
+	ShowLogoInTopBar             *bool               `json:"showLogoInTopBar,omitempty"`
 	Links                       []ConfigLink        `json:"links,omitempty"`
 }
 
@@ -35,6 +36,7 @@ type HomeScreenSection struct {
 	Items               *SectionItemsConfig `json:"items,omitempty"`
 	ShowFavoriteButton  *bool               `json:"showFavoriteButton,omitempty"`
 	ShowWatchlistButton *bool               `json:"showWatchlistButton,omitempty"`
+	AutoPlayTrailers    *bool               `json:"autoPlayTrailers,omitempty"`
 	Size                string              `json:"size,omitempty"`
 
 	// RecentlyAdded

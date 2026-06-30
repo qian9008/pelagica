@@ -2,6 +2,8 @@
   "title": "Sök",
   "description": "Sök efter filmer, serier och annan media",
   "input_placeholder": "Sök media...",
+  "input_placeholder_movies_tv": "Sök filmer och TV-serier...",
+  "input_placeholder_music": "Sök artister, album och låtar...",
   "failed_search": "Sökningen misslyckades",
   "start_typing": "Börja skriva för att söka...",
   "no_results": "Inga resultat hittades",

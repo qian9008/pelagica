@@ -8,12 +8,10 @@ import {
     DotIcon,
     Fingerprint,
     Globe,
-    Home,
     House,
     Laptop,
     Library,
     LogOut,
-    Menu,
     Moon,
     Music,
     Search,
@@ -73,7 +71,6 @@ import { getEffectiveTheme } from '@/utils/effectiveTheme';
 import { logout } from '@/api/logout';
 import { getUserProfileImageUrl } from '@/utils/jellyfinUrls';
 import { SUPPORTED_LIBRARY_COLLECTION_TYPES } from '@/utils/itemTypes';
-import JellyfinLibraryIcon from './JellyfinLibraryIcon';
 import { DynamicIcon, type IconName } from 'lucide-react/dynamic';
 import { useTranslation } from 'react-i18next';
 import i18n from 'i18next';
@@ -90,6 +87,7 @@ import {
 } from '@/utils/localTheme';
 import { useThemes } from '@/hooks/api/themes/useThemes';
 import { useQueryClient } from '@tanstack/react-query';
+import { SUPPORTED_LANGUAGES } from '../utils/supportedLanguages';
 
 const AuthorizeQuickConnectDialog = ({
     onAuthorize,
@@ -319,8 +317,8 @@ const UserMenu = () => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 px-2 h-9">
-                    <Avatar className="h-7 w-7 rounded-lg">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2 px-2">
+                    <Avatar className="h-6 w-6 rounded-lg">
                         <AvatarImage src={profileImageUrl} alt={userName} />
                         <AvatarFallback className="rounded-lg text-xs">{initials}</AvatarFallback>
                     </Avatar>
@@ -384,23 +382,14 @@ const UserMenu = () => {
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                         <DropdownMenuSubContent>
-                            {[
-                                { code: 'en', flag: 'us', label: 'English' },
-                                { code: 'de', flag: 'de', label: 'Deutsch' },
-                                { code: 'sv', flag: 'se', label: 'Svenska' },
-                                { code: 'fr', flag: 'fr', label: 'Français' },
-                                { code: 'pt', flag: 'pt', label: 'Português' },
-                                { code: 'ja', flag: 'jp', label: '日本語' },
-                            ].map(({ code, flag, label }) => (
+                            {SUPPORTED_LANGUAGES.map(({ code, Flag, label }) => (
                                 <DropdownMenuItem
                                     key={code}
                                     onClick={() => i18n.changeLanguage(code)}
                                 >
-                                    <img
-                                        src={`https://flagcdn.com/${flag}.svg`}
-                                        className="inline h-4 w-6 object-cover"
-                                        alt={flag}
-                                    />
+                                    <span className="inline-block w-6 h-4 shrink-0 overflow-hidden">
+                                        <Flag style={{ width: '100%', height: '100%' }} />
+                                    </span>
                                     {label}
                                 </DropdownMenuItem>
                             ))}
@@ -537,7 +526,6 @@ const TopBar = ({ overlay = false }: { overlay?: boolean }) => {
     const { data: views } = useUserViews();
     const { theme } = useTheme();
     const effectiveTheme = getEffectiveTheme(theme);
-    const [mobileOpen, setMobileOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
@@ -567,209 +555,161 @@ const TopBar = ({ overlay = false }: { overlay?: boolean }) => {
     const validLinks = config?.links?.filter((l) => l.url && l.text) ?? [];
 
     return (
-        <header className="fixed top-0 z-50 w-full">
+        <header className="fixed top-0 z-50 w-full flex justify-center pointer-events-none">
             {overlay && !scrolled && (
-                <div className="absolute inset-0 -bottom-5 bg-linear-to-b from-background/70 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 -bottom-5 bg-linear-to-b from-background/70 to-transparent" />
             )}
 
             <div
                 className={cn(
-                    'relative flex h-14 items-center gap-2 px-4 sm:px-12 transition-all duration-300 border-b',
+                    'pointer-events-auto relative flex h-11 items-center px-2 sm:px-4 mx-3 w-full md:w-auto mt-3 rounded-full transition-all duration-300 border',
+                    'justify-between md:justify-start gap-1 md:gap-2',
                     !overlay || scrolled
-                        ? 'border-border bg-background/60 backdrop-blur'
-                        : 'border-transparent'
+                        ? 'border-border bg-background/60 backdrop-blur shadow-sm'
+                        : 'border-white/10 bg-background/20 backdrop-blur-md'
                 )}
             >
-                {/* Logo */}
-                <Link to="/" className="flex items-center gap-2 shrink-0 mr-2">
-                    <Avatar className="h-7 w-7 p-0.5 rounded-md">
-                        <AvatarImage src={logoSrc} alt="logo" />
-                        <AvatarFallback className="rounded-md text-xs">PE</AvatarFallback>
-                    </Avatar>
-                </Link>
-
-                {/* Desktop nav */}
-                <nav className="hidden md:flex items-center gap-0.5">
-                    <Button asChild variant="ghost" size="sm">
-                        <Link to="/">
-                            <House className="h-4 w-4" />
-                            {t('home')}
+                <div className="flex items-center gap-1 md:gap-2">
+                    {/* Logo */}
+                    {config?.showLogoInTopBar !== false && (
+                        <Link to="/" className="flex items-center shrink-0">
+                            <Avatar className="h-6 w-6 p-0.5 rounded-md">
+                                <AvatarImage src={logoSrc} alt="logo" />
+                                <AvatarFallback className="rounded-md text-xs">PE</AvatarFallback>
+                            </Avatar>
                         </Link>
-                    </Button>
+                    )}
 
-                    <Button asChild variant="ghost" size="sm">
-                        <Link to="/library">
-                            <Library className="h-4 w-4" />
-                            {t('library')}
-                        </Link>
-                    </Button>
-
-                    <Button asChild variant="ghost" size="sm">
-                        <Link to="/shared-library">
-                            <Users className="h-4 w-4" />
-                            {t('shared_library', '共享库')}
-                        </Link>
-                    </Button>
-
-                    {hasMusicLibrary && (
+                    {/* Desktop nav */}
+                    <nav className="hidden md:flex items-center gap-0.5">
                         <Button asChild variant="ghost" size="sm">
-                            <Link to="/music">
-                                <Music className="h-4 w-4" />
-                                {t('music')}
+                            <Link to="/">
+                                <House className="h-4 w-4" />
+                                {t('home')}
                             </Link>
                         </Button>
-                    )}
 
-                    <Button asChild variant="ghost" size="sm">
-                        <Link to="/search">
-                            <Search className="h-4 w-4" />
-                            {t('search')}
-                        </Link>
-                    </Button>
-
-                    {config?.streamystatsUrl && config?.showStreamystatsButton && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                                window.open(config.streamystatsUrl, '_blank', 'noopener,noreferrer')
-                            }
-                        >
-                            <ChartLine className="h-4 w-4" />
-                            Streamystats
-                        </Button>
-                    )}
-
-                    {validLinks.map((link, i) => (
-                        <Button
-                            key={i}
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => window.open(link.url, '_blank', 'noopener,noreferrer')}
-                        >
-                            <DynamicIcon
-                                name={(link.icon || 'link-2') as IconName}
-                                className="h-4 w-4"
-                            />
-                            {link.text}
-                        </Button>
-                    ))}
-                </nav>
-
-                <div className="flex-1" />
-
-                {/* User menu */}
-                <UserMenu />
-
-                {/* Mobile hamburger */}
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="md:hidden"
-                    onClick={() => setMobileOpen((v) => !v)}
-                    aria-label="Toggle menu"
-                >
-                    {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                </Button>
-            </div>
-
-            {/* Mobile nav drawer */}
-            {mobileOpen && (
-                <div className="md:hidden border-t px-3 py-2 flex flex-col gap-0.5 bg-background">
-                    <Button
-                        asChild
-                        variant="ghost"
-                        className="justify-start"
-                        onClick={() => setMobileOpen(false)}
-                    >
-                        <Link to="/">
-                            <Home className="h-4 w-4" />
-                            {t('home')}
-                        </Link>
-                    </Button>
-                    <Button
-                        asChild
-                        variant="ghost"
-                        className="justify-start"
-                        onClick={() => setMobileOpen(false)}
-                    >
-                        <Link to="/library">
-                            <Library className="h-4 w-4" />
-                            {t('library')}
-                        </Link>
-                    </Button>
-                    {libraries.map((lib) => (
-                        <Button
-                            key={lib.Id}
-                            asChild
-                            variant="ghost"
-                            className="justify-start pl-8"
-                            onClick={() => setMobileOpen(false)}
-                        >
-                            <Link to={`/library?library=${lib.Id}`}>
-                                <JellyfinLibraryIcon libraryType={lib.CollectionType} />
-                                {lib.Name}
+                        <Button asChild variant="ghost" size="sm">
+                            <Link to="/library">
+                                <Library className="h-4 w-4" />
+                                {t('library')}
                             </Link>
                         </Button>
-                    ))}
-                    <Button
-                        asChild
-                        variant="ghost"
-                        className="justify-start"
-                        onClick={() => setMobileOpen(false)}
-                    >
-                        <Link to="/shared-library">
-                            <Users className="h-4 w-4" />
-                            {t('shared_library', '共享库')}
-                        </Link>
-                    </Button>
-                    <Button
-                        asChild
-                        variant="ghost"
-                        className="justify-start"
-                        onClick={() => setMobileOpen(false)}
-                    >
-                        <Link to="/search">
-                            <Search className="h-4 w-4" />
-                            {t('search')}
-                        </Link>
-                    </Button>
-                    {config?.streamystatsUrl && config?.showStreamystatsButton && (
-                        <Button
-                            variant="ghost"
-                            className="justify-start"
-                            onClick={() => {
-                                window.open(
-                                    config.streamystatsUrl,
-                                    '_blank',
-                                    'noopener,noreferrer'
-                                );
-                                setMobileOpen(false);
-                            }}
-                        >
-                            <ChartLine className="h-4 w-4" />
-                            Streamystats
+
+                        <Button asChild variant="ghost" size="sm">
+                            <Link to="/shared-library">
+                                <Users className="h-4 w-4" />
+                                {t('shared_library', '共享库')}
+                            </Link>
                         </Button>
-                    )}
-                    {validLinks.map((link, i) => (
-                        <Button
-                            key={i}
-                            variant="ghost"
-                            className="justify-start"
-                            onClick={() => {
-                                window.open(link.url, '_blank', 'noopener,noreferrer');
-                                setMobileOpen(false);
-                            }}
-                        >
-                            <DynamicIcon
-                                name={(link.icon || 'link-2') as IconName}
-                                className="h-4 w-4"
-                            />
-                            {link.text}
+
+                        {hasMusicLibrary && (
+                            <Button asChild variant="ghost" size="sm">
+                                <Link to="/music">
+                                    <Music className="h-4 w-4" />
+                                    {t('music')}
+                                </Link>
+                            </Button>
+                        )}
+
+                        <Button asChild variant="ghost" size="sm">
+                            <Link to="/search">
+                                <Search className="h-4 w-4" />
+                                {t('search')}
+                            </Link>
                         </Button>
-                    ))}
+
+                        {config?.streamystatsUrl && config?.showStreamystatsButton && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                    window.open(
+                                        config.streamystatsUrl,
+                                        '_blank',
+                                        'noopener,noreferrer'
+                                    )
+                                }
+                                className="cursor-pointer"
+                            >
+                                <ChartLine className="h-4 w-4" />
+                                Streamystats
+                            </Button>
+                        )}
+
+                        {validLinks.map((link, i) => (
+                            <Button
+                                key={i}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                    window.open(link.url, '_blank', 'noopener,noreferrer')
+                                }
+                                className="cursor-pointer"
+                            >
+                                <DynamicIcon
+                                    name={(link.icon || 'link-2') as IconName}
+                                    className="h-4 w-4"
+                                />
+                                {link.text}
+                            </Button>
+                        ))}
+                    </nav>
+
+                    {/* Mobile nav */}
+                    <nav className="flex md:hidden items-center gap-0.5">
+                        <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                            <Link to="/">
+                                <House className="h-4 w-4" />
+                            </Link>
+                        </Button>
+
+                        <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                            <Link to="/library">
+                                <Library className="h-4 w-4" />
+                            </Link>
+                        </Button>
+
+                        <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                            <Link to="/shared-library">
+                                <Users className="h-4 w-4" />
+                            </Link>
+                        </Button>
+
+                        {hasMusicLibrary && (
+                            <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                                <Link to="/music">
+                                    <Music className="h-4 w-4" />
+                                </Link>
+                            </Button>
+                        )}
+
+                        <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                            <Link to="/search">
+                                <Search className="h-4 w-4" />
+                            </Link>
+                        </Button>
+
+                        {validLinks.map((link, i) => (
+                            <Button
+                                key={i}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                    window.open(link.url, '_blank', 'noopener,noreferrer')
+                                }
+                            >
+                                <DynamicIcon
+                                    name={(link.icon || 'link-2') as IconName}
+                                    className="h-4 w-4"
+                                />
+                            </Button>
+                        ))}
+                    </nav>
                 </div>
-            )}
+
+                <UserMenu />
+            </div>
         </header>
     );
 };

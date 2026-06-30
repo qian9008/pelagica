@@ -60,12 +60,12 @@ If you want to suggest new features or report bugs, please use the [GitHub Issue
       <img src="./.github/assets/library.webp" />
     </td>
     <td>
-      <img src="./.github/assets/series_page.webp" />
+      <img src="./.github/assets/series.webp" />
     </td>
   </tr>
   <tr>
     <td>
-      <img src="./.github/assets/episode_page.webp" />
+      <img src="./.github/assets/episode.webp" />
     </td>
     <td>
       <img src="./.github/assets/music.webp" />
@@ -218,6 +218,8 @@ task --list
 
 Issues and pull requests are welcome.
 Please open an issue to discuss larger changes before submitting a PR.
+
+> **Note:** All pull requests should be made against the `develop` branch, not `main`.
 
 ## What does that name mean?
 

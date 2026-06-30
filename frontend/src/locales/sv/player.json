@@ -17,5 +17,41 @@
   "showLyrics": "Visa text",
   "hideLyrics": "Dölj text",
   "noLyrics": "Ingen text tillgänglig",
-  "unsyncedLyrics": "Osynkad text"
+  "unsyncedLyrics": "Osynkad text",
+  "equalizer": "Equalizer",
+  "equalizerPresets": {
+    "flat": "Platt",
+    "bassBoost": "Basförstärkning",
+    "vocalBoost": "Röstförstärkning",
+    "podcast": "Podcast",
+    "sleep": "Sömn"
+  },
+  "sleepFade": "Gradvis toning",
+  "sleepFadeDescription": "Tonar ut gradvis och pausa uppspelningen.",
+  "sleepFadeDuration": "Toningstid",
+  "sleepFadeDurationUnit": "min",
+  "sleepFadeStart": "Starta timer",
+  "sleepFadeStartRequiresPlayback": "Starta uppspelningen för att starta sömntimern.",
+  "sleepFadeStop": "Stoppa timer",
+  "sleepFadeRemaining": "{{time}} kvar",
+  "sleepFadeBack": "Tillbaka till förval",
+  "equalizerUnavailable": "Equalizer otillgänglig för denna ström. Volymtoning gäller fortfarande.",
+  "customPresets": "Anpassade",
+  "customPresetNew": "Nytt anpassat förval",
+  "customPresetDefaultName": "Mitt förval",
+  "customPresetName": "Förvalnamn",
+  "customPresetNamePlaceholder": "Ange förvalnamn",
+  "customPresetEditor": "Anpassat förval",
+  "customPresetLivePreview": "Ändringar förhandsgranskas live medan du justerar.",
+  "customPresetSave": "Spara",
+  "customPresetCancel": "Avbryt",
+  "customPresetEdit": "Redigera förval",
+  "customPresetDelete": "Ta bort förval",
+  "equalizerBands": {
+    "bass": "Bas",
+    "lowMid": "Låg mellan",
+    "mid": "Mellan",
+    "highMid": "Hög mellan",
+    "treble": "Diskant"
+  }
 }
