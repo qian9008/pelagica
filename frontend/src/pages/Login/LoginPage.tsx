@@ -38,15 +38,27 @@ const LoginPage = () => {
     const isDemo = import.meta.env.VITE_IS_DEMO === 'true';
 
     const { config } = useConfig();
-    const [serverUrl, setServerUrl] = useState<string>(() =>
-        isDemo ? DEMO_SERVER_URL : getServerUrl() || ''
-    );
+    const [serverUrl, setServerUrl] = useState<string>(() => {
+        if (isDemo) return DEMO_SERVER_URL;
+        const stored = getServerUrl();
+        if (stored) return stored;
+        // 自动提取当前浏览器的 IP 和端口
+        if (typeof window !== 'undefined') {
+            const proto = window.location.protocol; // http: 或 https:
+            const host = window.location.hostname;
+            const port = window.location.port ? `:${window.location.port}` : '';
+            return `${proto}//${host}${port}`;
+        }
+        return '';
+    });
     const { data: branding } = useServerBranding(serverUrl);
     const navigate = useNavigate();
     const { t } = useTranslation('login');
-    const [step, setStep] = useState<'server' | 'login' | 'quickconnect'>(
-        config?.serverAddress || serverUrl ? 'login' : 'server'
-    );
+    const [step, setStep] = useState<'server' | 'login' | 'quickconnect'>(() => {
+        if (config?.serverAddress) return 'login';
+        if (typeof window !== 'undefined' && getServerUrl()) return 'login';
+        return 'server';
+    });
 
     const [checkingServer, setCheckingServer] = useState(false);
     const [serverCheckError, setServerCheckError] = useState<string | null>(null);
@@ -286,10 +298,15 @@ const LoginPage = () => {
                                     <Label htmlFor="server-ip" className="mb-2 block font-medium">
                                         {t('server_address')}
                                     </Label>
-                                    <Input
+                                                                    <Input
                                         id="server-ip"
                                         type="text"
                                         placeholder="192.168.1.100"
+                                        defaultValue={
+                                            typeof window !== 'undefined'
+                                                ? `${window.location.protocol}//${window.location.hostname}`
+                                                : ''
+                                        }
                                         className="w-full"
                                         autoCapitalize="none"
                                         autoCorrect="off"
@@ -304,6 +321,11 @@ const LoginPage = () => {
                                         id="server-port"
                                         type="text"
                                         placeholder="8096"
+                                        defaultValue={
+                                            typeof window !== 'undefined'
+                                                ? window.location.port
+                                                : ''
+                                        }
                                         className="w-full"
                                         autoCapitalize="none"
                                         autoCorrect="off"

@@ -36,7 +36,14 @@ const MusicArtistView = lazy(() => import('./pages/Music/MusicArtistView.tsx'));
 const GenrePage = lazy(() => import('./pages/Genre/GenrePage.tsx'));
 const ItemsSectionPage = lazy(() => import('./pages/Items/ItemsSectionPage.tsx'));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            retry: import.meta.env.DEV ? false : 1,
+            refetchOnWindowFocus: false,
+        },
+    },
+});
 
 createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>

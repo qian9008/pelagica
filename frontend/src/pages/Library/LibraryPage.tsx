@@ -391,9 +391,9 @@ const LibraryPage = () => {
     const [viewMode, setViewMode] = useState<ViewMode>(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('pelagica_library_view_mode');
-            return (saved as ViewMode) || 'poster';
+            return (saved as ViewMode) || 'folder';
         }
-        return 'poster';
+        return 'folder';
     });
 
     // 文件夹路径导航栈：从 URL 的 folderPath 派生（URL 作为唯一的事实来源）
