@@ -944,7 +944,7 @@ const PlayerControls = ({
                                     <span className="text-[13px]">{playbackRate}x</span>
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="w-40 z-50">
+                            <DropdownMenuContent container={container} className="w-40 z-50">
                                 <DropdownMenuLabel>播放速度</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuRadioGroup
