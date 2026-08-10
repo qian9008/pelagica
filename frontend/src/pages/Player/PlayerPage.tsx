@@ -523,6 +523,7 @@ const PlayerPage = () => {
                 subtitleFonts={subtitleFonts}
                 isAudioSwitchRef={isAudioSwitchRef}
                 subtitleTrackIndex={subtitleTrackIndex}
+                isFullscreen={isFullscreen}
             />
             <PlayerControls
                 item={item}

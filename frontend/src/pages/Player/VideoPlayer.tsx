@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import JASSUB from 'jassub';
 import { setupSubtitleSanitizer } from '@/hooks/setupSubtitleSanitizer';
 import { setupHardwareIndicator } from '@/hooks/setupHardwareIndicator';
+import { useJellyfinFallbackFont } from '@/hooks/useJellyfinFallbackFont';
 
 type VideoJsPlayer = ReturnType<typeof videojs>;
 
@@ -26,6 +27,9 @@ interface VideoPlayerProps {
     onPlaybackError?: (error: MediaError | null) => void;
     isAudioSwitchRef: React.MutableRefObject<boolean>;
     subtitleTrackIndex: number | null;
+    // 由 PlayerPage 传入的全屏状态：用于动态切换 video opacity，
+    // 解决 opacity:0.999(修复移动端黑屏) 与 ASS 字幕 canvas 在全屏下被遮挡的冲突
+    isFullscreen?: boolean;
 }
 
 const VideoPlayer = ({
@@ -39,6 +43,7 @@ const VideoPlayer = ({
     onPlaybackError,
     isAudioSwitchRef,
     subtitleTrackIndex,
+    isFullscreen = false,
 }: VideoPlayerProps) => {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const playerRef = useRef<VideoJsPlayer | null>(null);
@@ -46,6 +51,9 @@ const VideoPlayer = ({
     const hasSeekedRef = useRef(false);
     const assRendererRef = useRef<JASSUB | null>(null);
     const onPlaybackErrorRef = useRef(onPlaybackError);
+    
+    // 自定义 Hook：专门负责解耦处理服务端的 fallback 字体抓取逻辑
+    const { fallbackFontBlobUrl, isFallbackFontsLoaded } = useJellyfinFallbackFont();
 
     useEffect(() => {
         onPlaybackErrorRef.current = onPlaybackError;
@@ -59,6 +67,8 @@ const VideoPlayer = ({
             autoplay: false,
             preload: 'auto',
             poster: poster,
+            // fluid/responsive 在全屏时会用 padding-bottom 布局，导致 JASSUB canvas 尺寸计算错位
+            // 由外层 CSS (w-full h-full) 控制尺寸，更简单可靠
             responsive: false,
             fluid: false,
             html5: {
@@ -97,6 +107,31 @@ const VideoPlayer = ({
             }
         };
     }, [onReady, poster]);
+
+    // 监听由 PlayerPage 传入的全屏状态（通过 document 原生 fullscreenchange 维护，比 player.on 更可靠）
+    // opacity 在 JSX 里声明式控制（isFullscreen ? 1 : 0.999），这里只负责 JASSUB resize
+    // 注意：不能在 useEffect 里用命令式 vid.style.opacity 修改——isFullscreen 变化会触发重渲染，
+    // JSX 的 style 会把命令式修改覆盖掉，产生竞态
+    useEffect(() => {
+        if (isFullscreen) {
+            // 全屏过渡动画期间视频尺寸是逐步变化的，用 staggered 多次延迟确保 JASSUB canvas 覆盖全屏
+            const timers = [100, 300, 600].map((delay) =>
+                setTimeout(() => {
+                    assRendererRef.current?.resize(
+                        window.innerWidth,
+                        window.innerHeight,
+                        0,
+                        0
+                    );
+                }, delay)
+            );
+            return () => timers.forEach(clearTimeout);
+        } else {
+            // 退出全屏后 resize 回正常尺寸
+            const timer = setTimeout(() => assRendererRef.current?.resize(), 150);
+            return () => clearTimeout(timer);
+        }
+    }, [isFullscreen]);
 
     useEffect(() => {
         if (!playerRef.current) return;
@@ -189,7 +224,7 @@ const VideoPlayer = ({
     }, [subtitles, src, subtitleTrackIndex]);
 
     useEffect(() => {
-        if (!playerRef.current) return;
+        if (!playerRef.current || !isFallbackFontsLoaded) return;
 
         const videoEl = playerRef.current.el()?.querySelector('video');
         if (!videoEl) return;
@@ -200,10 +235,17 @@ const VideoPlayer = ({
         if (!assRendererRef.current) {
             if (!activeTrack || activeTrack.format !== 'ass') return;
 
+            const finalFonts = subtitleFonts ? [...subtitleFonts] : [];
+            if (fallbackFontBlobUrl) {
+                finalFonts.push(fallbackFontBlobUrl);
+            }
+
             assRendererRef.current = new JASSUB({
                 video: videoEl,
                 subUrl: activeTrack.src,
-                fonts: subtitleFonts,
+                fonts: finalFonts,
+                queryFonts: false,
+                defaultFont: 'Noto Sans SC',
             });
             return;
         }
@@ -221,7 +263,7 @@ const VideoPlayer = ({
                 }
             })
             .catch((error) => console.error('Error updating ASS subtitles:', error));
-    }, [subtitleTrackIndex, subtitles, subtitleFonts]);
+    }, [subtitleTrackIndex, subtitles, subtitleFonts, fallbackFontBlobUrl, isFallbackFontsLoaded]);
 
     return (
         <div
@@ -235,7 +277,10 @@ const VideoPlayer = ({
                 data-testid="video-player"
                 playsInline
                 webkit-playsinline="true"
-                style={{ maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' }}
+                // opacity 声明式控制：
+                // - 非全屏：0.999 强制 video 进入独立 GPU 渲染层，修复移动端 WebGL 黑屏遮罩
+                // - 全屏：  1 消除层叠上下文对 JASSUB canvas 的遮挡
+                style={{ width: '100%', height: '100%', opacity: isFullscreen ? 1 : 0.999 }}
             >
                 <track kind="captions" srcLang="en" label="English" />
             </video>
@@ -262,7 +307,7 @@ const VideoPlayer = ({
                          2px -2px 3px rgba(0, 0, 0, 0.95),
                         -2px -2px 3px rgba(0, 0, 0, 0.95) !important;
                     font-weight: bold !important;
-                    font-family: 'Microsoft YaHei', sans-serif !important;
+                    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'WenQuanYi Micro Hei', 'Noto Sans CJK SC', sans-serif !important;
                 }
             `}</style>
         </div>
