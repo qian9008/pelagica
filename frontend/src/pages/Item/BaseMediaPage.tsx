@@ -91,6 +91,7 @@ const BaseMediaPage = ({
                     <div className="absolute inset-0 bg-muted/10 animate-pulse" />
                 )}
             </div>
+            
             {trailerReady && (
                 <div className="absolute top-0 left-0 h-[75vh] md:h-[85vh] w-full z-20 pointer-events-none">
                     <ItemBackdropTrailerControls
@@ -121,9 +122,9 @@ const BaseMediaPage = ({
                 </div>
             )}
             <div
-                className={`relative z-10 px-4 sm:px-12 pb-12 pt-6 ${topPadding ? '' : 'min-h-full flex'}`}
+                className={`relative z-10 px-4 sm:px-12 pb-12 pt-6 ${!topPadding ? 'min-h-full flex' : ''}`}
             >
-                <div className={`w-full flex flex-col gap-8 ${topPadding ? '' : 'flex-1'}`}>
+                <div className={`w-full flex flex-col gap-8 ${!topPadding ? 'flex-1' : ''}`}>
                     {children}
                 </div>
             </div>

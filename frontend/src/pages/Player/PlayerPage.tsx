@@ -40,10 +40,13 @@ const FONT_ATTACHMENT_EXTENSION_PATTERN = /\.(ttf|otf|woff2?)$/i;
 
 export type VideoJsPlayer = ReturnType<typeof import('video.js').default>;
 
-const PlayerPage = () => {
+export interface PlayerCoreProps {
+    itemId: string;
+    isInline?: boolean;
+}
+
+export const PlayerCore = ({ itemId, isInline = false }: PlayerCoreProps) => {
     const { t } = useTranslation('player');
-    const params = useParams<{ itemId: string }>();
-    const itemId = params.itemId;
     const hasUserSelectedSubtitleRef = useRef(false);
     const hasUserSelectedAudioRef = useRef(false);
     const hasAttemptedTranscodeFallbackRef = useRef(false);
@@ -497,7 +500,7 @@ const PlayerPage = () => {
         <div
             ref={containerRef}
             className={`bg-black flex overflow-hidden ${
-                shouldRotate ? 'fixed inset-0 z-[9999]' : 'relative w-full h-screen'
+                shouldRotate ? 'fixed inset-0 z-[9999]' : (isInline ? 'relative w-full h-full z-20' : 'relative w-full h-screen')
             }`}
             style={
                 shouldRotate
@@ -539,9 +542,16 @@ const PlayerPage = () => {
                 nextItem={adjacentItems?.nextItem}
                 srcUrl={streamResult.url}
                 containerRef={containerRef}
+                isInline={isInline}
             />
         </div>
     );
+};
+
+const PlayerPage = () => {
+    const params = useParams<{ itemId: string }>();
+    if (!params.itemId) return <p>Item not found</p>;
+    return <PlayerCore itemId={params.itemId} />;
 };
 
 export default PlayerPage;

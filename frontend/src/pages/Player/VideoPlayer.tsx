@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import JASSUB from 'jassub';
@@ -117,12 +117,7 @@ const VideoPlayer = ({
             // 全屏过渡动画期间视频尺寸是逐步变化的，用 staggered 多次延迟确保 JASSUB canvas 覆盖全屏
             const timers = [100, 300, 600].map((delay) =>
                 setTimeout(() => {
-                    assRendererRef.current?.resize(
-                        window.innerWidth,
-                        window.innerHeight,
-                        0,
-                        0
-                    );
+                    assRendererRef.current?.resize();
                 }, delay)
             );
             return () => timers.forEach(clearTimeout);

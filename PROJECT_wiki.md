@@ -15,11 +15,13 @@
   * **[`SharedLibrary/SharedLibraryPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/SharedLibrary/SharedLibraryPage.tsx)** [新增]: 共享库主管理页面，包括共享给我的、我分享的列表 and 分页管理。
   * **[`Library/LibraryPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Library/LibraryPage.tsx)** [修改]: 经过深度导航优化和“上一级文件夹”死循环修复后的媒体库页面。
   * **[`Login/LoginPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Login/LoginPage.tsx)** [修改]: 包含分立 IP 与端口输入框的登录页面。
+  * **[`Item/BaseMediaPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Item/BaseMediaPage.tsx)** [修改]: 支持传入 `isPlayingInline` 和 `inlinePlayer` 属性，实现在详情页顶部无缝渲染内嵌播放器并隐藏背景海报。
+  * **[`Item/MoviePage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Item/MoviePage.tsx)** 和 **[`Item/EpisodePage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Item/EpisodePage.tsx)** [修改]: 增加内嵌播放状态拦截，所有内部播放按钮不再跳转路由，改为在当前详情页触发极简 UI 的顶部播放。
 * **`/frontend/src/hooks/`**: 共享钩子（Hook）存放处。
   * **`api/useRefreshItemMetadata.ts`** [新增]: 元数据刷新钩子。
 * **`/frontend/src/pages/Player/`**: 播放器页面组件目录。
-  * **[`PlayerControls.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Player/PlayerControls.tsx)** [修改]: 倍速控制、音量滑出式控制、时间显示移至进度条下方。
-  * **[`PlayerPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Player/PlayerPage.tsx)** [修改]: 移动端全屏自动横屏、多浏览器全屏 API 兼容、STRM 直流播放。
+  * **[`PlayerControls.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Player/PlayerControls.tsx)** [修改]: 倍速控制、音量滑出式控制、时间显示移至进度条下方；支持 `isInline` 属性渲染内嵌播放器极简界面（大浮窗播放/暂停与全屏按钮）；在进度条上增加拖拽圆点增强交互反馈。
+  * **[`PlayerPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Player/PlayerPage.tsx)** [修改]: 移动端全屏自动横屏、多浏览器全屏 API 兼容、STRM 直流播放；已剥离为可供其他组件复用的 `PlayerCore`，原页面组件改为路由包裹层（解耦式二改）。
   * **[`VideoPlayer.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Player/VideoPlayer.tsx)** [修改]: iOS playsInline、屏蔽原生触摸控件、硬解指示器、字幕样式清理；新增基于 Jellyfin 后台备用字体的获取与本地 Blob 映射机制（处理尾部斜杠防 404），以 `defaultFont: 'Noto Sans SC'` 形式强制注入 JASSUB 字典；启用 `video.js` 的 `fluid: true` 流式布局，强制容器贴合视频画幅，完美消除移动端 Android Chrome 因 JASSUB Canvas 图层坐标与尺寸不匹配引发的“黑屏遮罩”和 GPU 崩溃 Bug。
 * **`/frontend/src/utils/jellyfinUrls.ts`** [修改]: 新增 `getStaticStreamUrl` 函数（STRM 直流）+ mkv 容器映射。
 

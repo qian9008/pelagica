@@ -6,7 +6,6 @@ import { ImageOff, Play, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Link } from 'react-router';
 import MoreLikeThisRow from './MoreLikeThisRow';
 import SeerRecommendationsRow from './SeerrRecommendationsRow';
 import type { AppConfig } from '@/hooks/api/useConfig';
@@ -27,6 +26,7 @@ import ExternalPlayerButton from '@/components/ExternalPlayerButton';
 import ItemMetadataBadges from './ItemMetadataBadges';
 import Overview from './Overview';
 import ItemBackButton from './ItemBackButton';
+import { PlayerCore } from '../Player/PlayerPage';
 
 interface MoviePageProps {
     item: BaseItemDto;
@@ -42,10 +42,12 @@ const MoviePage = ({ item, config, onBack }: MoviePageProps) => {
     const [failedLogo, setFailedLogo] = useState(false);
     const [customAspectRatio, setCustomAspectRatio] = useState<number | null>(null);
     const [prevItemId, setPrevItemId] = useState<string | undefined>(item.Id);
+    const [isPlayingInline, setIsPlayingInline] = useState(false);
 
     if (item.Id !== prevItemId) {
         setPrevItemId(item.Id);
         setCustomAspectRatio(null);
+        setIsPlayingInline(false);
     }
 
     const currentAspectRatio = customAspectRatio ?? item.PrimaryImageAspectRatio ?? (2 / 3);
@@ -91,11 +93,13 @@ const MoviePage = ({ item, config, onBack }: MoviePageProps) => {
                 <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-stretch lg:items-start relative z-10 w-full">
                     {/* Left Column (Poster) */}
                     <div
-                        className="relative -mx-4 sm:mx-auto lg:mx-0 w-[calc(100%+2rem)] sm:w-full sm:max-w-[24rem] lg:max-w-[30rem] xl:max-w-[36rem] shadow-lg overflow-hidden group shrink-0 bg-black/30"
+                        className="w-full sm:w-64 md:w-80 lg:w-96 shrink-0 rounded-xl overflow-hidden shadow-2xl shadow-black/85 border border-white/10 mx-auto lg:mx-0 group"
                         style={{ aspectRatio: currentAspectRatio }}
                     >
-                        {!postersFailed ? (
-                            <Link to={`/play/${item.Id}`} className="block w-full h-full relative cursor-pointer z-10">
+                        {isPlayingInline && item.Id ? (
+                            <PlayerCore itemId={item.Id} isInline={true} />
+                        ) : !postersFailed ? (
+                            <div onClick={() => setIsPlayingInline(true)} className="block w-full h-full relative cursor-pointer z-10">
                                 <Skeleton className="absolute inset-0 w-full h-full" />
                                 <img
                                     src={getPrimaryImageUrl(
@@ -126,7 +130,7 @@ const MoviePage = ({ item, config, onBack }: MoviePageProps) => {
                                         <Play className="h-8 w-8 text-white fill-white ml-1" />
                                     </div>
                                 </div>
-                            </Link>
+                            </div>
                         ) : (
                             <div className="w-full h-full flex items-center justify-center bg-muted">
                                 <ImageOff className="text-muted-foreground w-12 h-12" />
@@ -162,6 +166,7 @@ const MoviePage = ({ item, config, onBack }: MoviePageProps) => {
                                 isCurrentlyPlaying={Boolean(isCurrentlyPlaying)}
                                 playLabel={t('play')}
                                 resumeLabel={t('resume')}
+                                onPlay={() => setIsPlayingInline(true)}
                             />
                             <ExternalPlayerButton item={item} />
                             <TrailerButton item={item} />

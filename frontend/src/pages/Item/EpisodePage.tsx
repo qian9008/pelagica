@@ -29,6 +29,7 @@ import ExternalPlayerButton from '@/components/ExternalPlayerButton';
 import { Skeleton } from '@/components/ui/skeleton';
 import Overview from './Overview';
 import ItemBackButton from './ItemBackButton';
+import { PlayerCore } from '../Player/PlayerPage';
 
 interface EpisodePageProps {
     item: BaseItemDto;
@@ -41,6 +42,7 @@ const EpisodePage = ({ item, config, onBack }: EpisodePageProps) => {
     const [imageError, setImageError] = useState<boolean>(false);
     const [isImageLoaded, setIsImageLoaded] = useState<boolean>(false);
     const [selectedSeason, setSelectedSeason] = useState<string | null>(null);
+    const [isPlayingInline, setIsPlayingInline] = useState(false);
     const { data: seasons, isLoading: isLoadingSeasons } = useSeasons(item.SeriesId || '');
 
     const effectiveSelectedSeason =
@@ -69,10 +71,12 @@ const EpisodePage = ({ item, config, onBack }: EpisodePageProps) => {
                     {/* Left Column (Thumbnail) */}
                     <div className="w-full sm:w-72 md:w-96 lg:w-120 shrink-0 mx-auto lg:mx-0">
                         <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-2xl shadow-black/85 border border-white/10 bg-muted flex items-center justify-center group">
-                            {imageError ? (
+                            {isPlayingInline && item.Id ? (
+                                <PlayerCore itemId={item.Id} isInline={true} />
+                            ) : imageError ? (
                                 <ImageOff className="w-12 h-12 text-muted-foreground" />
                             ) : (
-                                <Link to={`/play/${item.Id}`} className="block w-full h-full relative cursor-pointer z-10">
+                                <div onClick={() => setIsPlayingInline(true)} className="block w-full h-full relative cursor-pointer z-10">
                                     <Skeleton className="absolute inset-0 w-full h-full rounded-xl" />
                                     <img
                                         src={
@@ -105,7 +109,7 @@ const EpisodePage = ({ item, config, onBack }: EpisodePageProps) => {
                                             <Play className="h-8 w-8 text-white fill-white ml-1" />
                                         </div>
                                     </div>
-                                </Link>
+                                </div>
                             )}
                             {progress > 0 && (
                                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700 z-20">
@@ -156,6 +160,7 @@ const EpisodePage = ({ item, config, onBack }: EpisodePageProps) => {
                                 isCurrentlyPlaying={isCurrentlyPlaying}
                                 playLabel={t('play')}
                                 resumeLabel={t('resume')}
+                                onPlay={() => setIsPlayingInline(true)}
                             />
                             <ExternalPlayerButton item={item} />
                             <FavoriteButton

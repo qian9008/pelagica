@@ -22,6 +22,7 @@ interface SourcePickerButtonProps {
     isCurrentlyPlaying: boolean;
     playLabel: string;
     resumeLabel: string;
+    onPlay?: (itemId?: string) => void;
 }
 
 const SourcePickerButton = ({
@@ -30,6 +31,7 @@ const SourcePickerButton = ({
     isCurrentlyPlaying,
     playLabel,
     resumeLabel,
+    onPlay,
 }: SourcePickerButtonProps) => {
     const location = useLocation();
     const [selectedSourceId, setSelectedSourceId] = useState<string | undefined>(
@@ -42,17 +44,27 @@ const SourcePickerButton = ({
 
     return (
         <ButtonGroup className="relative inline-flex">
-            <Button className={hasMultipleSources ? 'rounded-r-none w-min' : 'w-min'} asChild>
-                <Link
-                    to={buildPlayerUrl(
-                        selectedSource?.Id ?? itemId,
-                        location.pathname + location.search
-                    )}
+            {onPlay ? (
+                <Button 
+                    className={hasMultipleSources ? 'rounded-r-none w-min' : 'w-min'} 
+                    onClick={() => onPlay(selectedSource?.Id ?? itemId)}
                 >
                     <Play />
                     {isCurrentlyPlaying ? resumeLabel : playLabel}
-                </Link>
-            </Button>
+                </Button>
+            ) : (
+                <Button className={hasMultipleSources ? 'rounded-r-none w-min' : 'w-min'} asChild>
+                    <Link
+                        to={buildPlayerUrl(
+                            selectedSource?.Id ?? itemId,
+                            location.pathname + location.search
+                        )}
+                    >
+                        <Play />
+                        {isCurrentlyPlaying ? resumeLabel : playLabel}
+                    </Link>
+                </Button>
+            )}
 
             {hasMultipleSources && (
                 <>
@@ -67,7 +79,12 @@ const SourcePickerButton = ({
                             {mediaSources?.map((source) => (
                                 <DropdownMenuItem
                                     key={source.Id}
-                                    onSelect={() => setSelectedSourceId(source.Id ?? undefined)}
+                                    onSelect={() => {
+                                        setSelectedSourceId(source.Id ?? undefined);
+                                        if (onPlay) {
+                                            onPlay(source.Id ?? undefined);
+                                        }
+                                    }}
                                 >
                                     <Check
                                         className={cn(
