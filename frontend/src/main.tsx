@@ -30,6 +30,7 @@ const SearchPage = lazy(() => import('./pages/Search/SearchPage.tsx'));
 const ThemeBrowserPage = lazy(() => import('./pages/ThemeBrowser/ThemeBrowserPage.tsx'));
 const NotFoundPage = lazy(() => import('./pages/NotFound/NotFoundPage.tsx'));
 const PhotoViewerPage = lazy(() => import('./pages/PhotoViewer/PhotoViewerPage.tsx'));
+const SharedLibraryPage = lazy(() => import('./pages/SharedLibrary/SharedLibraryPage.tsx'));
 const MusicLayout = lazy(() => import('./pages/Music/MusicLayout.tsx'));
 const MusicMainContent = lazy(() => import('./pages/Music/MusicMainContent.tsx'));
 const MusicAlbumView = lazy(() => import('./pages/Music/MusicAlbumView.tsx'));
@@ -41,7 +42,14 @@ const StudiosPage = lazy(() => import('./pages/Studios/StudiosPage.tsx'));
 const ItemsSectionPage = lazy(() => import('./pages/Items/ItemsSectionPage.tsx'));
 const LivetvPage = lazy(() => import('./pages/Live/LiveTvPage.tsx'));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            retry: import.meta.env.DEV ? false : 1,
+            refetchOnWindowFocus: false,
+        },
+    },
+});
 
 createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
@@ -62,6 +70,7 @@ createRoot(document.getElementById('root')!).render(
                                     <Routes>
                                         <Route path="/" element={<HomePage />} />
                                         <Route path="/library" element={<LibraryPage />} />
+                                        <Route path="/shared-library" element={<SharedLibraryPage />} />
                                         <Route path="/item/:itemId" element={<ItemPage />} />
                                         <Route path="/person/:itemId" element={<PersonPage />} />
                                         <Route path="/genre/:itemId" element={<GenrePage />} />
