@@ -1,32 +1,17 @@
 export type StatsConsent = 'granted' | 'denied' | 'unknown';
 
-const numberToStatsConsent = (value: number): StatsConsent => {
-    switch (value) {
-        case 2:
-            return 'denied';
-        case 1:
-            return 'unknown';
-        case 0:
-            return 'granted';
-        default:
-            throw new Error(`Invalid stats consent value: ${value}`);
-    }
-};
+
 
 export const getStatsConsent = async (): Promise<StatsConsent> => {
-    const res = await fetch('/api/stats-consent');
-    if (!res.ok) {
-        throw new Error('Failed to fetch stats consent');
+    // 纯前端模式下，不再依赖 4321 后端的 /api/stats-consent，而是存在本地
+    const stored = localStorage.getItem('pelagica_stats_consent');
+    if (stored) {
+        return stored as StatsConsent;
     }
-    const data = await res.json();
-    return numberToStatsConsent(data.consent);
+    return 'unknown';
 };
 
 export const setStatsConsent = async (consent: boolean): Promise<void> => {
-    const res = await fetch('/api/stats-consent?consent=' + consent, {
-        method: 'POST',
-    });
-    if (!res.ok) {
-        throw new Error('Failed to set stats consent');
-    }
+    const value: StatsConsent = consent ? 'granted' : 'denied';
+    localStorage.setItem('pelagica_stats_consent', value);
 };
