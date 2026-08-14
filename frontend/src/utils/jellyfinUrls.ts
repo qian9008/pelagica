@@ -270,6 +270,7 @@ const BROWSER_PLAYABLE_CONTAINERS: Record<string, string> = {
     mp4: 'video/mp4',
     webm: 'video/webm',
     mov: 'video/mp4',
+    mkv: 'video/x-matroska',
 };
 
 export function getPlaybackStreamUrl(
@@ -408,4 +409,18 @@ export function getDownloadurl(itemId: string) {
 export function getStudioImageUrl(studioName: string, monoColor: string, monoColor2: string) {
     const params = new URLSearchParams({ mono: 'true', color: monoColor, color2: monoColor2 });
     return `/api/studios/${encodeURIComponent(studioName)}/logo?${params.toString()}`;
+}
+
+export function getStaticStreamUrl(itemId: string) {
+    try {
+        const creds = resolveCredentials();
+        if (!creds) return '';
+        const url = new URL(creds.server);
+        url.pathname = `/Videos/${itemId}/stream`;
+        url.searchParams.append('Static', 'true');
+        url.searchParams.append('api_key', creds.token);
+        return url.toString();
+    } catch {
+        return '';
+    }
 }

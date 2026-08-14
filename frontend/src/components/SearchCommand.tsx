@@ -10,6 +10,7 @@ import { useSearch, type SearchMode } from '@/context/SearchContext';
 import { useSearchItems } from '@/hooks/api/useSearchItems';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
 import { useNavigate } from 'react-router';
+
 import { Skeleton } from './ui/skeleton';
 import { Calendar, Clapperboard, Music, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -156,10 +157,12 @@ export const SearchCommand = () => {
             return results.reduce(
                 (acc, item) => {
                     acc[item.Id!] =
-                        getPrimaryImageUrl(item.Id!, {
-                            maxWidth: 96,
-                            maxHeight: 144,
-                        }) || '';
+                        getPrimaryImageUrl(
+                            item.Id!,
+                            { maxWidth: 96, maxHeight: 144 },
+                            item.ImageTags?.Primary,
+                            85
+                        ) || '';
                     return acc;
                 },
                 {} as Record<string, string>
