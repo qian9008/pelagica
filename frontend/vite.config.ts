@@ -12,15 +12,9 @@ export default defineConfig({
         },
     },
     server: {
+        host: '0.0.0.0',
         port: 3000,
         allowedHosts: ['mbjan.local'],
-        proxy: {
-            '/api': {
-                target: 'http://localhost:4321/api',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api/, ''), // remove /api prefix when forwarding to backend
-            },
-        },
     },
     build: {
         rolldownOptions: {
