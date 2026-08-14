@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import JASSUB from 'jassub';
+import { setupSubtitleSanitizer } from '@/hooks/setupSubtitleSanitizer';
+import { setupHardwareIndicator } from '@/hooks/setupHardwareIndicator';
 
 type VideoJsPlayer = ReturnType<typeof videojs>;
 
@@ -40,6 +42,7 @@ const VideoPlayer = ({
 }: VideoPlayerProps) => {
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const playerRef = useRef<VideoJsPlayer | null>(null);
+    const indicatorRef = useRef<HTMLDivElement>(null);
     const hasSeekedRef = useRef(false);
     const assRendererRef = useRef<JASSUB | null>(null);
     const onPlaybackErrorRef = useRef(onPlaybackError);
@@ -67,6 +70,9 @@ const VideoPlayer = ({
 
         playerRef.current = player;
 
+        const cleanupSubtitle = setupSubtitleSanitizer(player);
+        const cleanupIndicator = setupHardwareIndicator(player, indicatorRef.current);
+
         player.on('error', () => {
             const mediaError = player.error() as unknown as MediaError | null;
             console.error('video.js playback error:', mediaError);
@@ -75,9 +81,14 @@ const VideoPlayer = ({
 
         player.ready(() => {
             onReady?.(player);
+            player.play()?.catch((error) => {
+                console.error('Error attempting to play:', error);
+            });
         });
 
         return () => {
+            cleanupSubtitle();
+            cleanupIndicator();
             assRendererRef.current?.destroy();
             assRendererRef.current = null;
             if (playerRef.current) {
@@ -214,17 +225,46 @@ const VideoPlayer = ({
 
     return (
         <div
-            className="w-full h-full overflow-hidden"
+            className="w-full h-full overflow-hidden relative group"
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
+            <div ref={indicatorRef} style={{ display: 'none' }}></div>
             <video
                 ref={videoRef}
                 className="video-js vjs-default-skin"
                 data-testid="video-player"
+                playsInline
+                webkit-playsinline="true"
                 style={{ maxWidth: '100%', maxHeight: '100%', width: '100%', height: '100%' }}
             >
                 <track kind="captions" srcLang="en" label="English" />
             </video>
+            {/* 注入自定义字幕样式：透明背景，洋红描边与黑色深邃阴影 */}
+            <style>{`
+                .vjs-text-track-cue {
+                    background-color: transparent !important;
+                }
+                .vjs-text-track-cue > div {
+                    background-color: transparent !important;
+                    background: transparent !important;
+                    color: #ffffff !important;
+                    text-shadow: 
+                        -1.5px -1.5px 0 #ff00ff,  
+                         1.5px -1.5px 0 #ff00ff,
+                        -1.5px  1.5px 0 #ff00ff,
+                         1.5px  1.5px 0 #ff00ff,
+                        -2px  0px 1px #ff00ff,
+                         2px  0px 1px #ff00ff,
+                         0px -2px 1px #ff00ff,
+                         0px  2px 1px #ff00ff,
+                         2px  2px 3px rgba(0, 0, 0, 0.95),
+                        -2px  2px 3px rgba(0, 0, 0, 0.95),
+                         2px -2px 3px rgba(0, 0, 0, 0.95),
+                        -2px -2px 3px rgba(0, 0, 0, 0.95) !important;
+                    font-weight: bold !important;
+                    font-family: 'Microsoft YaHei', sans-serif !important;
+                }
+            `}</style>
         </div>
     );
 };

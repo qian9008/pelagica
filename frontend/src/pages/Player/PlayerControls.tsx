@@ -35,20 +35,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { formatPlayTime, ticksToReadableTime, ticksToSeconds } from '@/utils/timeConversion';
 import { buildPlayerUrl } from '@/utils/playerUrl';
-import { isDesktopApp } from '@/utils/desktopApp';
 import { useTranslation } from 'react-i18next';
+import { isDesktopApp } from '@/utils/desktopApp';
 import { usePlayerKeyboardControls } from '@/hooks/usePlayerKeyboardControls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getLogoUrl, getPrimaryImageUrl, getTrickplayImageUrl } from '@/utils/jellyfinUrls';
+import { getPrimaryImageUrl, getTrickplayImageUrl } from '@/utils/jellyfinUrls';
 import { useReportPlaybackProgress } from '@/hooks/api/usePlaybackProgress';
 import { getRuntimePlaybackStats, type RuntimePlaybackStats } from '@/utils/playbackStats';
 import { useSession } from '@/hooks/api/useSession';
+import { usePlaybackRate } from '@/hooks/usePlaybackRate';
 import {
     removeLastSubtitleLanguage,
     setLastAudioLanguage,
     setLastSubtitleLanguage,
 } from '@/utils/localstorageLastlanguage';
-import { useConfig } from '../../hooks/api/useConfig';
 
 function getPrimaryTrickplayInfo(trickplay?: BaseItemDto['Trickplay']) {
     if (!trickplay) return null;
@@ -126,14 +126,18 @@ const PlayerControls = ({
 }: PlayerControlsProps) => {
     const { t } = useTranslation('player');
     const [isPlaying, setIsPlaying] = useState(false);
+    const [playbackRate, setPlaybackRate] = usePlaybackRate(player);
     const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
+    const [duration, setDuration] = useState(() => {
+        return item.RunTimeTicks ? ticksToSeconds(item.RunTimeTicks) : 0;
+    });
     const [bufferedTime, setBufferedTime] = useState(0);
     const [volume, setVolume] = useState(() => {
         const saved = localStorage.getItem('playerVolume');
         return saved ? parseFloat(saved) : 1;
     });
     const [isMuted, setIsMuted] = useState(false);
+    const [showVolumeBar, setShowVolumeBar] = useState(false);
     const [hoverTime, setHoverTime] = useState<number | null>(null);
     const [hoverPosition, setHoverPosition] = useState<number>(0);
     const [showControls, setShowControls] = useState(true);
@@ -149,15 +153,15 @@ const PlayerControls = ({
     const [showStats, setShowStats] = useState(false);
     const [container, setContainer] = useState<HTMLElement | null>(null);
     const { data: session } = useSession(item.Id, showStats);
-    const [backButtonLogoFailed, setBackButtonLogoFailed] = useState(false);
-    const { config } = useConfig();
 
+    // 优先使用浏览器历史后退，避免 navigate(backUrl) 产生 PUSH 导致详情页↔播放页死循环
     const handleBack = () => {
-        if (backUrl) {
-            navigate(backUrl);
-        } else {
+        if (window.history.state && window.history.state.idx > 0) {
             navigate(-1);
+            return;
         }
+        // 无浏览器历史时，用 backUrl 或首页作为兜底
+        navigate(backUrl || '/');
     };
 
     useEffect(() => {
@@ -197,13 +201,17 @@ const PlayerControls = ({
     const markItemAsCompleted = useCallback(
         (itemId: string | undefined) => {
             if (!itemId) return;
+            const playerDuration = player && !player.isDisposed?.() ? player.duration() : 0;
+            const finalTicks = playerDuration && playerDuration > 0 && playerDuration !== Infinity && !isNaN(playerDuration)
+                ? Math.floor(playerDuration * 10000000)
+                : (item.RunTimeTicks || 0);
             reportProgress({
                 itemId,
-                positionTicks: item.RunTimeTicks || 0,
+                positionTicks: finalTicks,
                 isPaused: true,
             });
         },
-        [item.RunTimeTicks, reportProgress]
+        [item.RunTimeTicks, player, reportProgress]
     );
 
     useEffect(() => {
@@ -225,7 +233,16 @@ const PlayerControls = ({
 
         const updatePlayState = () => setIsPlaying(!player.paused());
         const updateTime = () => setCurrentTime(player.currentTime() || 0);
-        const updateDuration = () => setDuration(player.duration() || 0);
+        const updateDuration = () => {
+            const playerDuration = player.duration();
+            if (playerDuration && playerDuration > 0 && playerDuration !== Infinity && !isNaN(playerDuration)) {
+                setDuration(playerDuration);
+            } else if (item.RunTimeTicks) {
+                setDuration(ticksToSeconds(item.RunTimeTicks));
+            } else {
+                setDuration(playerDuration || 0);
+            }
+        };
         const updateMuted = () => setIsMuted(player.muted() || false);
         const updateBuffered = () => {
             const buffered = player.buffered();
@@ -254,6 +271,7 @@ const PlayerControls = ({
         player.on('timeupdate', updateTime);
         player.on('timeupdate', updateBuffered);
         player.on('loadedmetadata', updateDuration);
+        player.on('durationchange', updateDuration);
         player.on('progress', updateBuffered);
         player.on('volumechange', updateMuted);
         player.on('ended', handleEnded);
@@ -264,6 +282,7 @@ const PlayerControls = ({
             player.off('timeupdate', updateTime);
             player.off('timeupdate', updateBuffered);
             player.off('loadedmetadata', updateDuration);
+            player.off('durationchange', updateDuration);
             player.off('progress', updateBuffered);
             player.off('volumechange', updateMuted);
             player.off('ended', handleEnded);
@@ -279,9 +298,11 @@ const PlayerControls = ({
         nextItem,
         dismissedNextItemPrompt,
         item.Id,
+        item.RunTimeTicks,
         navigate,
         markItemAsCompleted,
         backUrl,
+        playbackRate,
     ]);
 
     const togglePlay = useCallback(() => {
@@ -428,9 +449,6 @@ const PlayerControls = ({
             ? `${item.SeriesName} - S${item.ParentIndexNumber}E${item.IndexNumber} - ${item.Name}`
             : item.Name;
 
-    const backButtonImageId = item.Type === 'Episode' ? item.SeriesId : item.Id;
-    const backButtonImageTag = item.Type === 'Episode' ? undefined : item.ImageTags?.Logo;
-
     const isLive = item.Type === 'TvChannel';
 
     const audioStreams = item.MediaStreams?.filter((s) => s.Type === 'Audio') || [];
@@ -447,7 +465,7 @@ const PlayerControls = ({
     return (
         <>
             <div
-                className="absolute top-0 left-0 w-full p-4 bg-linear-to-b from-black/80 to-transparent z-50 text-gray-200 text-lg flex items-center gap-2 transition-opacity duration-300"
+                className="absolute top-0 left-0 w-full p-4 bg-linear-to-b from-black/80 to-transparent z-20 text-gray-200 text-lg flex items-center gap-2 transition-opacity duration-300"
                 style={{
                     opacity: showControls ? 1 : 0,
                     pointerEvents: showControls ? 'auto' : 'none',
@@ -457,15 +475,7 @@ const PlayerControls = ({
                 <Button variant="ghost" onClick={handleBack}>
                     <ArrowLeft />
                 </Button>
-                {backButtonLogoFailed || (config && !config.showLogoInPlayerControls) ? (
-                    <h1>{title}</h1>
-                ) : (
-                    <img
-                        className="h-6 object-contain"
-                        src={getLogoUrl(backButtonImageId!, { maxHeight: 40 }, backButtonImageTag)}
-                        onError={() => setBackButtonLogoFailed(true)}
-                    />
-                )}
+                <h1>{title}</h1>
             </div>
             <div
                 className={`absolute inset-0 z-10 p-4 ${showControls ? '' : 'cursor-none'}`}
@@ -713,7 +723,7 @@ const PlayerControls = ({
                         />
                         {/* current progress */}
                         <div
-                            className="absolute top-1 left-0 h-1 bg-brand rounded pointer-events-none z-15 transition-[width] duration-250 ease-linear"
+                            className="absolute top-1 left-0 h-1 bg-brand rounded pointer-events-none z-15"
                             style={{ width: `${progressPercentage}%` }}
                         />
                         {/* Hover preview */}
@@ -770,6 +780,11 @@ const PlayerControls = ({
                             })()}
                     </div>
                 )}
+                {/* 进度条下方的两端时间显示 */}
+                <div className="flex justify-between items-center text-xs text-gray-400 mt-1.5 px-0.5 font-medium select-none pointer-events-none">
+                    <span className="tabular-nums">{formatPlayTime(clampedCurrentTime)}</span>
+                    <span className="tabular-nums">{formatPlayTime(duration)}</span>
+                </div>
 
                 {/* Controls */}
                 <div className="flex items-center justify-between text-white gap-4">
@@ -808,14 +823,11 @@ const PlayerControls = ({
                                 </Link>
                             </Button>
                         )}
-                        {isLive ? (
+                        {/* 直播标识：非直播时不再显示冗余时间（进度条下方已有） */}
+                        {isLive && (
                             <div className="flex items-center gap-1.5 text-sm ml-2">
                                 <Dot className="text-red-500 -mx-1" size={32} />
                                 {t('live')}
-                            </div>
-                        ) : (
-                            <div className="text-sm ml-2">
-                                {formatPlayTime(clampedCurrentTime)} / {formatPlayTime(duration)}
                             </div>
                         )}
                     </div>
@@ -896,22 +908,81 @@ const PlayerControls = ({
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )}
-                        <Button
-                            variant={'ghost'}
-                            size={'icon-lg'}
-                            onClick={toggleMute}
-                            className="cursor-pointer"
+                        {/* 音量控制组合区域：支持悬停/触摸滑出音量条，音量条显示时点击图标切换静音 */}
+                        <div
+                            className="flex items-center h-10"
+                            onMouseEnter={() => setShowVolumeBar(true)}
+                            onMouseLeave={() => setShowVolumeBar(false)}
                         >
-                            {isMuted ? <VolumeX /> : <Volume2 />}
-                        </Button>
-                        <Slider
-                            min={0}
-                            max={1}
-                            step={0.1}
-                            value={isMuted ? [0] : [volume]}
-                            onValueChange={handleVolumeChange}
-                            className="w-25 cursor-pointer mr-2"
-                        />
+                            <Button
+                                variant={'ghost'}
+                                size={'icon-lg'}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (showVolumeBar) {
+                                        toggleMute();
+                                    } else {
+                                        setShowVolumeBar(true);
+                                    }
+                                }}
+                                className="cursor-pointer"
+                            >
+                                {isMuted ? <VolumeX /> : <Volume2 />}
+                            </Button>
+                            <div
+                                className={`flex items-center transition-all duration-300 ease-in-out ${
+                                    showVolumeBar
+                                        ? 'w-24 opacity-100 ml-2'
+                                        : 'w-0 opacity-0 overflow-hidden pointer-events-none'
+                                }`}
+                            >
+                                <Slider
+                                    min={0}
+                                    max={1}
+                                    step={0.1}
+                                    value={isMuted ? [0] : [volume]}
+                                    onValueChange={handleVolumeChange}
+                                    className="w-24 cursor-pointer mr-2"
+                                />
+                            </div>
+                        </div>
+                        {/* 播放速度控制 */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant={'ghost'}
+                                    size={'icon-lg'}
+                                    className="cursor-pointer text-sm font-semibold select-none"
+                                    title="播放速度"
+                                >
+                                    <span className="text-[13px]">{playbackRate}x</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent container={container} className="w-40 z-50">
+                                <DropdownMenuLabel>播放速度</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuRadioGroup
+                                    value={playbackRate.toString()}
+                                    onValueChange={(val) => setPlaybackRate(parseFloat(val))}
+                                >
+                                    <DropdownMenuRadioItem value="0.5">0.5x</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="0.75">
+                                        0.75x
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1">
+                                        1.0x (正常)
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1.25">
+                                        1.25x
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1.5">1.5x</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1.75">
+                                        1.75x
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="2">2.0x</DropdownMenuRadioItem>
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                         {document.pictureInPictureEnabled && !isDesktopApp() && (
                             <Button
                                 variant={'ghost'}
