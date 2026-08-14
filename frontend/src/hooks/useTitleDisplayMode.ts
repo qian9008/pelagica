@@ -13,7 +13,10 @@ const STORAGE_KEY = 'mediaTitleDisplayMode';
  */
 export const getItemDisplayName = (item: BaseItemDto, mode: TitleDisplayMode) => {
     if (mode === 'filename') {
-        const path = item.Path || item.MediaSources?.[0]?.Path || (item as BaseItemDto & { FileName?: string }).FileName;
+        const path =
+            item.Path ||
+            item.MediaSources?.[0]?.Path ||
+            (item as BaseItemDto & { FileName?: string }).FileName;
         if (path) {
             // 支持 Windows 和 Unix 路径分隔符提取文件名
             const parts = path.split(/[/\\]/);
@@ -50,7 +53,10 @@ export function useTitleDisplayMode() {
 
         return () => {
             window.removeEventListener('storage', handleStorageChange);
-            window.removeEventListener('titleDisplayModeChanged', handleCustomChange as EventListener);
+            window.removeEventListener(
+                'titleDisplayModeChanged',
+                handleCustomChange as EventListener
+            );
         };
     }, []);
 

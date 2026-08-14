@@ -2,7 +2,10 @@ import videojs from 'video.js';
 
 type VideoJsPlayer = ReturnType<typeof videojs>;
 
-export const setupHardwareIndicator = (player: VideoJsPlayer, indicatorEl: HTMLDivElement | null) => {
+export const setupHardwareIndicator = (
+    player: VideoJsPlayer,
+    indicatorEl: HTMLDivElement | null
+) => {
     const handleLoadedMetadata = async () => {
         const videoEl = player.el()?.querySelector('video');
         if (!videoEl || !indicatorEl) return;
@@ -20,10 +23,10 @@ export const setupHardwareIndicator = (player: VideoJsPlayer, indicatorEl: HTMLD
                         width: width,
                         height: height,
                         bitrate: 2500000,
-                        framerate: 30
-                    }
+                        framerate: 30,
+                    },
                 });
-                
+
                 const isHw = info.powerEfficient;
                 indicatorEl.style.display = 'flex';
                 indicatorEl.innerHTML = `
@@ -31,8 +34,8 @@ export const setupHardwareIndicator = (player: VideoJsPlayer, indicatorEl: HTMLD
                     <span class="tracking-wider">${isHw ? 'HW' : 'SW'}</span>
                 `;
                 indicatorEl.className = `absolute top-6 right-6 px-3 py-1.5 text-xs font-bold rounded-md shadow-xl backdrop-blur-md z-50 transition-all duration-500 flex items-center gap-2 pointer-events-none opacity-60 group-hover:opacity-100 ${
-                    isHw 
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                    isHw
+                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                         : 'bg-orange-500/10 text-orange-400 border border-orange-500/20'
                 }`;
             } catch (error) {

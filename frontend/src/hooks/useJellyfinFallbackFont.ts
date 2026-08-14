@@ -20,12 +20,12 @@ export const useJellyfinFallbackFont = () => {
                 // 先获取服务端支持的回落字体列表
                 const listUrl = `${sanitizedServerUrl}/FallbackFont/Fonts`;
                 const listRes = await fetch(listUrl, {
-                    headers: { 'Authorization': `MediaBrowser Token="${token}"` }
+                    headers: { Authorization: `MediaBrowser Token="${token}"` },
                 });
-                
+
                 if (!listRes.ok) throw new Error('Failed to fetch fallback fonts list');
                 const fontsList = await listRes.json();
-                
+
                 if (!fontsList || fontsList.length === 0) {
                     console.warn('No fallback fonts available on the server');
                     setIsFallbackFontsLoaded(true);

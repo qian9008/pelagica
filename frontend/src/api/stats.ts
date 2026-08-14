@@ -1,7 +1,5 @@
 export type StatsConsent = 'granted' | 'denied' | 'unknown';
 
-
-
 export const getStatsConsent = async (): Promise<StatsConsent> => {
     // 纯前端模式下，不再依赖 4321 后端的 /api/stats-consent，而是存在本地
     const stored = localStorage.getItem('pelagica_stats_consent');

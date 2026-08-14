@@ -45,8 +45,8 @@ const SourcePickerButton = ({
     return (
         <ButtonGroup className="relative inline-flex">
             {onPlay ? (
-                <Button 
-                    className={hasMultipleSources ? 'rounded-r-none w-min' : 'w-min'} 
+                <Button
+                    className={hasMultipleSources ? 'rounded-r-none w-min' : 'w-min'}
                     onClick={() => onPlay(selectedSource?.Id ?? itemId)}
                 >
                     <Play />

@@ -36,7 +36,7 @@ const formatSeekTime = (positionMs: number) => {
     return [
         hours.toString().padStart(2, '0'),
         minutes.toString().padStart(2, '0'),
-        secs.toString().padStart(2, '0')
+        secs.toString().padStart(2, '0'),
     ].join(':');
 };
 
@@ -145,15 +145,13 @@ const PLAYER_OPTIONS: PlayerOption[] = [
         id: 'ios-fileball',
         name: 'Fileball',
         platforms: ['ios'],
-        getUrl: (url) =>
-            `filebox://play?url=${encodeURIComponent(url)}`,
+        getUrl: (url) => `filebox://play?url=${encodeURIComponent(url)}`,
     },
     {
         id: 'ios-senplayer',
         name: 'SenPlayer',
         platforms: ['ios'],
-        getUrl: (url) =>
-            `SenPlayer://x-callback-url/play?url=${encodeURIComponent(url)}`,
+        getUrl: (url) => `SenPlayer://x-callback-url/play?url=${encodeURIComponent(url)}`,
     },
 
     // --- Windows 平台播放器 ---
@@ -195,7 +193,11 @@ const PLAYER_OPTIONS: PlayerOption[] = [
     },
 ];
 
-export default function ExternalPlayerButton({ item, mediaSourceId, className }: ExternalPlayerButtonProps) {
+export default function ExternalPlayerButton({
+    item,
+    mediaSourceId,
+    className,
+}: ExternalPlayerButtonProps) {
     const { t } = useTranslation('item');
     const [os] = useState<'android' | 'ios' | 'windows' | 'macos' | 'other'>(() => {
         if (typeof window !== 'undefined') {
@@ -231,7 +233,12 @@ export default function ExternalPlayerButton({ item, mediaSourceId, className }:
         if (targetSub && targetSub.Index !== undefined) {
             // 大多数外部播放器更偏爱 srt 格式，兼容性更广
             const isSrt = targetSub.Codec?.toLowerCase() === 'srt';
-            return getSubtitleUrl(item.Id!, targetMediaSourceId, targetSub.Index, isSrt ? 'srt' : 'vtt');
+            return getSubtitleUrl(
+                item.Id!,
+                targetMediaSourceId,
+                targetSub.Index,
+                isSrt ? 'srt' : 'vtt'
+            );
         }
         return '';
     };
@@ -264,7 +271,8 @@ export default function ExternalPlayerButton({ item, mediaSourceId, className }:
             return;
         }
 
-        navigator.clipboard.writeText(streamUrl)
+        navigator.clipboard
+            .writeText(streamUrl)
             .then(() => {
                 setCopied(true);
                 toast.success(t('copied', '直链已成功复制到剪贴板！'));
@@ -289,10 +297,15 @@ export default function ExternalPlayerButton({ item, mediaSourceId, className }:
                     <span>{t('external_play', '外部播放')}</span>
                 </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="min-w-[180px] bg-background/90 backdrop-blur-md border border-border/50 shadow-xl">
-                <DropdownMenuLabel className="text-xs text-muted-foreground">{t('select_external_player', '选择外部播放器')}</DropdownMenuLabel>
+            <DropdownMenuContent
+                align="start"
+                className="min-w-[180px] bg-background/90 backdrop-blur-md border border-border/50 shadow-xl"
+            >
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    {t('select_external_player', '选择外部播放器')}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-border/50" />
-                
+
                 {filteredPlayers.length > 0 ? (
                     filteredPlayers.map((player) => (
                         <DropdownMenuItem
@@ -314,7 +327,11 @@ export default function ExternalPlayerButton({ item, mediaSourceId, className }:
                     onSelect={handleCopyLink}
                     className="cursor-pointer focus:bg-accent/80 gap-2 flex items-center"
                 >
-                    {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    {copied ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                    ) : (
+                        <Copy className="h-4 w-4" />
+                    )}
                     <span className="flex-1">{t('copy_stream_url', '复制播放直链')}</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>

@@ -181,7 +181,6 @@ export const PlayerCore = ({ itemId, isInline = false }: PlayerCoreProps) => {
             }
         };
 
-
         const handleFullscreenChange = () => {
             const isFS = !!(
                 document.fullscreenElement ||
@@ -500,7 +499,11 @@ export const PlayerCore = ({ itemId, isInline = false }: PlayerCoreProps) => {
         <div
             ref={containerRef}
             className={`bg-black flex overflow-hidden ${
-                shouldRotate ? 'fixed inset-0 z-[9999]' : (isInline ? 'relative w-full h-full z-20' : 'relative w-full h-screen')
+                shouldRotate
+                    ? 'fixed inset-0 z-[9999]'
+                    : isInline
+                      ? 'relative w-full h-full z-20'
+                      : 'relative w-full h-screen'
             }`}
             style={
                 shouldRotate

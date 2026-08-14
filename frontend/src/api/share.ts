@@ -37,7 +37,8 @@ function getHeaders(): Record<string, string> {
     };
     if (token) {
         headers['X-Emby-Token'] = token;
-        headers['Authorization'] = `MediaBrowser Client="Pelagica", Device="Web", DeviceId="web-device", Version="1.0.0", Token="${token}"`;
+        headers['Authorization'] =
+            `MediaBrowser Client="Pelagica", Device="Web", DeviceId="web-device", Version="1.0.0", Token="${token}"`;
     }
     return headers;
 }
@@ -89,9 +90,12 @@ export async function createShare(mediaId: string, targets: string[]): Promise<S
 export async function fetchMyShares(startIndex = 0, limit = 20): Promise<PagedResponse<ShareItem>> {
     try {
         const server = (getServerUrl() || '').replace(/\/$/, '');
-        const response = await fetch(`${server}/api/share/mine?StartIndex=${startIndex}&Limit=${limit}`, {
-            headers: getHeaders(),
-        });
+        const response = await fetch(
+            `${server}/api/share/mine?StartIndex=${startIndex}&Limit=${limit}`,
+            {
+                headers: getHeaders(),
+            }
+        );
         if (!response.ok) {
             throw new Error(`Failed to fetch my shares: ${response.statusText}`);
         }
@@ -105,12 +109,18 @@ export async function fetchMyShares(startIndex = 0, limit = 20): Promise<PagedRe
 }
 
 // 4. 获取共享给我的视频列表 (分页)
-export async function fetchSharedWithMe(startIndex = 0, limit = 20): Promise<PagedResponse<BaseItemDto & { ShareOwnerName?: string }>> {
+export async function fetchSharedWithMe(
+    startIndex = 0,
+    limit = 20
+): Promise<PagedResponse<BaseItemDto & { ShareOwnerName?: string }>> {
     try {
         const server = (getServerUrl() || '').replace(/\/$/, '');
-        const response = await fetch(`${server}/api/share/shared-with-me?StartIndex=${startIndex}&Limit=${limit}`, {
-            headers: getHeaders(),
-        });
+        const response = await fetch(
+            `${server}/api/share/shared-with-me?StartIndex=${startIndex}&Limit=${limit}`,
+            {
+                headers: getHeaders(),
+            }
+        );
         if (!response.ok) {
             throw new Error(`Failed to fetch shared with me items: ${response.statusText}`);
         }

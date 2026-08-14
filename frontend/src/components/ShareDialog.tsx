@@ -21,12 +21,7 @@ interface ShareDialogProps {
     mediaName: string;
 }
 
-export default function ShareDialog({
-    open,
-    onOpenChange,
-    mediaId,
-    mediaName,
-}: ShareDialogProps) {
+export default function ShareDialog({ open, onOpenChange, mediaId, mediaName }: ShareDialogProps) {
     const { t } = useTranslation('item');
     const [users, setUsers] = useState<ShareUser[]>([]);
     const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);

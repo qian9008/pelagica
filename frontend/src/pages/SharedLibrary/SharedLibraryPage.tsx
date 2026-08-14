@@ -17,13 +17,7 @@ import {
     EmptyMedia,
     EmptyTitle,
 } from '@/components/ui/empty';
-import {
-    LayoutGrid,
-    Image as ImageIcon,
-    List,
-    FolderHeart,
-    Trash2,
-} from 'lucide-react';
+import { LayoutGrid, Image as ImageIcon, List, FolderHeart, Trash2 } from 'lucide-react';
 import { getPrimaryImageUrl, getBackdropUrl } from '@/utils/jellyfinUrls';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 
@@ -68,7 +62,9 @@ export default function SharedLibraryPage() {
     const pageParam = parseInt(searchParams.get('page') ?? '0', 10);
     const [page, setPage] = useState<number>(Number.isNaN(pageParam) ? 0 : pageParam);
     const [pageSize, setPageSize] = useState(
-        () => getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640, viewMode) * ITEM_ROWS
+        () =>
+            getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640, viewMode) *
+            ITEM_ROWS
     );
 
     // 数据状态 (Incoming 共享给我的影片)
@@ -94,7 +90,9 @@ export default function SharedLibraryPage() {
     }, [viewMode]);
 
     useEffect(() => {
-        const newPageSize = getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640, viewMode) * ITEM_ROWS;
+        const newPageSize =
+            getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640, viewMode) *
+            ITEM_ROWS;
         setTimeout(() => {
             setPageSize(newPageSize);
             setPage(0);
@@ -336,7 +334,10 @@ export default function SharedLibraryPage() {
                                     </EmptyMedia>
                                     <EmptyTitle>{t('no_shared_items', '共享库为空')}</EmptyTitle>
                                     <EmptyDescription>
-                                        {t('no_shared_items_desc', '其他用户分享给你的视频将会在这里显示。')}
+                                        {t(
+                                            'no_shared_items_desc',
+                                            '其他用户分享给你的视频将会在这里显示。'
+                                        )}
                                     </EmptyDescription>
                                 </EmptyHeader>
                             </Empty>
@@ -393,10 +394,18 @@ export default function SharedLibraryPage() {
                                         <thead className="bg-accent/40 text-foreground font-semibold border-b border-border/40">
                                             <tr>
                                                 <th className="p-3 w-12 text-center">#</th>
-                                                <th className="p-3">{t('settings:shared_media_name', '影片名称')}</th>
-                                                <th className="p-3">{t('settings:shared_target_user', '分享给')}</th>
-                                                <th className="p-3">{t('settings:shared_date', '分享时间')}</th>
-                                                <th className="p-3 text-right">{t('settings:actions', '操作')}</th>
+                                                <th className="p-3">
+                                                    {t('settings:shared_media_name', '影片名称')}
+                                                </th>
+                                                <th className="p-3">
+                                                    {t('settings:shared_target_user', '分享给')}
+                                                </th>
+                                                <th className="p-3">
+                                                    {t('settings:shared_date', '分享时间')}
+                                                </th>
+                                                <th className="p-3 text-right">
+                                                    {t('settings:actions', '操作')}
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border/20">
@@ -411,12 +420,16 @@ export default function SharedLibraryPage() {
                                                         </div>
                                                     </td>
                                                     <td className="p-3">{share.target_username}</td>
-                                                    <td className="p-3 text-xs">{share.created_at}</td>
+                                                    <td className="p-3 text-xs">
+                                                        {share.created_at}
+                                                    </td>
                                                     <td className="p-3 text-right">
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
-                                                            onClick={() => handleCancelShare(share.id)}
+                                                            onClick={() =>
+                                                                handleCancelShare(share.id)
+                                                            }
                                                             className="text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
                                                         >
                                                             <Trash2 className="h-4 w-4 mr-1" />
@@ -432,7 +445,10 @@ export default function SharedLibraryPage() {
                                 {/* 移动端卡片视图 */}
                                 <div className="block md:hidden space-y-3">
                                     {myShares.map((share, index) => (
-                                        <div key={share.id} className="p-4 rounded-lg border border-border/40 bg-card flex flex-col gap-3">
+                                        <div
+                                            key={share.id}
+                                            className="p-4 rounded-lg border border-border/40 bg-card flex flex-col gap-3"
+                                        >
                                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-semibold text-foreground bg-accent/60 px-2 py-0.5 rounded-full text-[10px]">
@@ -441,12 +457,17 @@ export default function SharedLibraryPage() {
                                                     <span>{share.created_at}</span>
                                                 </div>
                                                 <div>
-                                                    {t('settings:shared_target_user', '分享给')}: <span className="font-medium text-foreground">{share.target_username}</span>
+                                                    {t('settings:shared_target_user', '分享给')}:{' '}
+                                                    <span className="font-medium text-foreground">
+                                                        {share.target_username}
+                                                    </span>
                                                 </div>
                                             </div>
 
                                             <div className="flex flex-col gap-1">
-                                                <span className="text-[11px] text-muted-foreground">{t('settings:shared_media_name', '影片名称')}</span>
+                                                <span className="text-[11px] text-muted-foreground">
+                                                    {t('settings:shared_media_name', '影片名称')}
+                                                </span>
                                                 {/* 文件名只显示一部分，多余的可以横向滑动出来 */}
                                                 <div className="overflow-x-auto whitespace-nowrap scrollbar-hide font-medium text-foreground py-1 px-2 bg-accent/20 rounded-md text-sm cursor-ew-resize">
                                                     《{share.media_name || share.media_id}》

@@ -70,7 +70,10 @@ createRoot(document.getElementById('root')!).render(
                                     <Routes>
                                         <Route path="/" element={<HomePage />} />
                                         <Route path="/library" element={<LibraryPage />} />
-                                        <Route path="/shared-library" element={<SharedLibraryPage />} />
+                                        <Route
+                                            path="/shared-library"
+                                            element={<SharedLibraryPage />}
+                                        />
                                         <Route path="/item/:itemId" element={<ItemPage />} />
                                         <Route path="/person/:itemId" element={<PersonPage />} />
                                         <Route path="/genre/:itemId" element={<GenrePage />} />

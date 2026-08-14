@@ -91,7 +91,7 @@ const BaseMediaPage = ({
                     <div className="absolute inset-0 bg-muted/10 animate-pulse" />
                 )}
             </div>
-            
+
             {trailerReady && (
                 <div className="absolute top-0 left-0 h-[75vh] md:h-[85vh] w-full z-20 pointer-events-none">
                     <ItemBackdropTrailerControls

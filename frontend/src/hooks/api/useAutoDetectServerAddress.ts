@@ -4,7 +4,7 @@ export const useAutoDetectServerAddress = () => {
             fullAddress: '',
             protocol: '',
             hostname: '',
-            port: ''
+            port: '',
         };
     }
 
@@ -18,6 +18,6 @@ export const useAutoDetectServerAddress = () => {
         fullAddress,
         protocol,
         hostname,
-        port
+        port,
     };
 };

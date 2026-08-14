@@ -50,7 +50,7 @@ const MoviePage = ({ item, config, onBack }: MoviePageProps) => {
         setIsPlayingInline(false);
     }
 
-    const currentAspectRatio = customAspectRatio ?? item.PrimaryImageAspectRatio ?? (2 / 3);
+    const currentAspectRatio = customAspectRatio ?? item.PrimaryImageAspectRatio ?? 2 / 3;
 
     const watched = item.UserData?.PlaybackPositionTicks ?? 0;
     const runtime = item.RunTimeTicks ?? 0;
@@ -76,7 +76,8 @@ const MoviePage = ({ item, config, onBack }: MoviePageProps) => {
     const filename = getFilename(item.Path || item.MediaSources?.[0]?.Path);
     const videoSize = formatSize(item.MediaSources?.[0]?.Size);
     const bitrateStr = formatBitrate(item.MediaSources?.[0]?.Bitrate);
-    const videoCodec = item.MediaStreams?.find((s) => s.Type === 'Video')?.Codec?.toUpperCase() || '';
+    const videoCodec =
+        item.MediaStreams?.find((s) => s.Type === 'Video')?.Codec?.toUpperCase() || '';
     const container = item.MediaSources?.[0]?.Container?.toUpperCase() || '';
 
     return (
@@ -99,7 +100,10 @@ const MoviePage = ({ item, config, onBack }: MoviePageProps) => {
                         {isPlayingInline && item.Id ? (
                             <PlayerCore itemId={item.Id} isInline={true} />
                         ) : !postersFailed ? (
-                            <div onClick={() => setIsPlayingInline(true)} className="block w-full h-full relative cursor-pointer z-10">
+                            <div
+                                onClick={() => setIsPlayingInline(true)}
+                                className="block w-full h-full relative cursor-pointer z-10"
+                            >
                                 <Skeleton className="absolute inset-0 w-full h-full" />
                                 <img
                                     src={getPrimaryImageUrl(
@@ -111,15 +115,15 @@ const MoviePage = ({ item, config, onBack }: MoviePageProps) => {
                                     className={[
                                         'object-cover w-full h-full relative z-10 bg-black/20',
                                         'transition-[filter,opacity] duration-700 ease-out',
-                                        isPosterLoaded
-                                            ? 'blur-0 opacity-100'
-                                            : 'blur-md opacity-0',
+                                        isPosterLoaded ? 'blur-0 opacity-100' : 'blur-md opacity-0',
                                     ].join(' ')}
                                     onLoad={(e) => {
                                         setIsPosterLoaded(true);
                                         const img = e.currentTarget;
                                         if (img.naturalWidth && img.naturalHeight) {
-                                            setCustomAspectRatio(img.naturalWidth / img.naturalHeight);
+                                            setCustomAspectRatio(
+                                                img.naturalWidth / img.naturalHeight
+                                            );
                                         }
                                     }}
                                     onError={() => setPostersFailed(true)}
@@ -207,21 +211,29 @@ const MoviePage = ({ item, config, onBack }: MoviePageProps) => {
                             <div className="mt-3 flex flex-col gap-1.5 p-3 rounded-lg bg-accent/15 border border-border/30 max-w-2xl backdrop-blur-sm">
                                 {filename && (
                                     <div className="text-[10px] leading-normal font-mono text-muted-foreground/90 break-all select-all flex items-start gap-1">
-                                        <span className="shrink-0 font-sans font-semibold text-foreground/75">文件：</span>
-                                        <span className="hover:text-foreground transition-colors">{filename}</span>
+                                        <span className="shrink-0 font-sans font-semibold text-foreground/75">
+                                            文件：
+                                        </span>
+                                        <span className="hover:text-foreground transition-colors">
+                                            {filename}
+                                        </span>
                                     </div>
                                 )}
                                 <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
                                     {videoSize && (
                                         <div className="flex items-center gap-1">
                                             <span className="text-muted-foreground">大小：</span>
-                                            <span className="font-semibold text-foreground/80">{videoSize}</span>
+                                            <span className="font-semibold text-foreground/80">
+                                                {videoSize}
+                                            </span>
                                         </div>
                                     )}
                                     {bitrateStr && (
                                         <div className="flex items-center gap-1">
                                             <span className="text-muted-foreground">码率：</span>
-                                            <span className="font-semibold text-foreground/80">{bitrateStr}</span>
+                                            <span className="font-semibold text-foreground/80">
+                                                {bitrateStr}
+                                            </span>
                                         </div>
                                     )}
                                     {(videoCodec || container) && (

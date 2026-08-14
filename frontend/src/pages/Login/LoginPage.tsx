@@ -292,7 +292,7 @@ const LoginPage = () => {
                                     <Label htmlFor="server-ip" className="mb-2 block font-medium">
                                         {t('server_address')}
                                     </Label>
-                                                                    <Input
+                                    <Input
                                         id="server-ip"
                                         type="text"
                                         placeholder="192.168.1.100"

@@ -51,7 +51,7 @@ const VideoPlayer = ({
     const hasSeekedRef = useRef(false);
     const assRendererRef = useRef<JASSUB | null>(null);
     const onPlaybackErrorRef = useRef(onPlaybackError);
-    
+
     // 自定义 Hook：专门负责解耦处理服务端的 fallback 字体抓取逻辑
     const { fallbackFontBlobUrl, isFallbackFontsLoaded } = useJellyfinFallbackFont();
 

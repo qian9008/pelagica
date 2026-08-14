@@ -33,7 +33,12 @@ const StatsConsentModal = () => {
     };
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) setDismissed(true); }}>
+        <Dialog
+            open={open}
+            onOpenChange={(isOpen) => {
+                if (!isOpen) setDismissed(true);
+            }}
+        >
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{t('stats_consent_title')}</DialogTitle>

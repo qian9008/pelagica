@@ -20,7 +20,7 @@
     const iconConfig = {
         // Icon source, choose one of the following three, comment to leave only one, 3 has the highest priority
         // 1.add icons from jsdelivr, network
-        baseUrl: "https://emby-external-url.7o7o.cc/embyWebAddExternalUrl/icons",
+        baseUrl: 'https://emby-external-url.7o7o.cc/embyWebAddExternalUrl/icons',
         // baseUrl: "https://fastly.jsdelivr.net/gh/bpking1/embyExternalUrl@main/embyWebAddExternalUrl/icons",
         // 2.server local icons, same as /emby-server/system/dashboard-ui/icons
         // baseUrl: "icons",
@@ -33,9 +33,9 @@
     // Default disabled, strongly depends on nginx-emby2Alist location two rewrite, if original link playback fails, please disable this option
     const useRealFileName = false;
     // The following are internal use variables, please do not change
-    let isEmby = "";
-    const mark = "embyLaunchPotplayer";
-    const playBtnsWrapperId = "ExternalPlayersBtns";
+    let isEmby = '';
+    const mark = 'embyLaunchPotplayer';
+    const playBtnsWrapperId = 'ExternalPlayersBtns';
     const lsKeys = {
         iconOnly: `${mark}-iconOnly`,
         hideByOS: `${mark}-hideByOS`,
@@ -52,44 +52,121 @@
         isUbuntu: () => /Ubuntu/i.test(navigator.userAgent),
         // isAndroidEmbyNoisyX: () => OS.isAndroid() && ApiClient.appVersion().includes('-'),
         // isEmbyNoisyX: () => ApiClient.appVersion().includes('-'),
-        isOthers: () => Object.entries(OS).filter(([key, val]) => key !== 'isOthers').every(([key, val]) => !val()),
+        isOthers: () =>
+            Object.entries(OS)
+                .filter(([key, val]) => key !== 'isOthers')
+                .every(([key, val]) => !val()),
     };
     const playBtns = [
-        { id: "embyPot", title: "Potplayer", iconId: "icon-PotPlayer"
-            , onClick: embyPot, osCheck: [OS.isWindows], },
-        { id: "embyVlc", title: "VLC", iconId: "icon-VLC", onClick: embyVlc, },
-        { id: "embyIINA", title: "IINA", iconId: "icon-IINA"
-            , onClick: embyIINA, osCheck: [OS.isMacOS], },
-        { id: "embyNPlayer", title: "NPlayer", iconId: "icon-NPlayer", onClick: embyNPlayer, },
-        { id: "embyMX", title: "MXPlayer", iconId: "icon-MXPlayer"
-            , onClick: embyMX, osCheck: [OS.isAndroid], },
-        { id: "embyMXPro", title: "MXPlayerPro", iconId: "icon-MXPlayerPro"
-            , onClick: embyMXPro, osCheck: [OS.isAndroid], },
-        { id: "embyInfuse", title: "Infuse", iconId: "icon-infuse"
-            , onClick: embyInfuse, osCheck: [OS.isApple], },
-        { id: "embyStellarPlayer", title: "Stellar Player", iconId: "icon-StellarPlayer"
-            , onClick: embyStellarPlayer, osCheck: [OS.isWindows, OS.isMacOS, OS.isAndroid], },
-        { id: "embyMPV", title: "MPV", iconId: "icon-MPV", onClick: embyMPV, },
-        { id: "embyDDPlay", title: "DanDan Play", iconId: "icon-DDPlay"
-            , onClick: embyDDPlay, osCheck: [OS.isWindows, OS.isAndroid], },
-        { id: "embyFileball", title: "Fileball", iconId: "icon-Fileball"
-            , onClick: embyFileball, osCheck: [OS.isApple], },
-        { id: "embyOmniPlayer", title: "OmniPlayer", iconId: "icon-OmniPlayer"
-            , onClick: embyOmniPlayer, osCheck: [OS.isMacOS], },
-        { id: "embyFigPlayer", title: "FigPlayer", iconId: "icon-FigPlayer"
-            , onClick: embyFigPlayer, osCheck: [OS.isMacOS], },
-        { id: "embySenPlayer", title: "SenPlayer", iconId: "icon-SenPlayer"
-            , onClick: embySenPlayer, osCheck: [OS.isIOS], },
-        { id: "embyCopyUrl", title: "Copy Stream URL", iconId: "icon-Copy", onClick: embyCopyUrl, },
+        {
+            id: 'embyPot',
+            title: 'Potplayer',
+            iconId: 'icon-PotPlayer',
+            onClick: embyPot,
+            osCheck: [OS.isWindows],
+        },
+        { id: 'embyVlc', title: 'VLC', iconId: 'icon-VLC', onClick: embyVlc },
+        {
+            id: 'embyIINA',
+            title: 'IINA',
+            iconId: 'icon-IINA',
+            onClick: embyIINA,
+            osCheck: [OS.isMacOS],
+        },
+        { id: 'embyNPlayer', title: 'NPlayer', iconId: 'icon-NPlayer', onClick: embyNPlayer },
+        {
+            id: 'embyMX',
+            title: 'MXPlayer',
+            iconId: 'icon-MXPlayer',
+            onClick: embyMX,
+            osCheck: [OS.isAndroid],
+        },
+        {
+            id: 'embyMXPro',
+            title: 'MXPlayerPro',
+            iconId: 'icon-MXPlayerPro',
+            onClick: embyMXPro,
+            osCheck: [OS.isAndroid],
+        },
+        {
+            id: 'embyInfuse',
+            title: 'Infuse',
+            iconId: 'icon-infuse',
+            onClick: embyInfuse,
+            osCheck: [OS.isApple],
+        },
+        {
+            id: 'embyStellarPlayer',
+            title: 'Stellar Player',
+            iconId: 'icon-StellarPlayer',
+            onClick: embyStellarPlayer,
+            osCheck: [OS.isWindows, OS.isMacOS, OS.isAndroid],
+        },
+        { id: 'embyMPV', title: 'MPV', iconId: 'icon-MPV', onClick: embyMPV },
+        {
+            id: 'embyDDPlay',
+            title: 'DanDan Play',
+            iconId: 'icon-DDPlay',
+            onClick: embyDDPlay,
+            osCheck: [OS.isWindows, OS.isAndroid],
+        },
+        {
+            id: 'embyFileball',
+            title: 'Fileball',
+            iconId: 'icon-Fileball',
+            onClick: embyFileball,
+            osCheck: [OS.isApple],
+        },
+        {
+            id: 'embyOmniPlayer',
+            title: 'OmniPlayer',
+            iconId: 'icon-OmniPlayer',
+            onClick: embyOmniPlayer,
+            osCheck: [OS.isMacOS],
+        },
+        {
+            id: 'embyFigPlayer',
+            title: 'FigPlayer',
+            iconId: 'icon-FigPlayer',
+            onClick: embyFigPlayer,
+            osCheck: [OS.isMacOS],
+        },
+        {
+            id: 'embySenPlayer',
+            title: 'SenPlayer',
+            iconId: 'icon-SenPlayer',
+            onClick: embySenPlayer,
+            osCheck: [OS.isIOS],
+        },
+        { id: 'embyCopyUrl', title: 'Copy Stream URL', iconId: 'icon-Copy', onClick: embyCopyUrl },
     ];
     // Jellyfin Icons: https://marella.github.io/material-icons/demo
     // Emby Icons: https://fonts.google.com/icons
     const customBtns = [
-        { id: "hideByOS", title: "Heterogeneous Players", iconName: "more", onClick: hideByOSHandler, },
-        { id: "iconOnly", title: "Display Mode", iconName: "open_in_full", onClick: iconOnlyHandler, },
-        { id: "notCurrentPot", title: "Multi-instance Potplayer", iconName: "window", onClick: notCurrentPotHandler, },
-        { id: "strmDirect", title: "STRM Direct", desc: "AList note: turn off sign, otherwise do not enable this option, still processed by server side sign"
-            , iconName: "link", onClick: strmDirectHandler,
+        {
+            id: 'hideByOS',
+            title: 'Heterogeneous Players',
+            iconName: 'more',
+            onClick: hideByOSHandler,
+        },
+        {
+            id: 'iconOnly',
+            title: 'Display Mode',
+            iconName: 'open_in_full',
+            onClick: iconOnlyHandler,
+        },
+        {
+            id: 'notCurrentPot',
+            title: 'Multi-instance Potplayer',
+            iconName: 'window',
+            onClick: notCurrentPotHandler,
+        },
+        {
+            id: 'strmDirect',
+            title: 'STRM Direct',
+            desc: 'AList note: turn off sign, otherwise do not enable this option, still processed by server side sign',
+            iconName: 'link',
+            onClick: strmDirectHandler,
         },
     ];
     if (!iconConfig.removeCustomBtns) {
@@ -99,14 +176,14 @@
     const selectors = {
         // Detail page rating, release date information bar
         embyMediaInfoDiv: "div[is='emby-scroller']:not(.hide) .mediaInfo:not(.hide)",
-        jellfinMediaInfoDiv: ".itemMiscInfo-primary:not(.hide)",
+        jellfinMediaInfoDiv: '.itemMiscInfo-primary:not(.hide)',
         // Live TV detail page create recording button
         embyBtnManualRecording: "div[is='emby-scroller']:not(.hide) .btnManualRecording:not(.hide)",
         // Live TV detail page stop recording button
-        jellfinBtnCancelTimer: ".btnCancelTimer:not(.hide)",
+        jellfinBtnCancelTimer: '.btnCancelTimer:not(.hide)',
         // Detail page play/favorite button row
         embyMainDetailButtons: "div[is='emby-scroller']:not(.hide) .mainDetailButtons",
-        jellfinMainDetailButtons: "div.itemDetailPage:not(.hide) div.detailPagePrimaryContainer",
+        jellfinMainDetailButtons: 'div.itemDetailPage:not(.hide) div.detailPagePrimaryContainer',
         // Detail page subtitle selection dropdown
         selectSubtitles: "div[is='emby-scroller']:not(.hide) select.selectSubtitles",
         // Detail page multi-version selection dropdown
@@ -138,7 +215,7 @@
             `;
         }
         let buttonHtml = `<div id="${playBtnsWrapperId}" class="detailButtons flex align-items-flex-start flex-wrap-wrap detail-lineItem">`;
-        playBtns.forEach(btn => {
+        playBtns.forEach((btn) => {
             buttonHtml += generateButtonHTML(btn);
         });
         buttonHtml += `</div>`;
@@ -148,23 +225,23 @@
             mainDetailButtons = document.querySelector(selectors.jellfinMainDetailButtons);
         }
 
-        mainDetailButtons.insertAdjacentHTML("afterend", buttonHtml);
+        mainDetailButtons.insertAdjacentHTML('afterend', buttonHtml);
 
         if (!isEmby) {
             // jellfin add class, detailPagePrimaryContainer、button-flat
-            let playBtnsWrapper = document.getElementById("ExternalPlayersBtns");
+            let playBtnsWrapper = document.getElementById('ExternalPlayersBtns');
             // style to cover .layout-mobile
-            playBtnsWrapper.style.display = "flex";
+            playBtnsWrapper.style.display = 'flex';
             // playBtnsWrapper.style["justifyContent"] = "center";
-            playBtnsWrapper.classList.add("detailPagePrimaryContainer");
-            let btns = playBtnsWrapper.getElementsByTagName("button");
+            playBtnsWrapper.classList.add('detailPagePrimaryContainer');
+            let btns = playBtnsWrapper.getElementsByTagName('button');
             for (let i = 0; i < btns.length; i++) {
-                btns[i].classList.add("button-flat");
+                btns[i].classList.add('button-flat');
             }
         }
 
         // add event
-        playBtns.forEach(btn => {
+        playBtns.forEach((btn) => {
             const btnEle = document.querySelector(`#${btn.id}`);
             if (btnEle) {
                 btnEle.onclick = btn.onClick;
@@ -174,28 +251,31 @@
         const iconBaseUrl = iconConfig.baseUrl;
         const icons = [
             // if url exists, use url property, if id diff icon name, use name property
-            { id: "icon-PotPlayer", name: "icon-PotPlayer.webp", fontSize: "1.4em" },
-            { id: "icon-VLC", fontSize: "1.3em" },
-            { id: "icon-IINA", fontSize: "1.4em" },
-            { id: "icon-NPlayer", fontSize: "1.3em" },
-            { id: "icon-MXPlayer", fontSize: "1.4em" },
-            { id: "icon-MXPlayerPro", fontSize: "1.4em" },
-            { id: "icon-infuse", fontSize: "1.4em" },
-            { id: "icon-StellarPlayer", fontSize: "1.4em" },
-            { id: "icon-MPV", fontSize: "1.4em" },
-            { id: "icon-DDPlay", fontSize: "1.4em" },
-            { id: "icon-Fileball", fontSize: "1.4em" },
-            { id: "icon-SenPlayer", fontSize: "1.4em" },
-            { id: "icon-OmniPlayer", fontSize: "1.4em" },
-            { id: "icon-FigPlayer", fontSize: "1.4em" },
-            { id: "icon-Copy", fontSize: "1.4em" },
+            { id: 'icon-PotPlayer', name: 'icon-PotPlayer.webp', fontSize: '1.4em' },
+            { id: 'icon-VLC', fontSize: '1.3em' },
+            { id: 'icon-IINA', fontSize: '1.4em' },
+            { id: 'icon-NPlayer', fontSize: '1.3em' },
+            { id: 'icon-MXPlayer', fontSize: '1.4em' },
+            { id: 'icon-MXPlayerPro', fontSize: '1.4em' },
+            { id: 'icon-infuse', fontSize: '1.4em' },
+            { id: 'icon-StellarPlayer', fontSize: '1.4em' },
+            { id: 'icon-MPV', fontSize: '1.4em' },
+            { id: 'icon-DDPlay', fontSize: '1.4em' },
+            { id: 'icon-Fileball', fontSize: '1.4em' },
+            { id: 'icon-SenPlayer', fontSize: '1.4em' },
+            { id: 'icon-OmniPlayer', fontSize: '1.4em' },
+            { id: 'icon-FigPlayer', fontSize: '1.4em' },
+            { id: 'icon-Copy', fontSize: '1.4em' },
         ];
         const iconsExt = getIconsExt();
         icons.map((icon, index) => {
             const element = document.querySelector(`#${icon.id}`);
             if (element) {
                 // if url exists, use url property, if id diff icon name, use name property
-                icon.url = typeof iconsExt !== 'undefined' && iconsExt && iconsExt[index] ? iconsExt[index].url : undefined;
+                icon.url =
+                    typeof iconsExt !== 'undefined' && iconsExt && iconsExt[index]
+                        ? iconsExt[index].url
+                        : undefined;
                 const url = icon.url || `${iconBaseUrl}/${icon.name || `${icon.id}.webp`}`;
                 element.style.cssText += `
                     background-image: url(${url});
@@ -235,43 +315,53 @@
         let itemId = /\?id=([A-Za-z0-9]+)/.exec(window.location.hash)[1];
         let response = await ApiClient.getItem(userId, itemId);
         // Continue playing next episode of current series
-        if (response.Type == "Series") {
-            let seriesNextUpItems = await ApiClient.getNextUpEpisodes({ SeriesId: itemId, UserId: userId });
+        if (response.Type == 'Series') {
+            let seriesNextUpItems = await ApiClient.getNextUpEpisodes({
+                SeriesId: itemId,
+                UserId: userId,
+            });
             if (seriesNextUpItems.Items.length > 0) {
-                console.log("nextUpItemId: " + seriesNextUpItems.Items[0].Id);
+                console.log('nextUpItemId: ' + seriesNextUpItems.Items[0].Id);
                 return await ApiClient.getItem(userId, seriesNextUpItems.Items[0].Id);
             }
         }
         // Play first episode of current season
-        if (response.Type == "Season") {
+        if (response.Type == 'Season') {
             let seasonItems = await ApiClient.getItems(userId, { parentId: itemId });
-            console.log("seasonItemId: " + seasonItems.Items[0].Id);
+            console.log('seasonItemId: ' + seasonItems.Items[0].Id);
             return await ApiClient.getItem(userId, seasonItems.Items[0].Id);
         }
         // Play current episode or movie
         if (response.MediaSources?.length > 0) {
-            console.log("itemId:  " + itemId);
+            console.log('itemId:  ' + itemId);
             return response;
         }
         // Default play first, episode/playlist first media
-        let firstItems = await ApiClient.getItems(userId, { parentId: itemId, Recursive: true, IsFolder: false, Limit: 1 });
-        console.log("firstItemId: " + firstItems.Items[0].Id);
+        let firstItems = await ApiClient.getItems(userId, {
+            parentId: itemId,
+            Recursive: true,
+            IsFolder: false,
+            Limit: 1,
+        });
+        console.log('firstItemId: ' + firstItems.Items[0].Id);
         return await ApiClient.getItem(userId, firstItems.Items[0].Id);
     }
 
     function getSeek(position) {
         let ticks = position * 10000;
-        let parts = []
-            , hours = ticks / 36e9;
+        let parts = [],
+            hours = ticks / 36e9;
         (hours = Math.floor(hours)) && parts.push(hours);
         let minutes = (ticks -= 36e9 * hours) / 6e8;
-        ticks -= 6e8 * (minutes = Math.floor(minutes)),
-            minutes < 10 && hours && (minutes = "0" + minutes),
-            parts.push(minutes);
+        ((ticks -= 6e8 * (minutes = Math.floor(minutes))),
+            minutes < 10 && hours && (minutes = '0' + minutes),
+            parts.push(minutes));
         let seconds = ticks / 1e7;
-        return (seconds = Math.floor(seconds)) < 10 && (seconds = "0" + seconds),
+        return (
+            (seconds = Math.floor(seconds)) < 10 && (seconds = '0' + seconds),
             parts.push(seconds),
-            parts.join(":")
+            parts.join(':')
+        );
     }
 
     function getSubPath(mediaSource) {
@@ -279,27 +369,29 @@
         let subTitlePath = '';
         // Return selected external subtitles
         if (selectSubtitles && selectSubtitles.value > 0) {
-            let SubIndex = mediaSource.MediaStreams.findIndex(m => m.Index == selectSubtitles.value && m.IsExternal);
+            let SubIndex = mediaSource.MediaStreams.findIndex(
+                (m) => m.Index == selectSubtitles.value && m.IsExternal
+            );
             if (SubIndex > -1) {
                 let subtitleCodec = mediaSource.MediaStreams[SubIndex].Codec;
                 subTitlePath = `/${mediaSource.Id}/Subtitles/${selectSubtitles.value}/Stream.${subtitleCodec}`;
             }
-        }
-        else {
+        } else {
             // Default try to return first external Chinese subtitle
-            let chiSubIndex = mediaSource.MediaStreams.findIndex(m => m.Language == "chi" && m.IsExternal);
+            let chiSubIndex = mediaSource.MediaStreams.findIndex(
+                (m) => m.Language == 'chi' && m.IsExternal
+            );
             if (chiSubIndex > -1) {
                 let subtitleCodec = mediaSource.MediaStreams[chiSubIndex].Codec;
                 subTitlePath = `/${mediaSource.Id}/Subtitles/${chiSubIndex}/Stream.${subtitleCodec}`;
             } else {
                 // Try to return first external subtitle
-                let externalSubIndex = mediaSource.MediaStreams.findIndex(m => m.IsExternal);
+                let externalSubIndex = mediaSource.MediaStreams.findIndex((m) => m.IsExternal);
                 if (externalSubIndex > -1) {
                     let subtitleCodec = mediaSource.MediaStreams[externalSubIndex].Codec;
                     subTitlePath = `/${mediaSource.Id}/Subtitles/${externalSubIndex}/Stream.${subtitleCodec}`;
                 }
             }
-
         }
         return subTitlePath;
     }
@@ -313,28 +405,36 @@
         }
         // let selectAudio = document.querySelector("div[is='emby-scroller']:not(.hide) select.selectAudio:not([disabled])");
         const accessToken = ApiClient.accessToken();
-        let mediaSource = itemInfo.MediaSources.find(m => m.Id == mediaSourceId);
-        let uri = isEmby ? "/emby/videos" : "/Items";
+        let mediaSource = itemInfo.MediaSources.find((m) => m.Id == mediaSourceId);
+        let uri = isEmby ? '/emby/videos' : '/Items';
         let baseUrl = `${ApiClient._serverAddress}${uri}/${itemInfo.Id}`;
         let subPath = getSubPath(mediaSource);
-        let subUrl = subPath.length > 0 ? `${baseUrl}${subPath}?api_key=${accessToken}` : "";
+        let subUrl = subPath.length > 0 ? `${baseUrl}${subPath}?api_key=${accessToken}` : '';
         let streamUrl = `${baseUrl}/`;
-        if (mediaSource.Path.startsWith("http") && localStorage.getItem(lsKeys.strmDirect) === "1") {
+        if (
+            mediaSource.Path.startsWith('http') &&
+            localStorage.getItem(lsKeys.strmDirect) === '1'
+        ) {
             streamUrl = decodeURIComponent(mediaSource.Path);
         } else {
-            let fileName = mediaSource.IsInfiniteStream ? `master.m3u8` : decodeURIComponent(mediaSource.Path.replace(fileNameReg, ""));
+            let fileName = mediaSource.IsInfiniteStream
+                ? `master.m3u8`
+                : decodeURIComponent(mediaSource.Path.replace(fileNameReg, ''));
             if (isEmby) {
                 if (mediaSource.IsInfiniteStream) {
-                    streamUrl += useRealFileName && mediaSource.Name ? `${mediaSource.Name}.m3u8` : fileName;
+                    streamUrl +=
+                        useRealFileName && mediaSource.Name ? `${mediaSource.Name}.m3u8` : fileName;
                 } else {
                     // origin link: /emby/videos/401929/stream.xxx?xxx
                     // modify link: /emby/videos/401929/stream/xxx.xxx?xxx
                     // this is not important, hit "/emby/videos/401929/" path level still worked
-                    streamUrl += useRealFileName ? `stream/${fileName}` : `stream.${mediaSource.Container}`;
+                    streamUrl += useRealFileName
+                        ? `stream/${fileName}`
+                        : `stream.${mediaSource.Container}`;
                 }
             } else {
                 streamUrl += `Download`;
-                streamUrl += useRealFileName ? `/${fileName}` : "";
+                streamUrl += useRealFileName ? `/${fileName}` : '';
             }
             streamUrl += `?api_key=${accessToken}&Static=true&MediaSourceId=${mediaSourceId}&DeviceId=${ApiClient._deviceId}`;
         }
@@ -345,22 +445,22 @@
             streamUrl: streamUrl,
             subUrl: subUrl,
             intent: intent,
-        }
+        };
     }
 
     async function getIntent(mediaSource, position) {
         // Live TV program query items interface has no path
         let title = mediaSource.IsInfiniteStream
             ? mediaSource.Name
-            : decodeURIComponent(mediaSource.Path.replace(fileNameReg, ""));
-        let externalSubs = mediaSource.MediaStreams.filter(m => m.IsExternal == true);
+            : decodeURIComponent(mediaSource.Path.replace(fileNameReg, ''));
+        let externalSubs = mediaSource.MediaStreams.filter((m) => m.IsExternal == true);
         let subs = ''; // Requires android.net.uri[] ?
         let subs_name = '';
         let subs_filename = '';
         let subs_enable = '';
         if (externalSubs) {
-            subs_name = externalSubs.map(s => s.DisplayTitle);
-            subs_filename = externalSubs.map(s => s.Path.split('/').pop());
+            subs_name = externalSubs.map((s) => s.DisplayTitle);
+            subs_filename = externalSubs.map((s) => s.Path.split('/').pop());
         }
         return {
             title: title,
@@ -387,13 +487,14 @@
     async function embyPot() {
         const mediaInfo = await getEmbyMediaInfo();
         const intent = mediaInfo.intent;
-        const notCurrentPotArg = localStorage.getItem(lsKeys.notCurrentPot) === "1" ? "" : "/current";
+        const notCurrentPotArg =
+            localStorage.getItem(lsKeys.notCurrentPot) === '1' ? '' : '/current';
         let potUrl = `potplayer://${encodeURI(mediaInfo.streamUrl)} /sub=${encodeURI(mediaInfo.subUrl)} ${notCurrentPotArg} /seek=${getSeek(intent.position)} /title="${intent.title}"`;
         await writeClipboard(potUrl);
-        console.log("Successfully wrote real deep link to clipboard: ", potUrl);
+        console.log('Successfully wrote real deep link to clipboard: ', potUrl);
         // Test shows no spaces also work, potplayer will automatically convert DeepLink to command line arguments, full parameters: PotPlayer About => Command Line Options
         potUrl = `potplayer://${notCurrentPotArg}/clipboard`;
-        window.open(potUrl, "_self");
+        window.open(potUrl, '_self');
     }
 
     // async function embyPot() {
@@ -423,18 +524,28 @@
             vlcUrl = `vlc-x-callback://x-callback-url/stream?url=${encodeURIComponent(mediaInfo.streamUrl)}&sub=${encodeURIComponent(mediaInfo.subUrl)}`;
         }
         console.log(vlcUrl);
-        window.open(vlcUrl, "_self");
+        window.open(vlcUrl, '_self');
     }
 
     // MPV
     async function embyMPV() {
         let mediaInfo = await getEmbyMediaInfo();
         // Desktop requires additional setup, refer to this project: https://github.com/akiirui/mpv-handler
-        let streamUrl64 = btoa(String.fromCharCode.apply(null, new Uint8Array(new TextEncoder().encode(mediaInfo.streamUrl))))
-            .replace(/\//g, "_").replace(/\+/g, "-").replace(/\=/g, "");
+        let streamUrl64 = btoa(
+            String.fromCharCode.apply(
+                null,
+                new Uint8Array(new TextEncoder().encode(mediaInfo.streamUrl))
+            )
+        )
+            .replace(/\//g, '_')
+            .replace(/\+/g, '-')
+            .replace(/\=/g, '');
         let MPVUrl = `mpv://play/${streamUrl64}`;
         if (mediaInfo.subUrl.length > 0) {
-            let subUrl64 = btoa(mediaInfo.subUrl).replace(/\//g, "_").replace(/\+/g, "-").replace(/\=/g, "");
+            let subUrl64 = btoa(mediaInfo.subUrl)
+                .replace(/\//g, '_')
+                .replace(/\+/g, '-')
+                .replace(/\=/g, '');
             MPVUrl = `mpv://play/${streamUrl64}/?subfile=${subUrl64}`;
         }
 
@@ -446,7 +557,7 @@
         }
 
         console.log(MPVUrl);
-        window.open(MPVUrl, "_self");
+        window.open(MPVUrl, '_self');
     }
 
     // https://github.com/iina/iina/issues/1991
@@ -454,7 +565,7 @@
         let mediaInfo = await getEmbyMediaInfo();
         let iinaUrl = `iina://weblink?url=${encodeURIComponent(mediaInfo.streamUrl)}&new_window=1`;
         console.log(`iinaUrl= ${iinaUrl}`);
-        window.open(iinaUrl, "_self");
+        window.open(iinaUrl, '_self');
     }
 
     // https://sites.google.com/site/mxvpen/api
@@ -464,29 +575,29 @@
         const mediaInfo = await getEmbyMediaInfo();
         const intent = mediaInfo.intent;
         // mxPlayer free
-        const packageName = "com.mxtech.videoplayer.ad";
+        const packageName = 'com.mxtech.videoplayer.ad';
         const url = `intent:${encodeURI(mediaInfo.streamUrl)}#Intent;package=${packageName};S.title=${encodeURI(intent.title)};i.position=${intent.position};end`;
         console.log(url);
-        window.open(url, "_self");
+        window.open(url, '_self');
     }
 
     async function embyMXPro() {
         const mediaInfo = await getEmbyMediaInfo();
         const intent = mediaInfo.intent;
         // mxPlayer Pro
-        const packageName = "com.mxtech.videoplayer.pro";
+        const packageName = 'com.mxtech.videoplayer.pro';
         const url = `intent:${encodeURI(mediaInfo.streamUrl)}#Intent;package=${packageName};S.title=${encodeURI(intent.title)};i.position=${intent.position};end`;
         console.log(url);
-        window.open(url, "_self");
+        window.open(url, '_self');
     }
 
     async function embyNPlayer() {
         let mediaInfo = await getEmbyMediaInfo();
         let nUrl = OS.isMacOS()
-            ? `nplayer-mac://weblink?url=${encodeURIComponent(mediaInfo.streamUrl)}&new_window=1` 
+            ? `nplayer-mac://weblink?url=${encodeURIComponent(mediaInfo.streamUrl)}&new_window=1`
             : `nplayer-${encodeURI(mediaInfo.streamUrl)}`;
         console.log(nUrl);
-        window.open(nUrl, "_self");
+        window.open(nUrl, '_self');
     }
 
     async function embyInfuse() {
@@ -495,7 +606,7 @@
         // see: https://support.firecore.com/hc/zh-cn/articles/215090997
         let infuseUrl = `infuse://x-callback-url/play?url=${encodeURIComponent(mediaInfo.streamUrl)}&sub=${encodeURIComponent(mediaInfo.subUrl)}`;
         console.log(`infuseUrl= ${infuseUrl}`);
-        window.open(infuseUrl, "_self");
+        window.open(infuseUrl, '_self');
     }
 
     // StellarPlayer
@@ -503,18 +614,28 @@
         let mediaInfo = await getEmbyMediaInfo();
         let stellarPlayerUrl = `stellar://play/${encodeURI(mediaInfo.streamUrl)}`;
         console.log(`stellarPlayerUrl= ${stellarPlayerUrl}`);
-        window.open(stellarPlayerUrl, "_self");
+        window.open(stellarPlayerUrl, '_self');
     }
 
     // MPV
     async function embyMPV() {
         let mediaInfo = await getEmbyMediaInfo();
         // Desktop requires additional setup, use this project: https://github.com/akiirui/mpv-handler
-        let streamUrl64 = btoa(String.fromCharCode.apply(null, new Uint8Array(new TextEncoder().encode(mediaInfo.streamUrl))))
-            .replace(/\//g, "_").replace(/\+/g, "-").replace(/\=/g, "");
+        let streamUrl64 = btoa(
+            String.fromCharCode.apply(
+                null,
+                new Uint8Array(new TextEncoder().encode(mediaInfo.streamUrl))
+            )
+        )
+            .replace(/\//g, '_')
+            .replace(/\+/g, '-')
+            .replace(/\=/g, '');
         let MPVUrl = `mpv-handler://play/${streamUrl64}`;
         if (mediaInfo.subUrl.length > 0) {
-            let subUrl64 = btoa(mediaInfo.subUrl).replace(/\//g, "_").replace(/\+/g, "-").replace(/\=/g, "");
+            let subUrl64 = btoa(mediaInfo.subUrl)
+                .replace(/\//g, '_')
+                .replace(/\+/g, '-')
+                .replace(/\=/g, '');
             MPVUrl = `mpv-handler://play/${streamUrl64}/?subfile=${subUrl64}`;
         }
 
@@ -523,19 +644,21 @@
         }
 
         console.log(MPVUrl);
-        window.open(MPVUrl, "_self");
+        window.open(MPVUrl, '_self');
     }
 
     // see https://greasyfork.org/zh-CN/scripts/443916
     async function embyDDPlay() {
         // Check if windows local path
-        const fullPathEle = document.querySelector(".mediaSources .mediaSource .sectionTitle > div:not([class]):first-child");
-        let fullPath = fullPathEle ? fullPathEle.innerText : "";
+        const fullPathEle = document.querySelector(
+            '.mediaSources .mediaSource .sectionTitle > div:not([class]):first-child'
+        );
+        let fullPath = fullPathEle ? fullPathEle.innerText : '';
         let ddplayUrl;
         if (new RegExp('^[a-zA-Z]:').test(fullPath)) {
             ddplayUrl = `ddplay:${encodeURIComponent(fullPath)}`;
         } else {
-            console.log("File path is not local path, will use streaming playback");
+            console.log('File path is not local path, will use streaming playback');
             const mediaInfo = await getEmbyMediaInfo();
             const intent = mediaInfo.intent;
             if (!fullPath) {
@@ -549,7 +672,7 @@
             }
         }
         console.log(`ddplayUrl= ${ddplayUrl}`);
-        window.open(ddplayUrl, "_self");
+        window.open(ddplayUrl, '_self');
     }
 
     async function embyFileball() {
@@ -557,7 +680,7 @@
         // see: app about, URL Schemes
         const url = `filebox://play?url=${encodeURIComponent(mediaInfo.streamUrl)}`;
         console.log(`FileballUrl= ${url}`);
-        window.open(url, "_self");
+        window.open(url, '_self');
     }
 
     async function embyOmniPlayer() {
@@ -565,7 +688,7 @@
         // see: https://github.com/AlistGo/alist-web/blob/main/src/pages/home/previews/video_box.tsx
         const url = `omniplayer://weblink?url=${encodeURIComponent(mediaInfo.streamUrl)}`;
         console.log(`OmniPlayerUrl= ${url}`);
-        window.open(url, "_self");
+        window.open(url, '_self');
     }
 
     async function embyFigPlayer() {
@@ -573,7 +696,7 @@
         // see: https://github.com/AlistGo/alist-web/blob/main/src/pages/home/previews/video_box.tsx
         const url = `figplayer://weblink?url=${encodeURIComponent(mediaInfo.streamUrl)}`;
         console.log(`FigPlayerUrl= ${url}`);
-        window.open(url, "_self");
+        window.open(url, '_self');
     }
 
     async function embySenPlayer() {
@@ -581,69 +704,69 @@
         // see: app about, URL Schemes
         const url = `SenPlayer://x-callback-url/play?url=${encodeURIComponent(mediaInfo.streamUrl)}`;
         console.log(`SenPlayerUrl= ${url}`);
-        window.open(url, "_self");
+        window.open(url, '_self');
     }
 
     function lsCheckSetBoolean(event, lsKeyName) {
-        let flag = localStorage.getItem(lsKeyName) === "1";
+        let flag = localStorage.getItem(lsKeyName) === '1';
         if (event) {
             flag = !flag;
-            localStorage.setItem(lsKeyName, flag ? "1" : "0");
+            localStorage.setItem(lsKeyName, flag ? '1' : '0');
         }
         return flag;
     }
 
     function hideByOSHandler(event) {
-        const btn = document.getElementById("hideByOS");
+        const btn = document.getElementById('hideByOS');
         if (!btn) {
             return;
         }
         const flag = lsCheckSetBoolean(event, lsKeys.hideByOS);
         const playBtnsWrapper = document.getElementById(playBtnsWrapperId);
-        const buttonEleArr = playBtnsWrapper.querySelectorAll("button");
-        buttonEleArr.forEach(btnEle => {
-            const btn = playBtns.find(btn => btn.id === btnEle.id);
-            const shouldHide = flag && btn.osCheck && !btn.osCheck.some(check => check());
+        const buttonEleArr = playBtnsWrapper.querySelectorAll('button');
+        buttonEleArr.forEach((btnEle) => {
+            const btn = playBtns.find((btn) => btn.id === btnEle.id);
+            const shouldHide = flag && btn.osCheck && !btn.osCheck.some((check) => check());
             console.log(`${btn.id} Should Hide: ${shouldHide}`);
             btnEle.style.display = shouldHide ? 'none' : 'block';
         });
-        btn.classList.toggle("button-submit", flag);
+        btn.classList.toggle('button-submit', flag);
     }
 
     function iconOnlyHandler(event) {
-        const btn = document.getElementById("iconOnly");
+        const btn = document.getElementById('iconOnly');
         if (!btn) {
             return;
         }
         const flag = lsCheckSetBoolean(event, lsKeys.iconOnly);
         const playBtnsWrapper = document.getElementById(playBtnsWrapperId);
-        const spans = playBtnsWrapper.querySelectorAll("span");
-        spans.forEach(span => {
+        const spans = playBtnsWrapper.querySelectorAll('span');
+        spans.forEach((span) => {
             span.hidden = flag;
         });
-        const iArr = playBtnsWrapper.querySelectorAll("i");
-        iArr.forEach(iEle => {
-            iEle.classList.toggle("button-icon-left", !flag);
+        const iArr = playBtnsWrapper.querySelectorAll('i');
+        iArr.forEach((iEle) => {
+            iEle.classList.toggle('button-icon-left', !flag);
         });
-        btn.classList.toggle("button-submit", flag);
+        btn.classList.toggle('button-submit', flag);
     }
 
     function notCurrentPotHandler(event) {
-        const btn = document.getElementById("notCurrentPot");
+        const btn = document.getElementById('notCurrentPot');
         if (!btn) {
             return;
         }
         const flag = lsCheckSetBoolean(event, lsKeys.notCurrentPot);
-        btn.classList.toggle("button-submit", flag);
+        btn.classList.toggle('button-submit', flag);
     }
 
     function strmDirectHandler(event) {
-        const btn = document.getElementById("strmDirect");
+        const btn = document.getElementById('strmDirect');
         if (!btn) {
             return;
         }
         const flag = lsCheckSetBoolean(event, lsKeys.strmDirect);
-        btn.classList.toggle("button-submit", flag);
+        btn.classList.toggle('button-submit', flag);
     }
 
     async function embyCopyUrl() {
@@ -662,13 +785,20 @@
             try {
                 await navigator.clipboard.writeText(text);
                 flag = true;
-                console.log("Successfully used navigator.clipboard modern clipboard implementation");
+                console.log(
+                    'Successfully used navigator.clipboard modern clipboard implementation'
+                );
             } catch (error) {
-                console.error('Error occurred when copying to clipboard using navigator.clipboard:', error);
+                console.error(
+                    'Error occurred when copying to clipboard using navigator.clipboard:',
+                    error
+                );
             }
         } else {
             flag = writeClipboardLegacy(text);
-            console.log("navigator.clipboard modern clipboard implementation not available, using legacy implementation");
+            console.log(
+                'navigator.clipboard modern clipboard implementation not available, using legacy implementation'
+            );
         }
         return flag;
     }
@@ -689,30 +819,29 @@
     // emby/jellyfin CustomEvent
     // see: https://github.com/MediaBrowser/emby-web-defaultskin/blob/822273018b82a4c63c2df7618020fb837656868d/nowplaying/videoosd.js#L691
     // monitor dom changements
-    document.addEventListener("viewbeforeshow", function (e) {
-        console.log("viewbeforeshow", e);
-        if (isEmby === "") {
+    document.addEventListener('viewbeforeshow', function (e) {
+        console.log('viewbeforeshow', e);
+        if (isEmby === '') {
             isEmby = !!e.detail.contextPath;
         }
         let isItemDetailPage;
         if (isEmby) {
-            isItemDetailPage = e.detail.contextPath.startsWith("/item?id=");
+            isItemDetailPage = e.detail.contextPath.startsWith('/item?id=');
         } else {
             isItemDetailPage = e.detail.params && e.detail.params.id;
         }
         if (isItemDetailPage) {
-            const mutation = new MutationObserver(function() {
+            const mutation = new MutationObserver(function () {
                 if (showFlag()) {
                     init();
                     mutation.disconnect();
                 }
-            })
+            });
             mutation.observe(document.body, {
                 childList: true,
                 characterData: true,
                 subtree: true,
-            })
+            });
         }
     });
-
 })();

@@ -152,7 +152,10 @@ const PlayerControls = ({
     const isDraggingProgressRef = useRef(false);
     const [dragTime, setDragTime] = useState<number | null>(null);
     const lastTapTimeRef = useRef<number>(0);
-    const [seekIndicator, setSeekIndicator] = useState<{type: 'forward' | 'backward', key: number} | null>(null);
+    const [seekIndicator, setSeekIndicator] = useState<{
+        type: 'forward' | 'backward';
+        key: number;
+    } | null>(null);
     const progressRef = useRef<HTMLDivElement>(null);
     const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -219,9 +222,13 @@ const PlayerControls = ({
         (itemId: string | undefined) => {
             if (!itemId) return;
             const playerDuration = player && !player.isDisposed?.() ? player.duration() : 0;
-            const finalTicks = playerDuration && playerDuration > 0 && playerDuration !== Infinity && !isNaN(playerDuration)
-                ? Math.floor(playerDuration * 10000000)
-                : (item.RunTimeTicks || 0);
+            const finalTicks =
+                playerDuration &&
+                playerDuration > 0 &&
+                playerDuration !== Infinity &&
+                !isNaN(playerDuration)
+                    ? Math.floor(playerDuration * 10000000)
+                    : item.RunTimeTicks || 0;
             reportProgress({
                 itemId,
                 positionTicks: finalTicks,
@@ -252,7 +259,12 @@ const PlayerControls = ({
         const updateTime = () => setCurrentTime(player.currentTime() || 0);
         const updateDuration = () => {
             const playerDuration = player.duration();
-            if (playerDuration && playerDuration > 0 && playerDuration !== Infinity && !isNaN(playerDuration)) {
+            if (
+                playerDuration &&
+                playerDuration > 0 &&
+                playerDuration !== Infinity &&
+                !isNaN(playerDuration)
+            ) {
                 setDuration(playerDuration);
             } else if (item.RunTimeTicks) {
                 setDuration(ticksToSeconds(item.RunTimeTicks));
@@ -334,15 +346,15 @@ const PlayerControls = ({
     const handleProgressPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
         e.stopPropagation();
         if (!player || !progressRef.current || !duration) return;
-        
+
         if (e.pointerType === 'touch') {
             e.currentTarget.setPointerCapture(e.pointerId);
         }
-        
+
         setIsDraggingProgress(true);
         isDraggingProgressRef.current = true;
         if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-        
+
         const rect = progressRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const percentage = Math.max(0, Math.min(1, x / rect.width));
@@ -374,10 +386,10 @@ const PlayerControls = ({
             window.removeEventListener('pointerup', onPointerUp);
             window.removeEventListener('pointercancel', onPointerUp);
             window.removeEventListener('touchmove', preventTouchMove);
-            
+
             setIsDraggingProgress(false);
             isDraggingProgressRef.current = false;
-            
+
             if (progressRef.current) {
                 const finalRect = progressRef.current.getBoundingClientRect();
                 const upX = upEvent.clientX - finalRect.left;
@@ -385,11 +397,11 @@ const PlayerControls = ({
                 player.currentTime(finalPercentage * duration);
             }
             setDragTime(null);
-            
+
             if (upEvent.pointerType !== 'mouse') {
                 setHoverTime(null);
             }
-            
+
             resetHideTimeout();
         };
 
@@ -399,7 +411,8 @@ const PlayerControls = ({
     };
 
     const handleProgressPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-        if (e.pointerType !== 'mouse' || isDraggingProgress || !progressRef.current || !duration) return;
+        if (e.pointerType !== 'mouse' || isDraggingProgress || !progressRef.current || !duration)
+            return;
         const rect = progressRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const percentage = Math.max(0, Math.min(1, x / rect.width));
@@ -530,10 +543,7 @@ const PlayerControls = ({
 
     const clampedCurrentTime = duration > 0 ? Math.min(currentTime, duration) : currentTime;
     const displayTime = isDraggingProgress && dragTime !== null ? dragTime : clampedCurrentTime;
-    const progressPercentage = Math.min(
-        100,
-        duration > 0 ? (displayTime / duration) * 100 : 0
-    );
+    const progressPercentage = Math.min(100, duration > 0 ? (displayTime / duration) * 100 : 0);
     const bufferedPercentage = Math.min(100, duration > 0 ? (bufferedTime / duration) * 100 : 0);
 
     const title =
@@ -561,10 +571,10 @@ const PlayerControls = ({
             className={`absolute inset-0 z-10 ${showControls ? '' : 'cursor-none'}`}
             onPointerDown={(e) => {
                 lastPointerType.current = e.pointerType;
-                
+
                 if (!showInlineControls) {
                     if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-                    
+
                     const handlePointerUp = () => {
                         cancelLongPress();
                         window.removeEventListener('pointerup', handlePointerUp);
@@ -575,7 +585,7 @@ const PlayerControls = ({
 
                     longPressTimerRef.current = setTimeout(() => {
                         if (player && !player.paused()) {
-                            // If they tapped previously and held, it might be interpreted as double tap if released soon, 
+                            // If they tapped previously and held, it might be interpreted as double tap if released soon,
                             // but long press takes 400ms, which is > 300ms double tap threshold, so it won't conflict.
                             initialPlaybackRateRef.current = player.playbackRate() ?? 1;
                             player.playbackRate(3.0);
@@ -608,18 +618,21 @@ const PlayerControls = ({
 
                 const now = Date.now();
                 const timeSinceLastTap = now - lastTapTimeRef.current;
-                
+
                 if (timeSinceLastTap < 300) {
                     // Double click/tap detected!
                     if (player) {
                         const isRightSide = e.clientX > window.innerWidth / 2;
                         const jump = isRightSide ? 30 : -30;
                         player.currentTime((player.currentTime() || 0) + jump);
-                        setSeekIndicator({ type: isRightSide ? 'forward' : 'backward', key: Date.now() });
-                        
+                        setSeekIndicator({
+                            type: isRightSide ? 'forward' : 'backward',
+                            key: Date.now(),
+                        });
+
                         // Clear the tap time to reset
                         lastTapTimeRef.current = 0;
-                        
+
                         // Clear the indicator after animation
                         setTimeout(() => {
                             setSeekIndicator((prev) => (prev?.key === Date.now() ? prev : null)); // Not exactly safe but CSS animation handles visual fade out
@@ -627,7 +640,7 @@ const PlayerControls = ({
                     }
                     return;
                 }
-                
+
                 lastTapTimeRef.current = now;
 
                 if (lastPointerType.current === 'mouse' && !showInlineControls) {
@@ -644,15 +657,21 @@ const PlayerControls = ({
         >
             {/* Seek Indicator Overlay */}
             {seekIndicator && (
-                <div 
+                <div
                     key={seekIndicator.key}
                     className={`absolute top-1/2 -translate-y-1/2 ${seekIndicator.type === 'forward' ? 'right-1/4' : 'left-1/4'} bg-black/50 backdrop-blur-sm text-white rounded-full p-4 z-50 flex flex-col items-center justify-center animate-out fade-out zoom-out duration-500 pointer-events-none`}
                 >
-                    {seekIndicator.type === 'forward' ? <RotateCw size={32} /> : <RotateCcw size={32} />}
-                    <span className="font-bold mt-1 text-sm">{seekIndicator.type === 'forward' ? '+30s' : '-30s'}</span>
+                    {seekIndicator.type === 'forward' ? (
+                        <RotateCw size={32} />
+                    ) : (
+                        <RotateCcw size={32} />
+                    )}
+                    <span className="font-bold mt-1 text-sm">
+                        {seekIndicator.type === 'forward' ? '+30s' : '-30s'}
+                    </span>
                 </div>
             )}
-            
+
             {isFastForwarding && (
                 <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md text-brand font-bold px-4 py-1.5 rounded-full z-50 animate-pulse pointer-events-none flex items-center gap-2">
                     <FastForward size={18} />
