@@ -1,10 +1,12 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 import BaseMediaPage from './BaseMediaPage';
-import { getPrimaryImageUrl, getLogoUrl } from '@/utils/jellyfinUrls';
-import { ImageOff } from 'lucide-react';
 import PeopleRow from './PeopleRow';
+import { getPrimaryImageUrl, getLogoUrl } from '@/utils/jellyfinUrls';
+import { ImageOff, Play, Share2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from 'react-router';
 import MoreLikeThisRow from './MoreLikeThisRow';
 import SeerRecommendationsRow from './SeerrRecommendationsRow';
 import type { AppConfig } from '@/hooks/api/useConfig';
@@ -20,25 +22,60 @@ import { useState } from 'react';
 import { TrailerButton } from '../../components/TrailerButton';
 import ItemDownloadButton from '../../components/ItemDownloadButton';
 import SourcePickerButton from '@/components/SourcePickerButton';
+import ShareDialog from '@/components/ShareDialog';
+import ExternalPlayerButton from '@/components/ExternalPlayerButton';
 import ItemMetadataBadges from './ItemMetadataBadges';
 import Overview from './Overview';
+import ItemBackButton from './ItemBackButton';
 
 interface MoviePageProps {
     item: BaseItemDto;
     config: AppConfig;
+    onBack?: () => void;
 }
 
-const MoviePage = ({ item, config }: MoviePageProps) => {
+const MoviePage = ({ item, config, onBack }: MoviePageProps) => {
     const { t } = useTranslation('item');
     const [postersFailed, setPostersFailed] = useState(false);
+    const [shareOpen, setShareOpen] = useState(false);
     const [isPosterLoaded, setIsPosterLoaded] = useState(false);
     const [failedLogo, setFailedLogo] = useState(false);
+    const [customAspectRatio, setCustomAspectRatio] = useState<number | null>(null);
+    const [prevItemId, setPrevItemId] = useState<string | undefined>(item.Id);
 
-    const isCurrentlyPlaying =
-        item.UserData?.PlaybackPositionTicks &&
-        item.UserData.PlaybackPositionTicks > 0 &&
-        item.RunTimeTicks &&
-        item.UserData.PlaybackPositionTicks < item.RunTimeTicks;
+    if (item.Id !== prevItemId) {
+        setPrevItemId(item.Id);
+        setCustomAspectRatio(null);
+    }
+
+    const currentAspectRatio = customAspectRatio ?? item.PrimaryImageAspectRatio ?? (2 / 3);
+
+    const watched = item.UserData?.PlaybackPositionTicks ?? 0;
+    const runtime = item.RunTimeTicks ?? 0;
+    const isCurrentlyPlaying = watched > 0 && runtime > 0 && watched < runtime;
+
+    const getFilename = (path?: string | null) => {
+        if (!path) return '';
+        const parts = path.split(/[/\\]/);
+        return parts[parts.length - 1];
+    };
+
+    const formatSize = (bytes?: number | null) => {
+        if (!bytes) return '';
+        if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(2)} GB`;
+        return `${(bytes / 1e6).toFixed(1)} MB`;
+    };
+
+    const formatBitrate = (bitrate?: number | null) => {
+        if (!bitrate) return '';
+        return `${(bitrate / 1e6).toFixed(1)} Mbps`;
+    };
+
+    const filename = getFilename(item.Path || item.MediaSources?.[0]?.Path);
+    const videoSize = formatSize(item.MediaSources?.[0]?.Size);
+    const bitrateStr = formatBitrate(item.MediaSources?.[0]?.Bitrate);
+    const videoCodec = item.MediaStreams?.find((s) => s.Type === 'Video')?.Codec?.toUpperCase() || '';
+    const container = item.MediaSources?.[0]?.Container?.toUpperCase() || '';
 
     return (
         <BaseMediaPage
@@ -51,35 +88,51 @@ const MoviePage = ({ item, config }: MoviePageProps) => {
             }
         >
             <div className="pt-24 sm:pt-32 pb-12 mx-auto w-full flex flex-col gap-12">
-                <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start relative z-10 w-full">
+                <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-stretch lg:items-start relative z-10 w-full">
                     {/* Left Column (Poster) */}
-                    <div className="w-48 sm:w-64 md:w-72 lg:w-80 shrink-0 mx-auto lg:mx-0">
-                        <div className="relative aspect-2/3 w-full rounded-xl overflow-hidden shadow-2xl shadow-black/85 border border-white/10 bg-muted flex items-center justify-center">
-                            {!postersFailed ? (
-                                <>
-                                    <Skeleton className="absolute inset-0 w-full h-full rounded-xl" />
-                                    <img
-                                        src={getPrimaryImageUrl(
-                                            item.Id || '',
-                                            { width: 640, height: 960 },
-                                            item.ImageTags?.Primary
-                                        )}
-                                        alt={item.Name + ' Primary'}
-                                        className={[
-                                            'object-cover rounded-xl w-full h-full relative z-10',
-                                            'transition-[filter,opacity] duration-700 ease-out',
-                                            isPosterLoaded
-                                                ? 'blur-0 opacity-100'
-                                                : 'blur-md opacity-0',
-                                        ].join(' ')}
-                                        onLoad={() => setIsPosterLoaded(true)}
-                                        onError={() => setPostersFailed(true)}
-                                    />
-                                </>
-                            ) : (
+                    <div
+                        className="relative -mx-4 sm:mx-auto lg:mx-0 w-[calc(100%+2rem)] sm:w-full sm:max-w-[24rem] lg:max-w-[30rem] xl:max-w-[36rem] shadow-lg overflow-hidden group shrink-0 bg-black/30"
+                        style={{ aspectRatio: currentAspectRatio }}
+                    >
+                        {!postersFailed ? (
+                            <Link to={`/play/${item.Id}`} className="block w-full h-full relative cursor-pointer z-10">
+                                <Skeleton className="absolute inset-0 w-full h-full" />
+                                <img
+                                    src={getPrimaryImageUrl(
+                                        item.Id || '',
+                                        undefined,
+                                        item.ImageTags?.Primary
+                                    )}
+                                    alt={item.Name + ' Primary'}
+                                    className={[
+                                        'object-cover w-full h-full relative z-10 bg-black/20',
+                                        'transition-[filter,opacity] duration-700 ease-out',
+                                        isPosterLoaded
+                                            ? 'blur-0 opacity-100'
+                                            : 'blur-md opacity-0',
+                                    ].join(' ')}
+                                    onLoad={(e) => {
+                                        setIsPosterLoaded(true);
+                                        const img = e.currentTarget;
+                                        if (img.naturalWidth && img.naturalHeight) {
+                                            setCustomAspectRatio(img.naturalWidth / img.naturalHeight);
+                                        }
+                                    }}
+                                    onError={() => setPostersFailed(true)}
+                                />
+                                {/* 半透明大播放按钮 */}
+                                <div className="absolute inset-0 bg-black/15 md:bg-black/25 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
+                                    <div className="h-16 w-16 bg-white/25 md:bg-white/20 hover:bg-white/35 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 shadow-xl">
+                                        <Play className="h-8 w-8 text-white fill-white ml-1" />
+                                    </div>
+                                </div>
+                            </Link>
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-muted">
                                 <ImageOff className="text-muted-foreground w-12 h-12" />
-                            )}
-                        </div>
+                            </div>
+                        )}
+                        {onBack && <ItemBackButton onClick={onBack} />}
                     </div>
 
                     {/* Right Column (Details) */}
@@ -110,6 +163,7 @@ const MoviePage = ({ item, config }: MoviePageProps) => {
                                 playLabel={t('play')}
                                 resumeLabel={t('resume')}
                             />
+                            <ExternalPlayerButton item={item} />
                             <TrailerButton item={item} />
                             <FavoriteButton
                                 item={item}
@@ -127,6 +181,13 @@ const MoviePage = ({ item, config }: MoviePageProps) => {
                                 item={item}
                                 showDownloadButton={config.itemPage?.showDownloadButton}
                             />
+                            <Button
+                                size={'icon-lg'}
+                                variant={'outline'}
+                                onClick={() => setShareOpen(true)}
+                            >
+                                <Share2 />
+                            </Button>
                             <MediaInfoDialog streams={item.MediaStreams || []} path={item.Path} />
                             {config.seerrUrl && item.ProviderIds?.Tmdb && (
                                 <SeerrItemButton tmdbId={item.ProviderIds.Tmdb} mediaType="movie" />
@@ -135,6 +196,40 @@ const MoviePage = ({ item, config }: MoviePageProps) => {
                         </div>
 
                         <Overview text={item.Overview || ''} />
+
+                        {/* 视频文件信息栏 */}
+                        {(filename || videoSize || bitrateStr || videoCodec) && (
+                            <div className="mt-3 flex flex-col gap-1.5 p-3 rounded-lg bg-accent/15 border border-border/30 max-w-2xl backdrop-blur-sm">
+                                {filename && (
+                                    <div className="text-[10px] leading-normal font-mono text-muted-foreground/90 break-all select-all flex items-start gap-1">
+                                        <span className="shrink-0 font-sans font-semibold text-foreground/75">文件：</span>
+                                        <span className="hover:text-foreground transition-colors">{filename}</span>
+                                    </div>
+                                )}
+                                <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs">
+                                    {videoSize && (
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-muted-foreground">大小：</span>
+                                            <span className="font-semibold text-foreground/80">{videoSize}</span>
+                                        </div>
+                                    )}
+                                    {bitrateStr && (
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-muted-foreground">码率：</span>
+                                            <span className="font-semibold text-foreground/80">{bitrateStr}</span>
+                                        </div>
+                                    )}
+                                    {(videoCodec || container) && (
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-muted-foreground">格式：</span>
+                                            <span className="font-semibold text-foreground/80">
+                                                {videoCodec} {container ? `(${container})` : ''}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
                         <ItemMetadataBadges item={item} />
                     </div>
@@ -156,6 +251,12 @@ const MoviePage = ({ item, config }: MoviePageProps) => {
                     />
                 )}
             </div>
+            <ShareDialog
+                open={shareOpen}
+                onOpenChange={setShareOpen}
+                mediaId={item.Id || ''}
+                mediaName={item.Name || ''}
+            />
         </BaseMediaPage>
     );
 };
