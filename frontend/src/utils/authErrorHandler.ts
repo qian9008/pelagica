@@ -25,7 +25,10 @@ export function getRetryConfig() {
                 clearAuthAndRedirect();
                 return false;
             }
-            return failureCount < 3;
+            if (import.meta.env.DEV) {
+                return false;
+            }
+            return failureCount < 2;
         },
     };
 }
