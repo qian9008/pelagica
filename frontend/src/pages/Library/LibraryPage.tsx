@@ -1,12 +1,13 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Page from '../Page';
 import { useUserViews } from '@/hooks/api/useUserViews';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useLibraryItems } from '@/hooks/api/useLibraryItems';
 import { useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Skeleton } from '@/components/ui/skeleton';
 import ItemPagination from '@/components/ItemPagination';
+import { Button } from '@/components/ui/button';
 import {
     Empty,
     EmptyDescription,
@@ -23,6 +24,11 @@ import {
     Clock,
     FolderOpen,
     Star,
+    LayoutGrid,
+    Image as ImageIcon,
+    List,
+    Folder,
+    RefreshCw,
 } from 'lucide-react';
 import JellyfinLibraryIcon from '@/components/JellyfinLibraryIcon';
 import {
@@ -32,149 +38,259 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import type { BaseItemDto, CollectionType, ItemSortBy, SortOrder } from '@jellyfin/sdk/lib/generated-client/models';
+import type { ItemSortBy, SortOrder } from '@jellyfin/sdk/lib/generated-client/models';
+import { MetadataRefreshMode } from '@jellyfin/sdk/lib/generated-client/models';
 import { ButtonGroup } from '@/components/ui/button-group';
 import LibraryItem from './LibraryItem';
-import HomeVideoGrid, { TARGET_ROW_HEIGHT } from './HomeVideoGrid';
-import { COLLECTION_ITEM_TYPES, DIRECT_PLAY_TYPES, SUPPORTED_LIBRARY_COLLECTION_TYPES } from '@/utils/itemTypes';
-import { getPrimaryImageUrl, type ImageSize } from '@/utils/jellyfinUrls';
+import { SUPPORTED_LIBRARY_COLLECTION_TYPES } from '@/utils/itemTypes';
+import { getPrimaryImageUrl, getBackdropUrl } from '@/utils/jellyfinUrls';
+import { useCurrentUser } from '@/hooks/api/useCurrentUser';
+import { useRefreshItemMetadata } from '@/hooks/api/useRefreshItemMetadata';
+import { toast } from 'sonner';
+
+export type ViewMode = 'poster' | 'backdrop' | 'list' | 'folder';
 
 const ITEM_ROWS = 5;
-const HOME_VIDEO_PAGE_SIZE = 50;
 
-const DEFAULT_POSTER_SIZE = { width: 416, height: 640 };
-
-const ITEM_POSTER_SIZES: Partial<Record<CollectionType, ImageSize>> = {
-    music: { width: 416, height: 416 },
-    musicvideos: { width: 700, height: 394 },
-};
-
-const DEFAULT_POSTER_ASPECT_RATIO = '2/3';
-
-const ITEM_POSTER_ASPECT_RATIOS: Partial<Record<CollectionType, string>> = {
-    music: 'square',
-    musicvideos: 'video',
-};
-
-type GridConfig = { cols: string; breakpoints: [number, number][] };
-
-const DEFAULT_GRID_CONFIG: GridConfig = {
-    cols: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-9',
-    breakpoints: [[1536, 9], [1280, 7], [1024, 5], [768, 4], [640, 3], [0, 2]],
-};
-
-const ITEM_GRID_CONFIG: Partial<Record<CollectionType, GridConfig>> = {
-    musicvideos: {
-        cols: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6',
-        breakpoints: [[1536, 6], [1280, 5], [1024, 4], [768, 3], [0, 2]],
-    },
-};
-
-function getGridConfig(collectionType: CollectionType): GridConfig {
-    return ITEM_GRID_CONFIG[collectionType] ?? DEFAULT_GRID_CONFIG;
+function getColumnCount(width: number, viewMode: ViewMode): number {
+    if (viewMode === 'list') return 1;
+    if (viewMode === 'backdrop' || viewMode === 'folder') {
+        if (width >= 1536) return 6; // 2xl
+        if (width >= 1280) return 5; // xl
+        if (width >= 1024) return 4; // lg
+        if (width >= 768) return 3; // md
+        return 2;
+    }
+    // poster (default)
+    if (width >= 1536) return 9; // 2xl
+    if (width >= 1280) return 7; // xl
+    if (width >= 1024) return 5; // lg
+    if (width >= 768) return 4; // md
+    if (width >= 640) return 3; // sm
+    return 2;
 }
-
-function getColumnCount(width: number, collectionType: CollectionType): number {
-    const { breakpoints } = getGridConfig(collectionType);
-    return breakpoints.find(([minWidth]) => width >= minWidth)?.[1] ?? 2;
-}
-
-function getPageSize(width: number, collectionType: CollectionType): number {
-    if (collectionType === 'homevideos') return HOME_VIDEO_PAGE_SIZE;
-    return getColumnCount(width, collectionType) * ITEM_ROWS;
-}
-
-function getDetailLine(item: BaseItemDto): string | undefined {
-    if (item.Type === 'MusicAlbum') return item.AlbumArtist || undefined;
-    return item.PremiereDate ? new Date(item.PremiereDate).getFullYear().toString() : undefined;
-}
-
-const SKELETON_ASPECT_RATIOS = [1.5, 0.75, 1.78, 1, 1.33, 0.67, 2, 1.2, 1.5, 0.8, 1, 1.78];
 
 const LibraryContent = ({
-    libraryId,
+    collectionType,
+    pageRef,
     sortBy,
     sortOrder,
     page,
     onPageChange,
-    collectionType,
+    viewMode,
+    currentFolderId,
+    folderPathStack,
+    setFolderPathStack,
 }: {
     libraryId: string;
+    collectionType?: string;
+    pageRef: React.RefObject<HTMLDivElement | null>;
     sortBy: ItemSortBy;
     sortOrder: SortOrder;
     page: number;
-    collectionType: CollectionType;
     onPageChange: (p: number) => void;
+    viewMode: ViewMode;
+    currentFolderId: string;
+    folderPathStack: Array<{ id: string; name: string }>;
+    setFolderPathStack: React.Dispatch<React.SetStateAction<Array<{ id: string; name: string }>>>;
 }) => {
     const { t } = useTranslation(['library', 'common']);
     const [pageSize, setPageSize] = useState(
-        () => getPageSize(typeof window !== 'undefined' ? window.innerWidth : 640, collectionType)
+        () => getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640, viewMode) * ITEM_ROWS
     );
 
+    // 监听窗口大小改变以动态计算列数
     useEffect(() => {
         const handleResize = () => {
-            setPageSize((prev) => {
-                const next = getPageSize(window.innerWidth, collectionType);
-                if (next !== prev) onPageChange(0);
-                return next;
-            });
+            const newPageSize = getColumnCount(window.innerWidth, viewMode) * ITEM_ROWS;
+            setPageSize(newPageSize);
+            onPageChange(0);
         };
+
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, [onPageChange, collectionType]);
+    }, [onPageChange, viewMode]);
 
-    const { data: libraryData, isLoading } = useLibraryItems(libraryId, {
+    // 监听视图切换以即时更新列数和重新分页
+    useEffect(() => {
+        const newPageSize = getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640, viewMode) * ITEM_ROWS;
+        setTimeout(() => {
+            setPageSize(newPageSize);
+            onPageChange(0);
+        }, 0);
+    }, [viewMode, onPageChange]);
+
+    const isFolderMode = viewMode === 'folder';
+
+    const { data: libraryData, isLoading } = useLibraryItems(currentFolderId, {
         limit: pageSize,
         startIndex: page * pageSize,
-        includeItemTypes: COLLECTION_ITEM_TYPES[collectionType],
+        includeItemTypes: isFolderMode
+            ? undefined // 文件夹模式下不限制媒体类型，捞出文件夹和所有格式的视频、音频
+            : collectionType === 'homevideos' || collectionType === 'photos'
+              ? ['Folder', 'Video', 'Photo']
+              : ['Series', 'Movie', 'BoxSet', 'MusicAlbum'],
         sortBy: [sortBy],
         sortOrder,
+        recursive: isFolderMode ? false : !(collectionType === 'homevideos' || collectionType === 'photos'),
     });
 
+    useEffect(() => {
+        if (pageRef.current && !isLoading && libraryData?.items?.length) {
+            pageRef.current.scrollIntoView({ block: 'start' });
+        }
+    }, [libraryData?.items, isLoading, pageRef]);
+
     const posterUrls = useMemo(() => {
-        if (!libraryData || collectionType === 'homevideos') return {};
+        if (!libraryData) return {};
         return libraryData.items.reduce(
             (acc, item) => {
-                acc[item.Id!] = getPrimaryImageUrl(
-                    item.Id!,
-                    ITEM_POSTER_SIZES[collectionType] || DEFAULT_POSTER_SIZE,
-                    item.ImageTags?.Primary
-                );
+                const isMusic = item.Type === 'MusicAlbum';
+                const isHomeOrPhotos = collectionType === 'homevideos' || collectionType === 'photos';
+
+                if (isMusic) {
+                    acc[item.Id!] = getPrimaryImageUrl(
+                        item.Id!,
+                        {
+                            height: 416,
+                            width: 416,
+                        },
+                        item.ImageTags?.Primary
+                    );
+                } else if (isHomeOrPhotos) {
+                    acc[item.Id!] = getPrimaryImageUrl(
+                        item.Id!,
+                        {
+                            width: 640,
+                        },
+                        item.ImageTags?.Primary
+                    );
+                } else if (viewMode === 'backdrop' || viewMode === 'list' || viewMode === 'folder') {
+                    // 横版、列表或物理文件夹模式：拉取媒体的 Backdrop 背景图，若无则使用 Primary 优雅降级
+                    if (item.BackdropImageTags && item.BackdropImageTags.length > 0) {
+                        acc[item.Id!] = getBackdropUrl(
+                            item.Id!,
+                            { width: 640, height: 360 },
+                            item.BackdropImageTags[0]
+                        );
+                    } else if (item.ImageTags?.Backdrop) {
+                        acc[item.Id!] = getBackdropUrl(
+                            item.Id!,
+                            { width: 640, height: 360 },
+                            item.ImageTags.Backdrop
+                        );
+                    } else {
+                        acc[item.Id!] = getPrimaryImageUrl(
+                            item.Id!,
+                            { width: 640 },
+                            item.ImageTags?.Primary
+                        );
+                    }
+                } else {
+                    // 默认竖屏海报 (poster)
+                    acc[item.Id!] = getPrimaryImageUrl(
+                        item.Id!,
+                        {
+                            height: 640,
+                            width: 416,
+                        },
+                        item.ImageTags?.Primary
+                    );
+                }
                 return acc;
             },
             {} as Record<string, string>
         );
-    }, [libraryData, collectionType]);
+    }, [libraryData, collectionType, viewMode]);
 
     const totalPages = libraryData?.totalCount ? Math.ceil(libraryData.totalCount / pageSize) : 0;
-    const gridCols = getGridConfig(collectionType).cols;
-    const posterAspectRatio = ITEM_POSTER_ASPECT_RATIOS[collectionType] || DEFAULT_POSTER_ASPECT_RATIO;
-    const isDirectPlay = DIRECT_PLAY_TYPES.includes(collectionType);
-    const isHomeVideos = collectionType === 'homevideos';
+
+    // 动态生成网格的 css class
+    const gridClasses = useMemo(() => {
+        if (viewMode === 'list') {
+            return 'w-full gap-3 mt-2 grid grid-cols-1';
+        }
+        if (viewMode === 'backdrop' || viewMode === 'folder') {
+            return 'w-full gap-4 mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6';
+        }
+        // poster
+        return 'w-full gap-4 mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-9';
+    }, [viewMode]);
+
+    const handleFolderClick = (folder: { id: string; name: string }) => {
+        setFolderPathStack((prev) => [...prev, folder]);
+        onPageChange(0);
+    };
 
     return (
         <div className="mb-4">
-            {isLoading && !isHomeVideos && (
-                <div className={`w-full gap-4 mt-2 grid ${gridCols}`}>
-                    {Array.from({ length: pageSize }).map((_, i) => (
-                        <div key={i} className="p-0 m-0">
-                            <div className={`relative w-full aspect-${posterAspectRatio} overflow-hidden rounded-md`}>
-                                <Skeleton className="w-full h-full" />
+            {/* 文件夹模式下的面包屑导航组件 */}
+            {isFolderMode && (
+                <div className="flex items-center gap-1.5 mb-4 text-sm text-muted-foreground flex-wrap bg-accent/20 px-3 py-2 rounded-lg border border-accent/20">
+                    <button
+                        onClick={() => {
+                            setFolderPathStack([]);
+                            onPageChange(0);
+                        }}
+                        className="hover:text-primary font-medium transition-colors cursor-pointer"
+                    >
+                        {t('folder_root', '全部媒体')}
+                    </button>
+                    
+                    {folderPathStack.map((crumb, index) => {
+                        const isLast = index === folderPathStack.length - 1;
+                        return (
+                            <div key={crumb.id} className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground/60 select-none">/</span>
+                                <button
+                                    disabled={isLast}
+                                    onClick={() => {
+                                        setFolderPathStack((prev) => prev.slice(0, index + 1));
+                                        onPageChange(0);
+                                    }}
+                                    className={`hover:text-primary transition-colors cursor-pointer ${
+                                        isLast ? 'text-foreground font-semibold pointer-events-none' : 'font-medium'
+                                    }`}
+                                >
+                                    {crumb.name}
+                                </button>
                             </div>
-                            <Skeleton className="mt-2 h-4 w-3/4" />
-                            <Skeleton className="mt-1 h-3 w-1/4" />
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
-            {isLoading && isHomeVideos && (
-                <div className="flex flex-wrap mt-2" style={{ gap: 8 }}>
-                    {SKELETON_ASPECT_RATIOS.map((ar, i) => (
-                        <Skeleton
-                            key={i}
-                            style={{ height: TARGET_ROW_HEIGHT, width: Math.round(TARGET_ROW_HEIGHT * ar) }}
-                            className="rounded-md"
-                        />
+
+            {isLoading && (
+                <div className={gridClasses}>
+                    {Array.from({ length: pageSize }).map((_, i) => (
+                        <div key={i} className="w-full">
+                            {viewMode === 'list' ? (
+                                <div className="p-3 border rounded-lg bg-card flex gap-4 items-center w-full">
+                                    <Skeleton className="w-[160px] h-[90px] rounded-md shrink-0 aspect-video" />
+                                    <div className="flex-1 space-y-2">
+                                        <Skeleton className="h-5 w-1/3" />
+                                        <Skeleton className="h-4 w-1/4" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="p-0 m-0">
+                                    <div
+                                        className={`relative w-full aspect-${
+                                            collectionType === 'homevideos' ||
+                                            collectionType === 'photos' ||
+                                            viewMode === 'backdrop' ||
+                                            viewMode === 'folder'
+                                                ? 'video'
+                                                : '2/3'
+                                        } overflow-hidden rounded-md`}
+                                    >
+                                        <Skeleton className="w-full h-full" />
+                                    </div>
+                                    <Skeleton className="mt-2 h-4 w-3/4" />
+                                    <Skeleton className="mt-1 h-3 w-1/4" />
+                                </div>
+                            )}
+                        </div>
                     ))}
                 </div>
             )}
@@ -191,23 +307,37 @@ const LibraryContent = ({
             )}
             {!isLoading && libraryData && libraryData.items && libraryData.items.length > 0 && (
                 <>
-                    {isHomeVideos ? (
-                        <HomeVideoGrid items={libraryData.items} />
-                    ) : (
-                        <div className={`w-full gap-4 mt-2 grid ${gridCols}`}>
-                            {libraryData.items.map((item) => (
-                                <LibraryItem
-                                    key={item.Id}
-                                    item={item}
-                                    posterUrl={posterUrls[item.Id!]}
-                                    t={t}
-                                    posterAspectRatio={posterAspectRatio}
-                                    detailLine={getDetailLine(item)}
-                                    isDirectPlay={isDirectPlay}
-                                />
-                            ))}
-                        </div>
-                    )}
+                    <div className={gridClasses}>
+                        {libraryData.items.map((item) => (
+                            <LibraryItem
+                                key={item.Id}
+                                item={item}
+                                posterUrl={posterUrls[item.Id!]}
+                                t={t}
+                                layoutMode={viewMode === 'list' ? 'list' : 'grid'}
+                                onFolderClick={handleFolderClick}
+                                posterAspectRatio={
+                                    item.Type === 'MusicAlbum'
+                                        ? 'square'
+                                        : collectionType === 'homevideos' ||
+                                            collectionType === 'photos' ||
+                                            viewMode === 'backdrop' ||
+                                            viewMode === 'folder'
+                                          ? 'video'
+                                          : '2/3'
+                                }
+                                detailLine={
+                                    item.Type === 'MusicAlbum'
+                                        ? item.AlbumArtist
+                                            ? item.AlbumArtist
+                                            : undefined
+                                        : item.PremiereDate
+                                          ? new Date(item.PremiereDate).getFullYear()
+                                          : undefined
+                                }
+                            />
+                        ))}
+                    </div>
                     <ItemPagination
                         totalPages={totalPages}
                         currentPage={page}
@@ -220,72 +350,152 @@ const LibraryContent = ({
 };
 
 const LibraryPage = () => {
+    const pageRef = useRef<HTMLDivElement>(null);
     const { t } = useTranslation('library');
     const { data: libraries } = useUserViews();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const { data: currentUser } = useCurrentUser();
+    const { refreshItemMetadata, isRefreshing } = useRefreshItemMetadata();
 
-    const sortBy = (searchParams.get('sortBy') as ItemSortBy) || 'DateCreated';
-    const sortOrder = (searchParams.get('sortOrder') as SortOrder) || 'Descending';
-    const page = Number(searchParams.get('page') ?? '0') || 0;
+    const isAdmin = currentUser?.Policy?.IsAdministrator || false;
 
-    const libraryIdFromUrl = searchParams.get('library') || '';
+    const handleScanLibrary = () => {
+        if (!activeLibraryId) return;
 
-    const libraryItems = useMemo(() => {
-        return (
-            libraries?.Items?.filter((library) =>
-                SUPPORTED_LIBRARY_COLLECTION_TYPES.includes(library.CollectionType!)
-            ) ?? []
+        refreshItemMetadata(
+            {
+                itemId: activeLibraryId,
+                metadataRefreshMode: MetadataRefreshMode.Default,
+                imageRefreshMode: MetadataRefreshMode.Default,
+                recursive: true,
+            },
+            {
+                onSuccess: () => {
+                    toast.success(t('scan_success', '已启动媒体库扫描'));
+                },
+                onError: (err) => {
+                    console.error('Scan library failed:', err);
+                    toast.error(t('scan_failed', '启动扫描失败'));
+                },
+            }
         );
-    }, [libraries?.Items]);
-
-    const activeLibraryId = useMemo(() => {
-        if (!libraryItems.length) return libraryIdFromUrl;
-
-        const exists = libraryItems.some(l => l.Id === libraryIdFromUrl);
-        return exists ? libraryIdFromUrl : libraryItems[0]?.Id ?? '';
-    }, [libraryItems, libraryIdFromUrl]);
-
-    const updateParams = (updates: Record<string, string>) => {
-        const next = new URLSearchParams(searchParams);
-        for (const [key, value] of Object.entries(updates)) {
-            next.set(key, value);
-        }
-        setSearchParams(next, { replace: true });
     };
+    const [searchParams, setSearchParams] = useSearchParams();
+    const sortByParam = (searchParams.get('sortBy') as ItemSortBy) || 'Name';
+    const sortOrderParam = (searchParams.get('sortOrder') as SortOrder) || 'Ascending';
+    const [sortBy, setSortBy] = useState<ItemSortBy>(sortByParam);
+    const [sortOrder, setSortOrder] = useState<SortOrder>(sortOrderParam);
+    const pageParam = parseInt(searchParams.get('page') ?? '0', 10);
+    const [page, setPage] = useState<number>(Number.isNaN(pageParam) ? 0 : pageParam);
+
+    // 本地持久化视图状态
+    const [viewMode, setViewMode] = useState<ViewMode>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('pelagica_library_view_mode');
+            return (saved as ViewMode) || 'folder';
+        }
+        return 'folder';
+    });
+
+    // 文件夹路径导航栈：从 URL 的 folderPath 派生（URL 作为唯一的事实来源）
+    const folderPathStack = useMemo<Array<{ id: string; name: string }>>(() => {
+        const param = searchParams.get('folderPath');
+        if (!param) return [];
+        try {
+            return JSON.parse(param);
+        } catch (e) {
+            console.error('Failed to parse folderPath from URL', e);
+            return [];
+        }
+    }, [searchParams]);
+
+    // 修改文件夹导航栈的辅助函数，直接通过更新 URL 实现
+    const setFolderPathStack = (
+        updater: Array<{ id: string; name: string }> | ((prev: Array<{ id: string; name: string }>) => Array<{ id: string; name: string }>)
+    ) => {
+        const nextStack = typeof updater === 'function' ? updater(folderPathStack) : updater;
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            if (nextStack.length > 0) {
+                next.set('folderPath', JSON.stringify(nextStack));
+            } else {
+                next.delete('folderPath');
+            }
+            next.set('page', '0'); // 切换目录时重置页码为 0
+            return next;
+        });
+    };
+
+    const handleViewModeChange = (mode: ViewMode) => {
+        setViewMode(mode);
+        setPage(0);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('pelagica_library_view_mode', mode);
+        }
+    };
+
+    const firstLibraryId = libraries?.Items?.[0]?.Id ?? '';
+    const libraryIdFromUrl = searchParams.get('library') || '';
+    const activeLibraryId =
+        libraryIdFromUrl && libraries?.Items?.some((library) => library.Id === libraryIdFromUrl)
+            ? libraryIdFromUrl
+            : firstLibraryId;
+
+    // 当前真正查询的 parent 文件夹 Id
+    const currentFolderId = folderPathStack.length > 0
+        ? folderPathStack[folderPathStack.length - 1].id
+        : activeLibraryId;
 
     const handleLibraryChange = (libraryId: string) => {
-        updateParams({
+        setPage(0);
+        // 切换不同库的时候通过 setSearchParams 隐式清空子级文件夹参数，防止路径错乱
+        setSearchParams({
             library: libraryId,
             page: '0',
+            sortBy,
+            sortOrder,
         });
     };
 
-    const handleSortByChange = (value: string) => {
-        updateParams({
-            sortBy: value,
-            page: '0',
-        });
-    };
+    const libraryItems = libraries?.Items?.filter((library) =>
+        SUPPORTED_LIBRARY_COLLECTION_TYPES.includes(library.CollectionType!)
+    );
 
-    const handleSortOrderChange = (value: string) => {
-        updateParams({
-            sortOrder: value,
-            page: '0',
-        });
-    };
+    const folderPathStr = searchParams.get('folderPath') || '';
 
-    const handlePageChange = (p: number) => {
-        updateParams({
-            page: String(p),
-        });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    // 将状态同步到 URL 的 searchParams 中
+    useEffect(() => {
+        const nextParams: Record<string, string> = {
+            library: activeLibraryId,
+            page: String(page),
+            sortBy,
+            sortOrder,
+        };
+        if (folderPathStr) {
+            nextParams.folderPath = folderPathStr;
+        }
+
+        // 仅在参数真正变化时调用 setSearchParams，杜绝一切潜在的死循环
+        const hasChanged = Object.keys(nextParams).some(
+            (key) => searchParams.get(key) !== nextParams[key]
+        ) || Array.from(searchParams.keys()).some(
+            (key) => nextParams[key] === undefined
+        );
+
+        if (hasChanged) {
+            setSearchParams(nextParams);
+        }
+    }, [activeLibraryId, page, sortBy, sortOrder, folderPathStr, searchParams, setSearchParams]);
 
     return (
         <Page title={t('title')} requiresAuth className="flex-1">
-            <Tabs value={activeLibraryId} onValueChange={handleLibraryChange} className="w-full">
-                <div className="flex flex-col sm:items-center sm:justify-between sm:flex-row gap-2">
-                    <TabsList className="max-w-full overflow-auto hidden sm:flex">
+            <Tabs
+                value={activeLibraryId}
+                onValueChange={handleLibraryChange}
+                className="w-full"
+                ref={pageRef}
+            >
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <TabsList className="max-w-full overflow-auto self-start hidden sm:flex">
                         {libraryItems?.map((library) => (
                             <TabsTrigger key={library.Id} value={library.Id ?? ''}>
                                 <JellyfinLibraryIcon libraryType={library.CollectionType} />
@@ -307,67 +517,127 @@ const LibraryPage = () => {
                             ))}
                         </SelectContent>
                     </Select>
+                    <div className="flex items-center gap-2 self-end sm:self-auto flex-nowrap">
+                        {/* 视图切换按钮组 */}
+                        <ButtonGroup>
+                            <Button
+                                variant={viewMode === 'poster' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => handleViewModeChange('poster')}
+                                title={t('view_poster', '海报网格')}
+                                className="h-8 px-3"
+                            >
+                                <LayoutGrid className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant={viewMode === 'backdrop' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => handleViewModeChange('backdrop')}
+                                title={t('view_backdrop', '横版网格')}
+                                className="h-8 px-3"
+                            >
+                                <ImageIcon className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant={viewMode === 'list' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => handleViewModeChange('list')}
+                                title={t('view_list', '列表模式')}
+                                className="h-8 px-3"
+                            >
+                                <List className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant={viewMode === 'folder' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => handleViewModeChange('folder')}
+                                title={t('view_folder', '文件夹视图')}
+                                className="h-8 px-3"
+                            >
+                                <Folder className="h-4 w-4" />
+                            </Button>
+                        </ButtonGroup>
 
-                    <ButtonGroup>
-                        <Select onValueChange={handleSortByChange} value={sortBy}>
-                            <SelectTrigger size="sm">
-                                <SelectValue placeholder="Sort" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Name">
-                                    <CaseSensitive />
-                                    {t('sort_name')}
-                                </SelectItem>
-                                <SelectItem value="DateCreated">
-                                    <CalendarPlus />
-                                    {t('sort_date_added')}
-                                </SelectItem>
-                                <SelectItem value="PremiereDate">
-                                    <Calendar />
-                                    {t('sort_premiere_date')}
-                                </SelectItem>
-                                <SelectItem value="CommunityRating">
-                                    <Star />
-                                    {t('sort_community_rating')}
-                                </SelectItem>
-                                <SelectItem value="Runtime">
-                                    <Clock />
-                                    {t('sort_runtime')}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-1">
+                            <ButtonGroup>
+                                <Select
+                                    onValueChange={(value) => setSortBy(value as ItemSortBy)}
+                                    value={sortBy}
+                                >
+                                    <SelectTrigger size="sm" className="h-8 px-2">
+                                        <SelectValue placeholder="Sort" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Name">
+                                            <CaseSensitive />
+                                            {t('sort_name')}
+                                        </SelectItem>
+                                        <SelectItem value="DateCreated">
+                                            <CalendarPlus />
+                                            {t('sort_date_added')}
+                                        </SelectItem>
+                                        <SelectItem value="PremiereDate">
+                                            <Calendar />
+                                            {t('sort_premiere_date')}
+                                        </SelectItem>
+                                        <SelectItem value="CommunityRating">
+                                            <Star />
+                                            {t('sort_community_rating')}
+                                        </SelectItem>
+                                        <SelectItem value="Runtime">
+                                            <Clock />
+                                            {t('sort_runtime')}
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSortOrder(prev => prev === 'Ascending' ? 'Descending' : 'Ascending')}
+                                    title={sortOrder === 'Ascending' ? t('ascending') : t('descending')}
+                                    className="h-8 px-2"
+                                >
+                                    {sortOrder === 'Ascending' ? (
+                                        <ArrowUpNarrowWideIcon className="h-4 w-4" />
+                                    ) : (
+                                        <ArrowDownWideNarrow className="h-4 w-4" />
+                                    )}
+                                </Button>
+                            </ButtonGroup>
 
-                        <Select onValueChange={handleSortOrderChange} value={sortOrder}>
-                            <SelectTrigger size="sm">
-                                <SelectValue placeholder="Order" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Ascending">
-                                    <ArrowUpNarrowWideIcon />
-                                    {t('ascending')}
-                                </SelectItem>
-                                <SelectItem value="Descending">
-                                    <ArrowDownWideNarrow />
-                                    {t('descending')}
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </ButtonGroup>
+                            {isAdmin && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleScanLibrary}
+                                    disabled={isRefreshing}
+                                    title={t('scan_library', '扫描新文件')}
+                                    className="h-8 w-8 p-0"
+                                >
+                                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                </Button>
+                            )}
+                        </div>
+                    </div>
                 </div>
-
                 {libraryItems?.map((library) => {
                     if (!library.Id) return null;
 
                     return (
-                        <TabsContent key={library.Id} value={library.Id}>
+                        <TabsContent key={library.Id} value={library.Id ?? ''}>
                             <LibraryContent
                                 key={`${library.Id}-${sortBy}-${sortOrder}`}
                                 libraryId={library.Id}
+                                collectionType={library.CollectionType}
+                                pageRef={pageRef}
                                 sortBy={sortBy}
                                 sortOrder={sortOrder}
                                 page={page}
-                                onPageChange={handlePageChange}
-                                collectionType={library.CollectionType as CollectionType}
+                                onPageChange={setPage}
+                                viewMode={viewMode}
+                                currentFolderId={currentFolderId}
+                                folderPathStack={folderPathStack}
+                                setFolderPathStack={setFolderPathStack}
                             />
                         </TabsContent>
                     );
