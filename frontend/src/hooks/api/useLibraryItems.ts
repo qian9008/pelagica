@@ -29,7 +29,16 @@ export function useLibraryItems(
     options?: UseLibraryItemsOptions
 ): ReturnType<typeof useQuery<LibraryItemsResponse>> {
     return useQuery<LibraryItemsResponse>({
-        queryKey: ['libraryItems', libraryId, options?.startIndex, options?.limit, options?.sortBy],
+        queryKey: [
+            'libraryItems',
+            libraryId,
+            options?.startIndex,
+            options?.limit,
+            options?.sortBy,
+            options?.sortOrder,
+            options?.recursive,
+            options?.includeItemTypes,
+        ],
         queryFn: async (): Promise<LibraryItemsResponse> => {
             const api = getApi();
             const itemsApi = getItemsApi(api);

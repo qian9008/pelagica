@@ -8,12 +8,17 @@ export function useMediaSegments(itemId: string | null | undefined) {
     return useQuery<MediaSegmentDto[]>({
         queryKey: ['mediaSegments', itemId],
         queryFn: async (): Promise<MediaSegmentDto[]> => {
-            const api = getApi();
-            const mediaSegmentsApi = getMediaSegmentsApi(api);
-            const response = await mediaSegmentsApi.getItemSegments({
-                itemId: itemId!,
-            });
-            return response.data.Items || [];
+            try {
+                const api = getApi();
+                const mediaSegmentsApi = getMediaSegmentsApi(api);
+                const response = await mediaSegmentsApi.getItemSegments({
+                    itemId: itemId!,
+                });
+                return response.data.Items || [];
+            } catch (error) {
+                console.warn('Failed to fetch media segments:', error);
+                return [];
+            }
         },
         enabled: !!itemId,
         ...getRetryConfig(),

@@ -42,10 +42,10 @@ function buildDeviceProfile(options?: { liveTvContainer?: boolean; excludeHevc?:
 
     const directPlayProfiles = [
         {
-            Container: 'mp4,webm',
+            Container: 'mp4,mkv,webm,m4v,mov',
             Type: 'Video' as const,
             VideoCodec: videoCodecs.join(','),
-            AudioCodec: 'aac,mp3,opus,flac',
+            AudioCodec: 'aac,mp3,opus,flac,ac3,eac3,dts,truehd',
         },
     ];
 

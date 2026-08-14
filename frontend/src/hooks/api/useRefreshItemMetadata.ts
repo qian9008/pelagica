@@ -10,6 +10,7 @@ export interface RefreshItemMetadataInput {
     replaceAllMetadata?: boolean;
     replaceAllImages?: boolean;
     regenerateTrickplay?: boolean;
+    recursive?: boolean;
 }
 
 export function useRefreshItemMetadata(onSuccess?: () => void) {
@@ -23,20 +24,24 @@ export function useRefreshItemMetadata(onSuccess?: () => void) {
             replaceAllMetadata,
             replaceAllImages,
             regenerateTrickplay,
+            recursive,
         }: RefreshItemMetadataInput) => {
             if (!itemId) throw new Error('Item ID is required');
 
             const api = getApi();
             const itemRefreshApi = getItemRefreshApi(api);
 
-            await itemRefreshApi.refreshItem({
-                itemId,
-                metadataRefreshMode,
-                imageRefreshMode,
-                replaceAllMetadata,
-                replaceAllImages,
-                regenerateTrickplay,
-            });
+            await itemRefreshApi.refreshItem(
+                {
+                    itemId,
+                    metadataRefreshMode,
+                    imageRefreshMode,
+                    replaceAllMetadata,
+                    replaceAllImages,
+                    regenerateTrickplay,
+                },
+                recursive !== undefined ? { params: { Recursive: recursive } } : undefined
+            );
 
             return itemId;
         },
