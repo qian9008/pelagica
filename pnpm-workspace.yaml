@@ -1,0 +1,8 @@
+packages:
+  - frontend
+  - tizen
+  - packages/*
+
+allowBuilds:
+  esbuild: true
+  lfa-ponyfill: false

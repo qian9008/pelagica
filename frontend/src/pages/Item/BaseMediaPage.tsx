@@ -1,4 +1,4 @@
-import { getBackdropUrl, getLogoUrl } from '@/utils/jellyfinUrls';
+import { getBackdropUrl, getLogoUrl } from '@pelagica/core';
 import { useEffect, useRef, useState } from 'react';
 import { ItemBackdropTrailerControls, ItemBackdropTrailerVideo } from './ItemBackdropTrailer';
 

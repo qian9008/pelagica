@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { SeerrMediaStatus, type SeerrMediaInfo, type SeerrMediaType } from '@/api/seerr/types';
+import { SeerrMediaStatus, type SeerrMediaInfo, type SeerrMediaType } from '@pelagica/core';
 import { useSeerrItemDialog } from '@/context/SeerrItemDialogContext';
 
 export function useSeerrItemClick() {

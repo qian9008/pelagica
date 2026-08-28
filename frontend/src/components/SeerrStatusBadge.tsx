@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Clock, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SeerrMediaStatus, type SeerrMediaInfo } from '@/api/seerr/types';
+import { SeerrMediaStatus, type SeerrMediaInfo } from '@pelagica/core';
 
 interface SeerrStatusBadgeProps {
     mediaInfo?: SeerrMediaInfo;

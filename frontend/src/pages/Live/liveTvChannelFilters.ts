@@ -1,4 +1,4 @@
-import type { UseLiveTvChannelsOptions } from '../../hooks/api/useLiveTvChannels';
+import type { UseLiveTvChannelsOptions } from '@pelagica/core';
 
 export type ChannelCategoryFilter =
     | 'all'

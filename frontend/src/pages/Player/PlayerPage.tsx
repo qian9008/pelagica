@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useReportPlaybackProgress } from '@/hooks/api/usePlaybackProgress';
-import { usePlaybackStart } from '@/hooks/api/usePlaybackStart';
-import { usePlaybackStop } from '@/hooks/api/usePlaybackStop';
-import { useCloseLiveStream } from '@/hooks/api/useCloseLiveStream';
+import { useReportPlaybackProgress } from '@pelagica/core';
+import { usePlaybackStart } from '@pelagica/core';
+import { usePlaybackStop } from '@pelagica/core';
+import { useCloseLiveStream } from '@pelagica/core';
 import { useParams } from 'react-router';
 import VideoPlayer, { type SubtitleTrack } from '@/pages/Player/VideoPlayer';
 import PlayerControls from '@/pages/Player/PlayerControls';
@@ -16,16 +16,16 @@ import {
     getPlaybackStreamUrl,
     getStaticStreamUrl,
     getAttachmentUrl,
-} from '@/utils/jellyfinUrls';
-import { usePlaybackInfo } from '@/hooks/api/usePlaybackInfo';
-import { useMediaSegments } from '@/hooks/api/useMediaSegments';
-import { useAdjacentItems } from '@/hooks/api/useAdjacentItems';
-import { getUserId } from '@/utils/localstorageCredentials';
+} from '@pelagica/core';
+import { usePlaybackInfo } from '@pelagica/core';
+import { useMediaSegments } from '@pelagica/core';
+import { useAdjacentItems } from '@pelagica/core';
+import { getUserId } from '@pelagica/core';
 import { getLastAudioLanguage, getLastSubtitleLanguage } from '@/utils/localstorageLastlanguage';
-import { useUserConfiguration } from '@/hooks/api/playbackPreferences/useUserConfiguration';
-import { usePlayerItem } from '@/hooks/api/usePlayerItem';
+import { useUserConfiguration } from '@pelagica/core';
+import { usePlayerItem } from '@pelagica/core';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
-import { clearCodecCache } from '@/utils/videoCodecDetection';
+import { clearCodecCache } from '@pelagica/core';
 import {
     hideTrafficLights,
     showTrafficLights,

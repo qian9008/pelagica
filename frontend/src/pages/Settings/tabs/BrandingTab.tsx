@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
-import type { AppConfig } from '@/hooks/api/useConfig';
-import { getServerUrl } from '@/utils/localstorageCredentials';
-import { getPluginLogoUrl, uploadPluginLogo } from '@/api/pelagicaPlugin';
+import type { AppConfig } from '@pelagica/core';
+import { getServerUrl } from '@pelagica/core';
+import { getPluginLogoUrl, uploadPluginLogo } from '@pelagica/core';
 import FileDropInput from '@/components/FileDropInput';
 import { StringInput, BooleanInput } from '../components/SettingsInputs';
 

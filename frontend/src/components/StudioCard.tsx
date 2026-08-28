@@ -1,7 +1,7 @@
 import { useTheme } from '@/components/theme-provider';
-import type { StudioSummary } from '@/hooks/api/useStudiosApi';
+import type { StudioSummary } from '@pelagica/core';
 import { getEffectiveTheme } from '@/utils/effectiveTheme';
-import { getStudioImageUrl } from '@/utils/jellyfinUrls';
+import { getBackendStudioImageUrl } from '@pelagica/core';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -20,7 +20,7 @@ const StudioCard = ({ studio, className }: StudioCardProps) => {
     const [monoColor, monoColor2] =
         getEffectiveTheme(theme) === 'dark' ? DARK_THEME_LOGO_COLORS : LIGHT_THEME_LOGO_COLORS;
 
-    const src = getStudioImageUrl(studio.name, monoColor, monoColor2);
+    const src = getBackendStudioImageUrl(studio.name, monoColor, monoColor2);
 
     return (
         <Link to={`/studio/${studio.id}`} className={`group ${className ?? ''}`}>

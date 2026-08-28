@@ -3,12 +3,15 @@ FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app
 
-COPY frontend/package.json frontend/pnpm-lock.yaml ./
-RUN npm install -g pnpm \
-    && pnpm install --frozen-lockfile
+RUN npm install -g pnpm
 
-COPY frontend .
-RUN pnpm run build
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages packages
+COPY frontend frontend
+COPY tizen/package.json tizen/package.json
+
+RUN pnpm install --frozen-lockfile --filter pelagica...
+RUN pnpm --filter pelagica run build
 
 
 # Stage 2: Build backend
@@ -39,7 +42,7 @@ ARG COLLECTOR_PING_TOKEN
 RUN apk add --no-cache ca-certificates tzdata
 
 # frontend
-COPY --from=frontend-builder /app/dist /usr/share/nginx/html
+COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 
 # backend
 COPY --from=backend-builder /backend/server /server

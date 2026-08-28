@@ -2,9 +2,9 @@ import { useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { memo } from 'react';
 import Page from '../Page';
-import { useItem } from '@/hooks/api/useItem';
-import { useStudioItems } from '@/hooks/api/useStudioItems';
-import { getUserId } from '@/utils/localstorageCredentials';
+import { useItem } from '@pelagica/core';
+import { useStudioItems } from '@pelagica/core';
+import { getUserId } from '@pelagica/core';
 import { Skeleton } from '@/components/ui/skeleton';
 import ItemsListPage from '@/components/ItemsListPage';
 

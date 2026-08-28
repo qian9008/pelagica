@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
-import type { AppConfig } from '@/hooks/api/useConfig';
-import { useStatsConsent } from '@/hooks/api/statsConsent/useStatsConsent';
-import { useSetStatsConsent } from '@/hooks/api/statsConsent/useSetStatsConsent';
+import type { AppConfig } from '@pelagica/core';
+import { useStatsConsent } from '@pelagica/core';
+import { useSetStatsConsent } from '@pelagica/core';
 import { StringInput, BooleanInput } from '../components/SettingsInputs';
 import { isDesktopApp } from '../../../utils/desktopApp';
 

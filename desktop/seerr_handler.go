@@ -322,6 +322,10 @@ func handleSeerTvDetails(w http.ResponseWriter, r *http.Request) {
 	proxySeerGet(w, r, "/api/v1/tv/"+r.PathValue("tvId"))
 }
 
+func handleSeerPersonCombinedCredits(w http.ResponseWriter, r *http.Request) {
+	proxySeerGet(w, r, "/api/v1/person/"+r.PathValue("personId")+"/combined_credits")
+}
+
 func handleSeerDiscoverTrending(w http.ResponseWriter, r *http.Request) {
 	proxySeerGet(w, r, "/api/v1/discover/trending")
 }
@@ -442,6 +446,7 @@ func registerSeerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/seerr/tv/{tvId}/recommendations", handleSeerTvRecommendations)
 	mux.HandleFunc("GET /api/seerr/movie/{tmdbId}", handleSeerMovieDetails)
 	mux.HandleFunc("GET /api/seerr/tv/{tvId}", handleSeerTvDetails)
+	mux.HandleFunc("GET /api/seerr/person/{personId}/combined_credits", handleSeerPersonCombinedCredits)
 	mux.HandleFunc("POST /api/seerr/request", handleSeerRequest)
 	mux.HandleFunc("GET /api/seerr/search", handleSeerSearch)
 	mux.HandleFunc("GET /api/seerr/status", handleSeerStatus)

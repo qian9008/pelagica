@@ -1,0 +1,20 @@
+{
+    "name": "@pelagica/tv-platform",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "exports": {
+        ".": "./src/index.ts"
+    },
+    "dependencies": {
+        "@pelagica/core": "workspace:*"
+    },
+    "peerDependencies": {
+        "video.js": "^8.23.7"
+    },
+    "devDependencies": {
+        "@types/react": "^19.2.17",
+        "typescript": "~5.9.3",
+        "video.js": "^8.23.7"
+    }
+}

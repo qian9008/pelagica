@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
-import { useSeasons } from '@/hooks/api/useSeasons';
-import { getPrimaryImageUrl, getLogoUrl } from '@/utils/jellyfinUrls';
+import { useSeasons } from '@pelagica/core';
+import { getPrimaryImageUrl, getLogoUrl } from '@pelagica/core';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 import { ImageOff, Play } from 'lucide-react';
 import { useState } from 'react';
@@ -13,24 +13,25 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useEpisodes } from '@/hooks/api/useEpisodes';
+import { useEpisodes } from '@pelagica/core';
 import { useTranslation } from 'react-i18next';
 import { Skeleton } from '@/components/ui/skeleton';
 import PeopleRow from './PeopleRow';
 import BaseMediaPage from './BaseMediaPage';
 import MoreLikeThisRow from './MoreLikeThisRow';
 import SeerRecommendationsRow from './SeerrRecommendationsRow';
-import { type AppConfig } from '@/hooks/api/useConfig';
+import { type AppConfig } from '@pelagica/core';
 import DetailBadges from './DetailBadges';
 import EpisodesDisplay from './EpisodesDisplay';
+import SeasonsDisplay from './SeasonsDisplay';
 import FavoriteButton from '../../components/FavoriteButton';
 import WatchListButton from '../../components/WatchlistButton';
 import PlayStateButton from '../../components/PlayStateButton';
-import { getUserId } from '@/utils/localstorageCredentials';
+import { getUserId } from '@pelagica/core';
 import ItemAdminButton from '@/components/ItemAdminButton';
 import SeerrItemButton from '@/components/SeerrItemButton';
 import { TrailerButton } from '../../components/TrailerButton';
-import { useUpcomingEpisodes } from '../../hooks/api/useUpcomingEpisodes';
+import { useUpcomingEpisodes } from '@pelagica/core';
 import UpcomingEpisodeComponent from './UpcomingEpisodeComponent';
 import ItemMetadataBadges from './ItemMetadataBadges';
 import Overview from './Overview';
@@ -61,6 +62,9 @@ const SeriesPage = ({ item, config, onBack }: SeriesPageProps) => {
     const currentAspectRatio = customAspectRatio ?? item.PrimaryImageAspectRatio ?? 2 / 3;
 
     const { data: upcomingEpisodes } = useUpcomingEpisodes(item.Id || '');
+
+    const hasMultipleSeasons = seasons ? seasons.length > 1 : (item.ChildCount ?? 0) !== 1;
+    const showSeasonsView = config.itemPage?.seriesView === 'seasons' && hasMultipleSeasons;
 
     const effectiveSelectedSeason =
         selectedSeason ||
@@ -222,35 +226,47 @@ const SeriesPage = ({ item, config, onBack }: SeriesPageProps) => {
                 )}
 
                 <div className="flex flex-col gap-4">
-                    <EpisodesDisplay
-                        title={
-                            <div className="flex flex-wrap items-center gap-4">
-                                <h3 className="text-3xl font-bold">{t('episodes')}</h3>
-                                {seasons && seasons.length > 1 && (
-                                    <Select
-                                        value={effectiveSelectedSeason || ''}
-                                        onValueChange={(value) => setSelectedSeason(value || '')}
-                                        disabled={isLoading || !seasons || seasons.length === 0}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder={t('select_season')} />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {seasons?.map((season) => (
-                                                <SelectItem key={season.Id} value={season.Id || ''}>
-                                                    {season.Name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                            </div>
-                        }
-                        seasonsLoading={isLoading}
-                        seriesId={item.Id || null}
-                        seasonId={effectiveSelectedSeason}
-                        episodeDisplay={config.itemPage?.episodeDisplay || 'row'}
-                    />
+                    {showSeasonsView ? (
+                        <SeasonsDisplay
+                            seriesId={item.Id || null}
+                            title={<h3 className="text-3xl font-bold">{t('seasons')}</h3>}
+                        />
+                    ) : (
+                        <EpisodesDisplay
+                            title={
+                                <div className="flex flex-wrap items-center gap-4">
+                                    <h3 className="text-3xl font-bold">{t('episodes')}</h3>
+                                    {seasons && seasons.length > 1 && (
+                                        <Select
+                                            value={effectiveSelectedSeason || ''}
+                                            onValueChange={(value) =>
+                                                setSelectedSeason(value || '')
+                                            }
+                                            disabled={isLoading || !seasons || seasons.length === 0}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={t('select_season')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {seasons?.map((season) => (
+                                                    <SelectItem
+                                                        key={season.Id}
+                                                        value={season.Id || ''}
+                                                    >
+                                                        {season.Name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                </div>
+                            }
+                            seasonsLoading={isLoading}
+                            seriesId={item.Id || null}
+                            seasonId={effectiveSelectedSeason}
+                            episodeDisplay={config.itemPage?.episodeDisplay || 'row'}
+                        />
+                    )}
                     {error && (
                         <p className="text-destructive">
                             Error loading seasons: {(error as Error).message}

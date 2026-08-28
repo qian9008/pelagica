@@ -14,9 +14,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { useCurrentUser } from '@/hooks/api/useCurrentUser';
-import { useSeerrLogin } from '@/hooks/api/useSeerrLogin';
-import { getServerUrl } from '@/utils/localstorageCredentials';
+import { useCurrentUser } from '@pelagica/core';
+import { useSeerrLogin } from '@pelagica/core';
+import { getServerUrl } from '@pelagica/core';
 
 export const SeerrLoginDialog = ({ trigger }: { trigger: React.ReactNode }) => {
     const { t } = useTranslation('sidebar');

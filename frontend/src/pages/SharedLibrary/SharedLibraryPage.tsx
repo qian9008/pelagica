@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';
 import Page from '../Page';
-import { fetchSharedWithMe, fetchMyShares, deleteShare, type ShareItem } from '@/api/share';
+import { fetchSharedWithMe, fetchMyShares, deleteShare, type ShareItem, getPrimaryImageUrl, getBackdropUrl } from '@pelagica/core';
 import LibraryItem from '../Library/LibraryItem';
 import ItemPagination from '@/components/ItemPagination';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -18,7 +18,6 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 import { LayoutGrid, Image as ImageIcon, List, FolderHeart, Trash2 } from 'lucide-react';
-import { getPrimaryImageUrl, getBackdropUrl } from '@/utils/jellyfinUrls';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 
 type ViewMode = 'poster' | 'backdrop' | 'list';

@@ -73,21 +73,21 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { useCurrentUser } from '@/hooks/api/useCurrentUser';
-import { useUserViews } from '@/hooks/api/useUserViews';
-import { useConfig } from '@/hooks/api/useConfig';
+import { useCurrentUser } from '@pelagica/core';
+import { useUserViews } from '@pelagica/core';
+import { useConfig } from '@pelagica/core';
 import { useTheme } from '@/components/theme-provider';
 import { getEffectiveTheme } from '@/utils/effectiveTheme';
-import { logout } from '@/api/logout';
-import { getUserProfileImageUrl } from '@/utils/jellyfinUrls';
-import { SUPPORTED_LIBRARY_COLLECTION_TYPES } from '@/utils/itemTypes';
+import { logout } from '@pelagica/core';
+import { getUserProfileImageUrl } from '@pelagica/core';
+import { SUPPORTED_LIBRARY_COLLECTION_TYPES } from '../utils/itemTypes';
 import { DynamicIcon, type IconName } from 'lucide-react/dynamic';
 import { useTranslation } from 'react-i18next';
 import i18n from 'i18next';
-import { useUpdateUserConfiguration } from '@/hooks/api/playbackPreferences/useUpdateUserConfiguration';
-import { useAuthorizeQuickConnect } from '@/hooks/api/useQuickConnect';
-import { useSeerrLoginStatus } from '@/hooks/api/useSeerrLoginStatus';
-import { useSeerrLogout } from '@/hooks/api/useSeerrLogout';
+import { useUpdateUserConfiguration } from '@pelagica/core';
+import { useAuthorizeQuickConnect } from '@pelagica/core';
+import { useSeerrLoginStatus } from '@pelagica/core';
+import { useSeerrLogout } from '@pelagica/core';
 import { SeerrLoginDialog } from '@/components/SeerrLoginDialog';
 import { toast } from 'sonner';
 import { iso6392 } from 'iso-639-2';
@@ -99,9 +99,9 @@ import {
     LOCAL_THEME_SERVER_DEFAULT,
     saveLocalTheme,
 } from '@/utils/localTheme';
-import { useThemes } from '@/hooks/api/themes/useThemes';
+import { useThemes } from '@pelagica/core';
 import { useQueryClient } from '@tanstack/react-query';
-import { SUPPORTED_LANGUAGES } from '../utils/supportedLanguages';
+import { SUPPORTED_LANGUAGES } from '@pelagica/core/i18n';
 import {
     isDesktopApp,
     isMacOS,

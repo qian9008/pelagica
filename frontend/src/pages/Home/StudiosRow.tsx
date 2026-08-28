@@ -3,7 +3,7 @@ import StudioCard from '@/components/StudioCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router';
-import { useStudiosByItemCount } from '../../hooks/api/useStudiosApi';
+import { useStudiosByItemCount } from '@pelagica/core';
 
 interface StudiosRowProps {
     title?: string;

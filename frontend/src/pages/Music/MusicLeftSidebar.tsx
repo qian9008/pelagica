@@ -1,10 +1,10 @@
 import { Link } from 'react-router';
 import { Heart, ListMusic, Mic2, Disc3 } from 'lucide-react';
-import { getPrimaryImageUrl } from '@/utils/jellyfinUrls';
+import { getPrimaryImageUrl } from '@pelagica/core';
 import { getItemUrl } from '@/utils/itemUrl';
-import { usePlaylists } from '@/hooks/api/playlist/usePlaylists';
-import { useCurrentUser } from '@/hooks/api/useCurrentUser';
-import { useFavoriteArtists, useFavoriteAlbums, useFavoriteSongs } from '@/hooks/api/useMusicItems';
+import { usePlaylists } from '@pelagica/core';
+import { useCurrentUser } from '@pelagica/core';
+import { useFavoriteArtists, useFavoriteAlbums, useFavoriteSongs } from '@pelagica/core';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
 import MusicSongRow from '@/components/MusicSongRow';
 import { toPlaybackTrack } from '@/utils/musicPlaybackTrack';

@@ -10,7 +10,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { getStaticStreamUrl, getSubtitleUrl } from '@/utils/jellyfinUrls';
+import { getStaticStreamUrl, getSubtitleUrl } from '@pelagica/core';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 

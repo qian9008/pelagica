@@ -6,12 +6,21 @@ import {
     DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Button } from './ui/button';
-import { Captions, EllipsisVertical, Image, RotateCcw, Trash2, PencilLine } from 'lucide-react';
+import {
+    Captions,
+    EllipsisVertical,
+    Image,
+    RotateCcw,
+    Trash2,
+    PencilLine,
+    ScanSearch,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useCurrentUser } from '@/hooks/api/useCurrentUser';
+import { useCurrentUser } from '@pelagica/core';
 import { useRef } from 'react';
 import { useAdminItemDialogs } from '../context/AdminItemDialogsContext';
 import SubtitleDownloadDialog from '../pages/Item/SubtitleDownloadDialog';
+import { isIdentifiable } from '../utils/identifiableTypes';
 
 const ItemAdminButton = ({
     item,
@@ -58,6 +67,12 @@ const ItemAdminButton = ({
                         <PencilLine />
                         {t('editMetadata')}
                     </DropdownMenuItem>
+                    {item.Type && isIdentifiable(item.Type) && (
+                        <DropdownMenuItem onClick={() => openDialog(item, 'identify')}>
+                            <ScanSearch />
+                            {t('identify')}
+                        </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => openDialog(item, 'delete')}>
                         <Trash2 />
                         {t('deleteItem')}

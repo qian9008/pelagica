@@ -14,9 +14,6 @@ import {
     Info,
     Minimize,
     SkipBack,
-    FastForward,
-    RotateCcw,
-    RotateCw,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Link, useNavigate, useSearchParams } from 'react-router';
@@ -36,22 +33,29 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { formatPlayTime, ticksToReadableTime, ticksToSeconds } from '@/utils/timeConversion';
+import { formatPlayTime, ticksToReadableTime, ticksToSeconds } from '@pelagica/core';
 import { buildPlayerUrl } from '@/utils/playerUrl';
 import { useTranslation } from 'react-i18next';
 import { isDesktopApp } from '@/utils/desktopApp';
 import { usePlayerKeyboardControls } from '@/hooks/usePlayerKeyboardControls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getPrimaryImageUrl, getTrickplayImageUrl } from '@/utils/jellyfinUrls';
-import { useReportPlaybackProgress } from '@/hooks/api/usePlaybackProgress';
+import {
+    getLogoUrl,
+    getPrimaryImageUrl,
+    getTrickplayImageUrl,
+    useReportPlaybackProgress,
+    useSession,
+    useConfig,
+} from '@pelagica/core';
 import { getRuntimePlaybackStats, type RuntimePlaybackStats } from '@/utils/playbackStats';
-import { useSession } from '@/hooks/api/useSession';
 import { usePlaybackRate } from '@/hooks/usePlaybackRate';
 import {
     removeLastSubtitleLanguage,
     setLastAudioLanguage,
     setLastSubtitleLanguage,
 } from '@/utils/localstorageLastlanguage';
+import { usePlayerGestures } from '@/features/player/usePlayerGestures';
+import { PlayerGestureOverlay } from '@/features/player/PlayerGestureOverlay';
 
 function getPrimaryTrickplayInfo(trickplay?: BaseItemDto['Trickplay']) {
     if (!trickplay) return null;
@@ -145,22 +149,11 @@ const PlayerControls = ({
     const [showVolumeBar, setShowVolumeBar] = useState(false);
     const [hoverTime, setHoverTime] = useState<number | null>(null);
     const [hoverPosition, setHoverPosition] = useState<number>(0);
-    const [showControls, setShowControls] = useState(!isInline);
-    const [isPiP, setIsPiP] = useState(false);
-    const [isFastForwarding, setIsFastForwarding] = useState(false);
     const [isDraggingProgress, setIsDraggingProgress] = useState(false);
     const isDraggingProgressRef = useRef(false);
     const [dragTime, setDragTime] = useState<number | null>(null);
-    const lastTapTimeRef = useRef<number>(0);
-    const [seekIndicator, setSeekIndicator] = useState<{
-        type: 'forward' | 'backward';
-        key: number;
-    } | null>(null);
     const progressRef = useRef<HTMLDivElement>(null);
     const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const initialPlaybackRateRef = useRef<number>(1);
-    const lastPointerType = useRef<string>('mouse');
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const backUrl = searchParams.get('backUrl');
@@ -426,18 +419,10 @@ const PlayerControls = ({
         }
     };
 
-    const cancelLongPress = useCallback(() => {
-        if (longPressTimerRef.current) {
-            clearTimeout(longPressTimerRef.current);
-            longPressTimerRef.current = null;
-        }
-        setIsFastForwarding((prev) => {
-            if (prev && player) {
-                player.playbackRate(initialPlaybackRateRef.current);
-            }
-            return false;
-        });
-    }, [player]);
+    const [showControls, setShowControls] = useState(!isInline);
+    const [isPiP, setIsPiP] = useState(false);
+    const [backButtonLogoFailed, setBackButtonLogoFailed] = useState(false);
+    const { config } = useConfig();
 
     const togglePiP = useCallback(async () => {
         if (!player) return;
@@ -565,131 +550,63 @@ const PlayerControls = ({
             (duration > 0 && currentTime / duration >= 0.95)); // or 95% complete
 
     const showInlineControls = isInline && !isFullscreen;
+    const backButtonImageId = item.Type === 'Episode' ? item.SeriesId : item.Id;
+    const backButtonImageTag = item.Type === 'Episode' ? undefined : item.ImageTags?.Logo;
+
+    const { isFastForwarding, seekIndicator, gestureHandlers } = usePlayerGestures({
+        player,
+        isInline: showInlineControls,
+        showControls,
+        setShowControls,
+        togglePlay,
+        handleMouseMove,
+        handleMouseLeave,
+        resetHideTimeout,
+        clearHideTimeout: () => {
+            if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+        },
+    });
 
     return (
         <div
             className={`absolute inset-0 z-10 ${showControls ? '' : 'cursor-none'}`}
-            onPointerDown={(e) => {
-                lastPointerType.current = e.pointerType;
-
-                if (!showInlineControls) {
-                    if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
-
-                    const handlePointerUp = () => {
-                        cancelLongPress();
-                        window.removeEventListener('pointerup', handlePointerUp);
-                        window.removeEventListener('pointercancel', handlePointerUp);
-                    };
-                    window.addEventListener('pointerup', handlePointerUp);
-                    window.addEventListener('pointercancel', handlePointerUp);
-
-                    longPressTimerRef.current = setTimeout(() => {
-                        if (player && !player.paused()) {
-                            // If they tapped previously and held, it might be interpreted as double tap if released soon,
-                            // but long press takes 400ms, which is > 300ms double tap threshold, so it won't conflict.
-                            initialPlaybackRateRef.current = player.playbackRate() ?? 1;
-                            player.playbackRate(3.0);
-                            setIsFastForwarding(true);
-                        }
-                    }, 400);
-                }
-            }}
-            onPointerMove={(e) => {
-                if (e.pointerType === 'mouse') handleMouseMove();
-            }}
-            onPointerLeave={(e) => {
-                if (e.pointerType === 'mouse') {
-                    handleMouseLeave();
-                    cancelLongPress();
-                }
-            }}
+            {...gestureHandlers}
             style={{
                 WebkitUserSelect: 'none',
                 userSelect: 'none',
                 WebkitTouchCallout: 'none',
             }}
-            onClick={(e) => {
-                // If we are fast forwarding, don't trigger the click behavior
-                if (isFastForwarding) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                }
-
-                const now = Date.now();
-                const timeSinceLastTap = now - lastTapTimeRef.current;
-
-                if (timeSinceLastTap < 300) {
-                    // Double click/tap detected!
-                    if (player) {
-                        const isRightSide = e.clientX > window.innerWidth / 2;
-                        const jump = isRightSide ? 30 : -30;
-                        player.currentTime((player.currentTime() || 0) + jump);
-                        setSeekIndicator({
-                            type: isRightSide ? 'forward' : 'backward',
-                            key: Date.now(),
-                        });
-
-                        // Clear the tap time to reset
-                        lastTapTimeRef.current = 0;
-
-                        // Clear the indicator after animation
-                        setTimeout(() => {
-                            setSeekIndicator((prev) => (prev?.key === Date.now() ? prev : null)); // Not exactly safe but CSS animation handles visual fade out
-                        }, 500);
-                    }
-                    return;
-                }
-
-                lastTapTimeRef.current = now;
-
-                if (lastPointerType.current === 'mouse' && !showInlineControls) {
-                    togglePlay();
-                } else {
-                    if (!showControls) {
-                        resetHideTimeout();
-                    } else {
-                        setShowControls(false);
-                        if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
-                    }
-                }
-            }}
         >
-            {/* Seek Indicator Overlay */}
-            {seekIndicator && (
-                <div
-                    key={seekIndicator.key}
-                    className={`absolute top-1/2 -translate-y-1/2 ${seekIndicator.type === 'forward' ? 'right-1/4' : 'left-1/4'} bg-black/50 backdrop-blur-sm text-white rounded-full p-4 z-50 flex flex-col items-center justify-center animate-out fade-out zoom-out duration-500 pointer-events-none`}
-                >
-                    {seekIndicator.type === 'forward' ? (
-                        <RotateCw size={32} />
-                    ) : (
-                        <RotateCcw size={32} />
-                    )}
-                    <span className="font-bold mt-1 text-sm">
-                        {seekIndicator.type === 'forward' ? '+30s' : '-30s'}
-                    </span>
-                </div>
-            )}
+            <PlayerGestureOverlay
+                isFastForwarding={isFastForwarding}
+                seekIndicator={seekIndicator}
+            />
 
-            {isFastForwarding && (
-                <div className="absolute top-12 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md text-brand font-bold px-4 py-1.5 rounded-full z-50 animate-pulse pointer-events-none flex items-center gap-2">
-                    <FastForward size={18} />
-                    <span>3x 快进中</span>
-                </div>
-            )}
             {!showInlineControls && (
                 <div
-                    className="absolute top-0 left-0 w-full p-4 bg-linear-to-b from-black/80 to-transparent z-20 text-gray-200 text-lg flex items-center gap-2 transition-opacity duration-300"
+                    className="absolute top-0 left-0 w-full p-4 bg-linear-to-b from-black/80 to-transparent z-50 text-gray-200 text-lg flex items-center gap-2 transition-opacity duration-300"
                     style={{
                         opacity: showControls ? 1 : 0,
                         pointerEvents: showControls ? 'auto' : 'none',
                     }}
+                    onMouseMove={handleMouseMove}
                 >
                     <Button variant="ghost" onClick={handleBack}>
                         <ArrowLeft />
                     </Button>
-                    <h1>{title}</h1>
+                    {backButtonLogoFailed || (config && !config.showLogoInPlayerControls) ? (
+                        <h1>{title}</h1>
+                    ) : (
+                        <img
+                            className="h-9 object-contain"
+                            src={getLogoUrl(
+                                backButtonImageId!,
+                                { maxHeight: 40 },
+                                backButtonImageTag
+                            )}
+                            onError={() => setBackButtonLogoFailed(true)}
+                        />
+                    )}
                 </div>
             )}
             <div className="absolute bottom-28 right-8 z-30 flex gap-2">

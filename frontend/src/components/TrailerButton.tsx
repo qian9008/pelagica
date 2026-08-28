@@ -4,7 +4,7 @@ import { ChevronDown, ExternalLink, Film } from 'lucide-react';
 import { Link, useLocation } from 'react-router';
 import { ExternalAnchor } from './ExternalAnchor';
 import { buildPlayerUrl } from '@/utils/playerUrl';
-import { useLocalTrailers } from '@/hooks/api/useLocalTrailers';
+import { useLocalTrailers } from '@pelagica/core';
 import { ButtonGroup } from './ui/button-group';
 import { forwardRef, type ComponentProps } from 'react';
 import {

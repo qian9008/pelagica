@@ -4,7 +4,7 @@ import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getPrimaryImageUrl } from '@/utils/jellyfinUrls';
+import { getPrimaryImageUrl } from '@pelagica/core';
 import { renderItemFallbackIcon } from '@/utils/itemFallbackIcon';
 import { getItemUrl } from '@/utils/itemUrl';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
@@ -16,9 +16,9 @@ import {
     useAllAlbums,
     useAllArtists,
     useMusicSearch,
-} from '@/hooks/api/useMusicItems';
-import { usePlaylists } from '@/hooks/api/playlist/usePlaylists';
-import { useCurrentUser } from '@/hooks/api/useCurrentUser';
+} from '@pelagica/core';
+import { usePlaylists } from '@pelagica/core';
+import { useCurrentUser } from '@pelagica/core';
 import SectionScroller from '@/components/SectionScroller';
 import MusicAlbumCard from '@/components/MusicAlbumCard';
 import MusicSongRow from '@/components/MusicSongRow';

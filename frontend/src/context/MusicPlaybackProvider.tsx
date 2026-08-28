@@ -4,10 +4,10 @@ import {
     type MusicPlaybackContextType,
     type MusicPlaybackTrack,
 } from './MusicPlaybackContext';
-import { getAudioStreamUrl } from '@/utils/jellyfinUrls';
-import { usePlaybackStart } from '@/hooks/api/usePlaybackStart';
-import { useReportPlaybackProgress } from '@/hooks/api/usePlaybackProgress';
-import { usePlaybackStop } from '@/hooks/api/usePlaybackStop';
+import { getAudioStreamUrl } from '@pelagica/core';
+import { usePlaybackStart } from '@pelagica/core';
+import { useReportPlaybackProgress } from '@pelagica/core';
+import { usePlaybackStop } from '@pelagica/core';
 import { useMediaSession } from '@/hooks/useMediaSession';
 import {
     EQUALIZER_PRESET_STORAGE_KEY,

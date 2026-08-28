@@ -4,33 +4,40 @@
 
 ---
 
-## 1. 核心架构与公共文件夹说明
+## 1. Monorepo 体系与核心架构说明
 
-* **`/frontend/src/api/`**: 包含所有对接 Jellyfin API 的网络请求。
-  * **[`share.ts`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/api/share.ts)** [新增]: 自定义分享功能的后端 API 封装。
-* **`/frontend/src/components/`**: 基础 UI 组件目录。
-  * **[`ExternalPlayerButton.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/components/ExternalPlayerButton.tsx)** [新增]: 用于唤起本地 Potplayer/VLC 播放器的通用按钮组件。
-  * **[`TopBar.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/components/TopBar.tsx)** [修改]: 顶部水平导航栏，包含“共享库”入口。
-* **`/frontend/src/pages/`**: 视图页面组件目录。
-  * **[`SharedLibrary/SharedLibraryPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/SharedLibrary/SharedLibraryPage.tsx)** [新增]: 共享库主管理页面，包括共享给我的、我分享的列表 and 分页管理。
-  * **[`Library/LibraryPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Library/LibraryPage.tsx)** [修改]: 经过深度导航优化和“上一级文件夹”死循环修复后的媒体库页面。
-  * **[`Login/LoginPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Login/LoginPage.tsx)** [修改]: 包含分立 IP 与端口输入框的登录页面。
-  * **[`Item/BaseMediaPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Item/BaseMediaPage.tsx)** [修改]: 支持传入 `isPlayingInline` 和 `inlinePlayer` 属性，实现在详情页顶部无缝渲染内嵌播放器并隐藏背景海报。
-  * **[`Item/MoviePage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Item/MoviePage.tsx)** 和 **[`Item/EpisodePage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Item/EpisodePage.tsx)** [修改]: 增加内嵌播放状态拦截，所有内部播放按钮不再跳转路由，改为在当前详情页触发极简 UI 的顶部播放。
-* **`/frontend/src/hooks/`**: 共享钩子（Hook）存放处。
-  * **`api/useRefreshItemMetadata.ts`** [新增]: 元数据刷新钩子。
-* **`/frontend/src/pages/Player/`**: 播放器页面组件目录。
-  * **[`PlayerControls.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Player/PlayerControls.tsx)** [修改]: 倍速控制、音量滑出式控制、时间显示移至进度条下方；支持 `isInline` 属性渲染内嵌播放器极简界面（大浮窗播放/暂停与全屏按钮）；在进度条上增加拖拽圆点增强交互反馈。
-  * **[`PlayerPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Player/PlayerPage.tsx)** [修改]: 移动端全屏自动横屏、多浏览器全屏 API 兼容、STRM 直流播放；已剥离为可供其他组件复用的 `PlayerCore`，原页面组件改为路由包裹层（解耦式二改）。
-  * **[`VideoPlayer.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Player/VideoPlayer.tsx)** [修改]: iOS playsInline、屏蔽原生触摸控件、硬解指示器、字幕样式清理；新增基于 Jellyfin 后台备用字体的获取与本地 Blob 映射机制（处理尾部斜杠防 404），以 `defaultFont: 'Noto Sans SC'` 形式强制注入 JASSUB 字典；启用 `video.js` 的 `fluid: true` 流式布局，强制容器贴合视频画幅，完美消除移动端 Android Chrome 因 JASSUB Canvas 图层坐标与尺寸不匹配引发的“黑屏遮罩”和 GPU 崩溃 Bug。
-* **`/frontend/src/utils/jellyfinUrls.ts`** [修改]: 新增 `getStaticStreamUrl` 函数（STRM 直流）+ mkv 容器映射。
+上游近期完成了 Monorepo 模块化重构，代码库分为以下工作区包：
+* **`packages/core` (`@pelagica/core`)**: 跨端公用核心库，包含 API、React Query Hooks、状态管理、国际化与工具函数。
+  * **[`share.ts`](file:///Users/qian/Documents/code/emby2openlist/pelagica/packages/core/src/api/share.ts)** [解耦新增]: 自定义媒体分享后端 API 封装，已直接整合进 `@pelagica/core` 统一导出。
+* **`frontend` (`pelagica`)**: Web 客户端主项目。
+* **`packages/tv-frontend` / `packages/tv-platform`**: 电视端专用前端与平台适配层。
+* **`tizen`**: 三星 Tizen 客户端。
 
 ---
 
-## 2. 核心定制数据结构
+## 2. 二开解耦模块与公共组件
+
+* **`/frontend/src/features/player/`**: [解耦模块] 播放器增强手势与交互层
+  * **[`usePlayerGestures.ts`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/features/player/usePlayerGestures.ts)**: 独立封装的长按 3x 快进、左右半屏双击 ±30s 识别、触摸/鼠标状态机与定时器管理。
+  * **[`PlayerGestureOverlay.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/features/player/PlayerGestureOverlay.tsx)**: 独立渲染快进徽章与跳转动画浮层组件。
+* **`/frontend/src/components/`**: 基础 UI 组件目录
+  * **[`ExternalPlayerButton.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/components/ExternalPlayerButton.tsx)**: 用于唤起本地 Potplayer/VLC/IINA 播放器的通用按钮组件。
+  * **[`ShareDialog.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/components/ShareDialog.tsx)**: 媒体分享目标选择与提交弹窗。
+  * **[`TopBar.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/components/TopBar.tsx)**: 顶部水平导航栏，包含“共享库”入口。
+* **`/frontend/src/pages/`**: 视图页面组件目录
+  * **[`App.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/App.tsx)**: 根应用组件，已挂载 `/shared-library` 路由。
+  * **[`SharedLibrary/SharedLibraryPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/SharedLibrary/SharedLibraryPage.tsx)**: 共享库主管理页面，包括共享给我的、我分享的列表及分页管理。
+  * **[`Library/LibraryPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Library/LibraryPage.tsx)** & **[`LibraryItem.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Library/LibraryItem.tsx)**: 支持海报/横幅/列表/文件夹 4 种视图切换及文件夹穿透下钻；内建**文件夹智能封面反哺**（自动拉取目录内视频的精美封面与最短进度作为文件夹封面，并悬浮微型角标）。
+  * **[`Item/BaseMediaPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Item/BaseMediaPage.tsx)** / **[`MoviePage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Item/MoviePage.tsx)** / **[`EpisodePage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Item/EpisodePage.tsx)**: 详情页支持内嵌行内视频播放（Inline Video Player）与清晰度选择。
+  * **[`Item/SeriesPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Item/SeriesPage.tsx)**: 兼容上游 `showSeasonsView` 与自定义剧季快速下拉筛选。
+  * **[`Player/PlayerControls.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Player/PlayerControls.tsx)**: 零侵入主干结构，通过装配 `usePlayerGestures` 与 `PlayerGestureOverlay` 实现手势交互。
+
+---
+
+## 3. 核心定制数据结构
 
 ### 共享记录数据模型 (ShareItem)
-定义于 `src/api/share.ts`：
+定义于 `packages/core/src/api/share.ts`：
 ```typescript
 export interface ShareItem {
     id: string; // 共享记录大数 ID，前端必须作为 string 处理防精度溢出
@@ -48,16 +55,13 @@ export interface ShareItem {
 
 ---
 
-## 3. 防丢失合并规范 (Merge Guide)
+## 4. 防丢失合并规范 (Merge Guide)
 
 每次与上游合并后，请务必执行以下核对流程：
-1. 打开 **[`CUSTOM_FEATURES.md`](file:///Users/qian/Documents/code/emby2openlist/pelagica/CUSTOM_FEATURES.md)** 对照功能清单。
-2. 逐一验证：
-   - 登录页面的 IP 与 Port 输入框是否存在且逻辑正常。
-   - 顶栏的「共享库」按钮是否存在。
-   - 点击「共享库」是否能打开页面，且取消分享是否能正确传递完整的 19 位字符串 ID。
-   - 详情页是否有「外部播放器」唤起按钮。
-   - 播放器控制栏是否有倍速按钮、音量悬停滑出、进度条下方时间显示。
-   - 手机端全屏播放是否自动横屏，播放 `.strm` 文件是否正常直流。
-   - 播放器右上角是否有 HW/SW 硬解指示器，字幕样式是否正常。
-3. 如果被覆盖，请从 Git 历史或暂存区提取补丁恢复。
+1. 运行 `pnpm -r build` 确保多包编译与类型检查 100% 通过。
+2. 逐一验证二开核心功能点：
+   - **手势交互**：长按 3x 快速播放、双击左右半屏 ±30s 动画指示。
+   - **行内播放**：电影/单集详情页顶部无缝渲染内嵌播放器。
+   - **共享系统**：顶栏「共享库」入口、分享弹窗创建及删除功能。
+   - **外部播放器**：详情页「外部播放器」按钮（Potplayer/VLC/IINA 调用）。
+   - **媒体库视图**：列表视图、网格视图与文件夹穿透下钻。

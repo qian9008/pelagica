@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getServerUrl, getAccessToken } from '@/utils/localstorageCredentials';
+import { getServerUrl, getAccessToken } from '@pelagica/core';
 
 export const useJellyfinFallbackFont = () => {
     const [fallbackFontBlobUrl, setFallbackFontBlobUrl] = useState<string | null>(null);

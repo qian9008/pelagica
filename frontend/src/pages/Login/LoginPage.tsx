@@ -5,21 +5,24 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@radix-ui/react-label';
 import { Info, Server, TriangleAlert, User } from 'lucide-react';
-import { jellyfin } from '@/api/jellyfinClient';
-import { useLogin } from '@/hooks/api/useLogin';
 import {
+    getJellyfinInstance,
+    useLogin,
     useQuickConnectInitiate,
     useQuickConnectStatus,
     useQuickConnectAuthenticate,
-} from '@/hooks/api/useQuickConnect';
+} from '@pelagica/core';
 import { Spinner } from '@/components/ui/spinner';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { useConfig } from '@/hooks/api/useConfig';
-import { useServerAddress } from '@/hooks/api/useServerAddress';
+import {
+    useConfig,
+    useServerAddress,
+    getServerUrl,
+    saveServerUrl,
+    useServerBranding,
+} from '@pelagica/core';
 import { useAutoDetectServerAddress } from '@/hooks/api/useAutoDetectServerAddress';
-import { getServerUrl, saveServerUrl } from '@/utils/localstorageCredentials';
-import { useServerBranding } from '../../hooks/api/useServerBranding';
 import DOMPurify from 'dompurify';
 
 const DEMO_SERVER_URL = 'https://jellyfin.streamyfin.app';
@@ -188,9 +191,9 @@ const LoginPage = () => {
         }
 
         const serverAddress = serverPort ? `${serverIp}:${serverPort}` : serverIp;
-
-        const servers = await jellyfin.discovery.getRecommendedServerCandidates(serverAddress);
-        const best = jellyfin.discovery.findBestServer(servers);
+        const servers =
+            await getJellyfinInstance().discovery.getRecommendedServerCandidates(serverAddress);
+        const best = getJellyfinInstance().discovery.findBestServer(servers);
 
         if (!best) {
             setServerCheckError(t('could_not_find_server'));

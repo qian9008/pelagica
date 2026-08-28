@@ -1,4 +1,4 @@
-import type { SeerrMediaType } from '../api/seerr/types';
+import type { SeerrMediaType } from '@pelagica/core';
 
 const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 const TMDB_BACKDROP_BASE = 'https://image.tmdb.org/t/p/w1280';

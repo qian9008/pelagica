@@ -5,6 +5,7 @@ import ManageImageButton from '../components/ManageImageButton';
 import RefreshItemMetadataButton from '../components/RefreshItemMetadataButton';
 import EditItemMetadataButton from '../components/EditItemMetadataButton';
 import MediaDeleteButton from '../components/MediaDeleteButton';
+import IdentifyItemButton from '../components/IdentifyItemButton';
 
 const EMPTY_ITEM: BaseItemDto = {};
 
@@ -15,11 +16,13 @@ export const AdminItemDialogsProvider = ({ children }: { children: ReactNode }) 
     const refreshMetadataTriggerRef = useRef<HTMLButtonElement>(null);
     const editMetadataTriggerRef = useRef<HTMLButtonElement>(null);
     const deleteTriggerRef = useRef<HTMLButtonElement>(null);
+    const identifyTriggerRef = useRef<HTMLButtonElement>(null);
 
     const triggerRefs: Record<AdminItemDialog, RefObject<HTMLButtonElement | null>> = {
         manageImages: manageImagesTriggerRef,
         refreshMetadata: refreshMetadataTriggerRef,
         editMetadata: editMetadataTriggerRef,
+        identify: identifyTriggerRef,
         delete: deleteTriggerRef,
     };
 
@@ -43,6 +46,10 @@ export const AdminItemDialogsProvider = ({ children }: { children: ReactNode }) 
                 <EditItemMetadataButton
                     item={activeItem}
                     trigger={<button ref={editMetadataTriggerRef} />}
+                />
+                <IdentifyItemButton
+                    item={activeItem}
+                    trigger={<button ref={identifyTriggerRef} />}
                 />
                 <MediaDeleteButton item={activeItem} trigger={<button ref={deleteTriggerRef} />} />
             </div>

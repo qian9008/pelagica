@@ -1,15 +1,15 @@
 import { Navigate, useParams, useNavigate } from 'react-router';
 import Page from '../Page';
-import { useItem } from '@/hooks/api/useItem';
+import { useItem } from '@pelagica/core';
 import MoviePage from './MoviePage';
 import SeriesPage from './SeriesPage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Fragment, memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useConfig } from '@/hooks/api/useConfig';
+import { useConfig } from '@pelagica/core';
 import EpisodePage from './EpisodePage';
 import SeasonPage from './SeasonPage';
-import { getUserId } from '@/utils/localstorageCredentials';
+import { getUserId } from '@pelagica/core';
 import BoxSetPage from './BoxSetPage';
 import type { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models';
 

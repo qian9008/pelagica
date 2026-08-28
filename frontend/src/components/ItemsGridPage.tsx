@@ -1,5 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton';
-import { getPrimaryImageUrl, type ImageSize } from '@/utils/jellyfinUrls';
+import { getPrimaryImageUrl, type ImageSize } from '@pelagica/core';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 import {
     ArrowDownWideNarrow,

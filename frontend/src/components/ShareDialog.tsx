@@ -10,7 +10,7 @@ import {
 } from './ui/dialog';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
-import { fetchShareUsers, createShare, type ShareUser } from '@/api/share';
+import { fetchShareUsers, createShare, type ShareUser } from '@pelagica/core';
 import { toast } from 'sonner';
 import { Loader2, Share2, Users } from 'lucide-react';
 

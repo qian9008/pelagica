@@ -14,7 +14,7 @@ import { ThemesTab } from './tabs/ThemesTab';
 import { LinksTab } from './tabs/LinksTab';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { getServerUrl } from '../../utils/localstorageCredentials';
+import { getServerUrl } from '@pelagica/core';
 
 const SettingsPage = () => {
     const { t } = useTranslation('settings');
@@ -61,7 +61,7 @@ const SettingsPage = () => {
 
     return (
         <Page title={t('title')} className="flex-1 flex flex-col" requireAdmin requiresAuth>
-            <Tabs defaultValue={activeTab} onValueChange={(val) => setSearchParams({ tab: val })}>
+            <Tabs value={activeTab} onValueChange={(val) => setSearchParams({ tab: val })}>
                 <TabsList>
                     <TabsTrigger value="general">{t('category_general')}</TabsTrigger>
                     <TabsTrigger value="homesections">{t('category_homesections')}</TabsTrigger>

@@ -1,6 +1,6 @@
 import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
-import { ticksToReadableMusicTime } from '@/utils/timeConversion';
+import { ticksToReadableMusicTime } from '@pelagica/core';
 import type { MusicPlaybackTrack } from '@/context/MusicPlaybackContext';
 import MusicItemContextMenu from '@/components/MusicItemContextMenu';
 import { cn } from '@/lib/utils';

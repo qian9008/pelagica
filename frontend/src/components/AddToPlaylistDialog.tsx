@@ -12,10 +12,10 @@ import {
     CommandList,
 } from '@/components/ui/command';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCurrentUser } from '@/hooks/api/useCurrentUser';
-import { usePlaylists } from '@/hooks/api/playlist/usePlaylists';
-import { useAddToPlaylist } from '@/hooks/api/playlist/useAddToPlaylist';
-import { useCreatePlaylist } from '@/hooks/api/playlist/useCreatePlaylist';
+import { useCurrentUser } from '@pelagica/core';
+import { usePlaylists } from '@pelagica/core';
+import { useAddToPlaylist } from '@pelagica/core';
+import { useCreatePlaylist } from '@pelagica/core';
 
 interface AddToPlaylistDialogProps {
     open: boolean;

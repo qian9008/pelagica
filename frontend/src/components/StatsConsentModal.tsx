@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CircleCheck } from 'lucide-react';
-import { useSetStatsConsent } from '../hooks/api/statsConsent/useSetStatsConsent';
-import { useStatsConsent } from '../hooks/api/statsConsent/useStatsConsent';
+import { useSetStatsConsent } from '@pelagica/core';
+import { useStatsConsent } from '@pelagica/core';
 import { Button } from './ui/button';
 import {
     Dialog,

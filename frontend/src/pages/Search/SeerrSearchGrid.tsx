@@ -1,5 +1,5 @@
 import { Skeleton } from '@/components/ui/skeleton';
-import type { SeerrSearchResultItem } from '@/api/seerr/types';
+import type { SeerrSearchResultItem } from '@pelagica/core';
 import { getSeerrItemPosterUrl } from '@/utils/seerUrls';
 import { ImageOff } from 'lucide-react';
 import { useState } from 'react';

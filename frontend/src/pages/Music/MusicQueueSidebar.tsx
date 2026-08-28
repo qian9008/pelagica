@@ -1,6 +1,6 @@
 import { ListMusic, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import { getPrimaryImageUrl } from '@/utils/jellyfinUrls';
+import { getPrimaryImageUrl } from '@pelagica/core';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';

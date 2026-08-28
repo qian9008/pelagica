@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCreatePlaylist } from '@/hooks/api/playlist/useCreatePlaylist';
+import { useCreatePlaylist } from '@pelagica/core';
 import {
     Dialog,
     DialogContent,

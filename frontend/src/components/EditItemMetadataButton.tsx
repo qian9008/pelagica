@@ -1,11 +1,9 @@
-import { useEditItemMetadata } from '@/hooks/api/useEditItemMetadata';
 import type {
     BaseItemDto,
     Video3DFormat,
     MetadataField,
 } from '@jellyfin/sdk/lib/generated-client/models';
-import { getApi } from '@/api/getApi';
-import { getUserLibraryApi } from '@jellyfin/sdk/lib/utils/api/user-library-api';
+import { getApi, useEditItemMetadata, useUserLibraryItem } from '@pelagica/core';
 import { getItemUpdateApi } from '@jellyfin/sdk/lib/utils/api/item-update-api';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, startTransition } from 'react';
@@ -82,14 +80,7 @@ const EditItemMetadataButton = ({
     });
 
     // ---- fetch full item when dialog opens ----
-    const { data: fullItem } = useQuery({
-        queryKey: ['fullItem', item.Id],
-        queryFn: async () => {
-            const api = getApi();
-            return (await getUserLibraryApi(api).getItem({ itemId: item.Id! })).data;
-        },
-        enabled: isEditDialogOpen && !!item.Id,
-    });
+    const { data: fullItem } = useUserLibraryItem(isEditDialogOpen ? item.Id : undefined);
 
     const { data: metadataEditorInfo } = useQuery({
         queryKey: ['metadataEditorInfo', item.Id],

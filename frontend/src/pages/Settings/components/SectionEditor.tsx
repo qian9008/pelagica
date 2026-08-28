@@ -19,8 +19,8 @@ import {
     type DetailField,
     type HomeScreenSection,
     type RecentlyAddedSection,
-} from '@/hooks/api/useConfig';
-import { useUserViews } from '@/hooks/api/useUserViews';
+} from '@pelagica/core';
+import { useUserViews } from '@pelagica/core';
 import {
     ImmediateStringInput,
     BooleanInput,

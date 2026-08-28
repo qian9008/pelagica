@@ -2,7 +2,7 @@ import ItemPagination from '@/components/ItemPagination';
 import StudioCard from '@/components/StudioCard';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useStudiosByItemCount } from '@/hooks/api/useStudiosApi';
+import { useStudiosByItemCount } from '@pelagica/core';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router';

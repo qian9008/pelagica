@@ -1,7 +1,7 @@
 import ScrollableSectionPoster from '@/components/ScrollableSectionPoster';
 import SectionScroller from '@/components/SectionScroller';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSimilarItems } from '@/hooks/api/useSimilarItems';
+import { useSimilarItems } from '@pelagica/core';
 import { memo, useMemo } from 'react';
 import type React from 'react';
 import GeneralItemContextMenu from '../../components/GeneraItemContextMenu';

@@ -24,11 +24,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useConfig } from '@/hooks/api/useConfig';
-import { useSeerrItemDetails } from '@/hooks/api/useSeerrItemDetails';
-import { useRequestSeerrItem } from '@/hooks/api/useRequestSeerrItem';
+import { useConfig } from '@pelagica/core';
+import { useSeerrItemDetails } from '@pelagica/core';
+import { useRequestSeerrItem } from '@pelagica/core';
 import { getSeerrItemBackdropUrl, getSeerrItemPosterUrl, getSeerrItemUrl } from '@/utils/seerUrls';
-import { SeerrMediaStatus, SeerrRequestStatus, type SeerrMediaType } from '@/api/seerr/types';
+import { SeerrMediaStatus, SeerrRequestStatus, type SeerrMediaType } from '@pelagica/core';
 import type { SeerrDialogItem } from '@/context/SeerrItemDialogContext';
 import { ExternalAnchor } from '@/components/ExternalAnchor';
 

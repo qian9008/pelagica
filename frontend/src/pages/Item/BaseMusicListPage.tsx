@@ -1,19 +1,19 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
-import { getPrimaryImageUrl } from '@/utils/jellyfinUrls';
+import { getPrimaryImageUrl } from '@pelagica/core';
 import { getItemUrl } from '@/utils/itemUrl';
 import { usePageBackground } from '@/hooks/usePageBackground';
 import { Link } from 'react-router';
-import { ticksToReadableTime } from '@/utils/timeConversion';
+import { ticksToReadableTime } from '@pelagica/core';
 import { Button } from '@/components/ui/button';
 import { EllipsisVertical, ImageOff, Info, Play } from 'lucide-react';
 import FavoriteButton from '@/components/FavoriteButton';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { AppConfig } from '@/hooks/api/useConfig';
-import { useAlbumTracks } from '@/hooks/api/useAlbumTracks';
-import { usePlaylistItems } from '@/hooks/api/playlist/usePlaylistItems';
+import type { AppConfig } from '@pelagica/core';
+import { useAlbumTracks } from '@pelagica/core';
+import { usePlaylistItems } from '@pelagica/core';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
 import { useTranslation } from 'react-i18next';
-import { getUserId } from '@/utils/localstorageCredentials';
+import { getUserId } from '@pelagica/core';
 import {
     DropdownMenu,
     DropdownMenuContent,

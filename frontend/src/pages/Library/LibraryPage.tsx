@@ -1,8 +1,14 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Page from '../Page';
-import { useUserViews } from '@/hooks/api/useUserViews';
+import {
+    useUserViews,
+    useLibraryItems,
+    useCurrentUser,
+    useRefreshItemMetadata,
+    getPrimaryImageUrl,
+    getBackdropUrl,
+} from '@pelagica/core';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { useLibraryItems } from '@/hooks/api/useLibraryItems';
 import { useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -43,9 +49,6 @@ import { MetadataRefreshMode } from '@jellyfin/sdk/lib/generated-client/models';
 import { ButtonGroup } from '@/components/ui/button-group';
 import LibraryItem from './LibraryItem';
 import { SUPPORTED_LIBRARY_COLLECTION_TYPES } from '@/utils/itemTypes';
-import { getPrimaryImageUrl, getBackdropUrl } from '@/utils/jellyfinUrls';
-import { useCurrentUser } from '@/hooks/api/useCurrentUser';
-import { useRefreshItemMetadata } from '@/hooks/api/useRefreshItemMetadata';
 import { toast } from 'sonner';
 
 export type ViewMode = 'poster' | 'backdrop' | 'list' | 'folder';

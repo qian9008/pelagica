@@ -2,16 +2,12 @@ import { memo } from 'react';
 import type React from 'react';
 import SectionScroller from '@/components/SectionScroller';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSeerrLoginStatus } from '@/hooks/api/useSeerrLoginStatus';
-import {
-    useSeerrPopularMovies,
-    useSeerrPopularSeries,
-    useSeerrTrending,
-} from '@/hooks/api/useSeerrDiscover';
-import type { SeerrSearchResultItem } from '@/api/seerr/types';
+import { useSeerrLoginStatus } from '@pelagica/core';
+import { useSeerrPopularMovies, useSeerrPopularSeries, useSeerrTrending } from '@pelagica/core';
+import type { SeerrSearchResultItem } from '@pelagica/core';
 import { SeerrRecommendationPoster } from '../Item/SeerrRecommendationsRow';
 import { ChevronRight } from 'lucide-react';
-import { useConfig } from '../../hooks/api/useConfig';
+import { useConfig } from '@pelagica/core';
 import { ExternalAnchor } from '@/components/ExternalAnchor';
 
 interface SeerrDiscoverRowProps {

@@ -1,7 +1,7 @@
 import { memo, useEffect, useState, useTransition, type JSX } from 'react';
 import { useSearchParams } from 'react-router';
 import Page from '../Page';
-import { useSearchItems } from '@/hooks/api/useSearchItems';
+import { useSearchItems } from '@pelagica/core';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import {
     Select,
@@ -38,11 +38,11 @@ import {
 import { useTranslation } from 'react-i18next';
 import GenresGrid from './GenresGrid';
 import SeerrSearchGrid from './SeerrSearchGrid';
-import { getUserId } from '@/utils/localstorageCredentials';
-import { useConfig } from '@/hooks/api/useConfig';
-import { useSeerrLoginStatus } from '@/hooks/api/useSeerrLoginStatus';
-import { useSeerrSearch } from '@/hooks/api/useSeerrSearch';
-import { SeerrMediaStatus } from '@/api/seerr/types';
+import { getUserId } from '@pelagica/core';
+import { useConfig } from '@pelagica/core';
+import { useSeerrLoginStatus } from '@pelagica/core';
+import { useSeerrSearch } from '@pelagica/core';
+import { SeerrMediaStatus } from '@pelagica/core';
 
 const ITEM_TYPE_GROUPS = {
     episodes: ['Episode'] as BaseItemKind[],

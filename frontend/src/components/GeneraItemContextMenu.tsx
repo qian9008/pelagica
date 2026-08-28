@@ -8,7 +8,7 @@ import {
     ContextMenuTrigger,
 } from './ui/context-menu';
 import { useAdminItemDialogs } from '../context/AdminItemDialogsContext';
-import { useCurrentUser } from '../hooks/api/useCurrentUser';
+import { useCurrentUser } from '@pelagica/core';
 import { useTranslation } from 'react-i18next';
 import {
     Bookmark,
@@ -18,15 +18,17 @@ import {
     PencilLine,
     Play,
     RotateCcw,
+    ScanSearch,
     Trash2,
 } from 'lucide-react';
-import { useFavorite } from '../hooks/api/useFavorite';
-import { useConfig } from '../hooks/api/useConfig';
+import { useFavorite } from '@pelagica/core';
+import { useConfig } from '@pelagica/core';
 import { Link } from 'react-router';
-import { useLike } from '../hooks/api/useLike';
+import { useLike } from '@pelagica/core';
 import { WATCHLISTABLE_ITEM_TYPES } from '../utils/watchlistableItems';
 import { DOWNLOADABLE_ITEM_TYPES } from '../utils/downloadableItems';
-import { getDownloadurl } from '../utils/jellyfinUrls';
+import { getDownloadurl } from '@pelagica/core';
+import { isIdentifiable } from '../utils/identifiableTypes';
 
 interface GeneralItemContextMenuProps {
     item: BaseItemDto;
@@ -115,6 +117,12 @@ const GeneralItemContextMenu = ({ item, playLink, children }: GeneralItemContext
                             <PencilLine />
                             {t('editMetadata')}
                         </ContextMenuItem>
+                        {item.Type && isIdentifiable(item.Type) && (
+                            <ContextMenuItem onClick={() => openDialog(item, 'identify')}>
+                                <ScanSearch />
+                                {t('identify')}
+                            </ContextMenuItem>
+                        )}
                         <ContextMenuItem onClick={() => openDialog(item, 'delete')}>
                             <Trash2 />
                             {t('deleteItem')}

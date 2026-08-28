@@ -11,7 +11,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { PELAGICA_PLUGIN_REPO_URL } from '@/api/pelagicaPlugin';
+import { PELAGICA_PLUGIN_REPO_URL } from '@pelagica/core';
 import type { PelagicaPluginStatus } from '@/hooks/api/usePelagicaPluginStatus';
 import {
     Empty,

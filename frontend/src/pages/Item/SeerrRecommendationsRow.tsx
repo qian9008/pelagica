@@ -1,8 +1,8 @@
 import SectionScroller from '@/components/SectionScroller';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSeerrRecommendations } from '@/hooks/api/useSeerrRecommendations';
-import { useSeerrLoginStatus } from '@/hooks/api/useSeerrLoginStatus';
-import type { SeerrMediaInfo, SeerrMediaType } from '@/api/seerr/types';
+import { useSeerrRecommendations } from '@pelagica/core';
+import { useSeerrLoginStatus } from '@pelagica/core';
+import type { SeerrMediaInfo, SeerrMediaType } from '@pelagica/core';
 import { ImageOff } from 'lucide-react';
 import { memo, useMemo, useState } from 'react';
 import type React from 'react';

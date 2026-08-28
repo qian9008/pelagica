@@ -1,9 +1,9 @@
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 import { Link, useNavigate } from 'react-router';
 import { Skeleton } from './ui/skeleton';
-import { getPrimaryImageUrl, type ImageSize } from '@/utils/jellyfinUrls';
+import { getPrimaryImageUrl, type ImageSize } from '@pelagica/core';
 import { getItemUrl } from '@/utils/itemUrl';
-import { useConfig } from '@/hooks/api/useConfig';
+import { useConfig } from '@pelagica/core';
 import WatchedStateBadge from './WatchedStateBadge';
 import { forwardRef, useState, type ComponentPropsWithoutRef } from 'react';
 import PosterTrailerVideo from './PosterTrailerVideo';

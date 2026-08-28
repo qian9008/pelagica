@@ -1,7 +1,12 @@
 import { createContext, useContext } from 'react';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 
-export type AdminItemDialog = 'manageImages' | 'refreshMetadata' | 'editMetadata' | 'delete';
+export type AdminItemDialog =
+    | 'manageImages'
+    | 'refreshMetadata'
+    | 'editMetadata'
+    | 'identify'
+    | 'delete';
 
 interface AdminItemDialogsContextType {
     openDialog: (item: BaseItemDto, dialog: AdminItemDialog) => void;

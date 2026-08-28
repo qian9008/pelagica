@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { getServerUrl } from '@/utils/localstorageCredentials';
-import type { AppConfig } from '@/hooks/api/useConfig';
+import { getServerUrl } from '@pelagica/core';
+import type { AppConfig } from '@pelagica/core';
 import {
     fetchPluginConfig,
     fetchPluginEnabled,
@@ -11,7 +11,7 @@ import {
     installPelagicaPlugin,
     restartJellyfinServer,
     savePluginConfig,
-} from '@/api/pelagicaPlugin';
+} from '@pelagica/core';
 
 export type PelagicaPluginStatus = 'checking' | 'active' | 'needs-restart' | 'not-installed';
 

@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { SeerrMediaType } from '@/api/seerr/types';
+import type { SeerrMediaType } from '@pelagica/core';
 
 export interface SeerrDialogItem {
     id: number;

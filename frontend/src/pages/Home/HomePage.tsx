@@ -1,6 +1,6 @@
 import Page from '../Page';
-import { useUserViews } from '@/hooks/api/useUserViews';
-import { useConfig, type DetailField } from '@/hooks/api/useConfig';
+import { useUserViews } from '@pelagica/core';
+import { useConfig, type DetailField } from '@pelagica/core';
 import MediaBar from './MediaBar';
 import ItemsRow from './ItemsRow';
 import ContinueWatchingRow from './ContinueWatchingRow';

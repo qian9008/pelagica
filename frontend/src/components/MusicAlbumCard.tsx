@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
-import { getPrimaryImageUrl, type ImageSize } from '@/utils/jellyfinUrls';
+import { getPrimaryImageUrl, type ImageSize } from '@pelagica/core';
 import { getItemUrl } from '@/utils/itemUrl';
 import { renderItemFallbackIcon } from '@/utils/itemFallbackIcon';
 import { getAlbumArtistName } from '@/utils/musicPlaybackTrack';

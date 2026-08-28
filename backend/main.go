@@ -77,6 +77,7 @@ func main() {
 	api.Get("/seerr/tv/:tvId/recommendations", handlers.GetSeerTvRecommendations)
 	api.Get("/seerr/movie/:tmdbId", handlers.GetSeerMovieDetails)
 	api.Get("/seerr/tv/:tvId", handlers.GetSeerTvDetails)
+	api.Get("/seerr/person/:personId/combined_credits", handlers.GetSeerPersonCombinedCredits)
 	api.Post("/seerr/request", handlers.PostSeerRequest)
 	api.Get("/seerr/search", handlers.GetSeerSearch)
 	api.Get("/seerr/status", handlers.GetSeerrStatus)

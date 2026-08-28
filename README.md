@@ -9,9 +9,10 @@
   <a href="https://hub.docker.com/r/kartoffelchipss/pelagica"><img src="https://img.shields.io/docker/pulls/kartoffelchipss/pelagica" alt="Docker Pulls"></a>
   <img src="https://img.shields.io/github/stars/PelagicaApp/pelagica?style=flat&color=gold" alt="Stars">
   <a href="https://stats.pelagica.app/"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fstats.pelagica.app%2Fstats&label=active%20instances&query=%24.active_instances&color=brightgreen" alt="Active Instances"></a>
+  <a href="https://translate.pelagica.app/"><img src="https://translate.pelagica.app/api/badge.svg" alt="Translations"></a>
 </p>
 
-<p align="center">Pelagica is a web and desktop client for <a href="https://jellyfin.org">Jellyfin</a> built using React. It aims to provide a fast, modern, and customizable user experience for browsing and watching your media library. It's available both as a self-hosted web app and as a native desktop app for macOS, Windows, and Linux.</p>
+<p align="center">Pelagica is a web, desktop, and TV client for <a href="https://jellyfin.org">Jellyfin</a> built using React. It aims to provide a fast, modern, and customizable user experience for browsing and watching your media library. It's available as a self-hosted web app, a native desktop app for macOS, Windows, and Linux, and a TV app for Samsung Tizen.</p>
 
 <!-- p align="center">A fast, modern web frontend for Jellyfin</p> -->
 
@@ -21,8 +22,7 @@
 
 - [Features](#features)
 - [Web Demo](#web-demo)
-- [Web Installation](#web-installation)
-- [Desktop App](#desktop-app)
+- [Installation options](#installation-options)
 - [Discord](#discord)
 - [Localization](#localization)
 - [Development Setup](#development-setup)
@@ -43,8 +43,6 @@
 - **Desktop App:** Native apps for macOS, Windows, and Linux, built with [Wails](https://v3.wails.io).
 - **Theming:** Light and dark mode support as well as custom themes
 - **Localization:** Supports multiple languages through [community contributions](#localization).
-
-You can find a roadmap of planned features and improvements in the [GitHub Projects](https://github.com/users/KartoffelChipss/projects/7).
 
 If you want to suggest new features or report bugs, please use the [GitHub Issues](https://github.com/KartoffelChipss/pelagica/issues) section.
 
@@ -89,11 +87,13 @@ For production use, you should self-host Pelagica using Docker or another method
 
 Thank you to [Streamyfin](https://streamyfin.app/) for providing a demo Jellyfin server for testing!
 
-## Web Installation
+## Installation options
+
+### Web Installation
 
 Pelagica web is distributed as a Docker image. See the [Installation](https://pelagica.app/docs/installation) and [Configuration](https://pelagica.app/docs/configuration) docs for setup instructions, and [Themes](https://pelagica.app/docs/themes) for applying custom themes.
 
-## Desktop App
+### Desktop App
 
 Pelagica is also available as a native desktop app for macOS, Windows, and Linux, built with [Wails v3](https://v3.wails.io). Download the latest build for your platform from the [Releases](https://github.com/PelagicaApp/pelagica/releases/latest) page.
 
@@ -103,6 +103,10 @@ Pelagica is also available as a native desktop app for macOS, Windows, and Linux
 
 See the [desktop README](./desktop/README.md) for build and packaging instructions if you'd rather build it yourself.
 
+### Samsung Tizen
+
+Pelagica is available as a Tizen app for Samsung Smart TVs. See the [Tizen Documentation](https://pelagica.app/docs/tizen) for installation instructions.
+
 ## Discord
 
 For discussions about Pelagica, join the [JellyfinCommunity](https://discord.gg/VKqprjh3Wr) and head to the `#pelagica` channel.
@@ -110,6 +114,8 @@ For discussions about Pelagica, join the [JellyfinCommunity](https://discord.gg/
 ## Localization
 
 Pelagica supports multiple languages through community contributions. See the [Translations](https://pelagica.app/docs/translations) docs for how to contribute.
+
+![Languages](https://translate.pelagica.app/api/badge/languages.svg)
 
 ## Development Setup
 

@@ -12,8 +12,8 @@ import {
 import { Heart, ListEnd, ListMusic, ListPlus, ListStart, Play, Shuffle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useMusicPlayback } from '@/hooks/useMusicPlayback';
-import { useFavorite } from '@/hooks/api/useFavorite';
-import { useAlbumTracks } from '@/hooks/api/useAlbumTracks';
+import { useFavorite } from '@pelagica/core';
+import { useAlbumTracks } from '@pelagica/core';
 import { AddToPlaylistDialog } from '@/components/AddToPlaylistDialog';
 import type { MusicPlaybackTrack } from '@/context/MusicPlaybackContext';
 import {

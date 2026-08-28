@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useConfig, useUpdateConfig, type AppConfig } from '@/hooks/api/useConfig';
-import { getServerUrl } from '@/utils/localstorageCredentials';
+import { useConfig, useUpdateConfig, type AppConfig } from '@pelagica/core';
+import { getServerUrl } from '@pelagica/core';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
