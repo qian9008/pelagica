@@ -61,7 +61,7 @@ const SettingsPage = () => {
 
     return (
         <Page title={t('title')} className="flex-1 flex flex-col" requireAdmin requiresAuth>
-            <Tabs value={activeTab} onValueChange={(val) => setSearchParams({ tab: val })}>
+            <Tabs defaultValue={activeTab} onValueChange={(val) => setSearchParams({ tab: val })}>
                 <TabsList>
                     <TabsTrigger value="general">{t('category_general')}</TabsTrigger>
                     <TabsTrigger value="homesections">{t('category_homesections')}</TabsTrigger>

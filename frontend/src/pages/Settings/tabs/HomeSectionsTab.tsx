@@ -23,12 +23,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-const generateSectionId = () => {
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-        return crypto.randomUUID();
-    }
-    return 'sec-' + Math.random().toString(36).substring(2, 11) + '-' + Date.now().toString(36);
-};
+const generateSectionId = () => crypto.randomUUID();
 
 const SortableSectionRow = ({
     id,
@@ -115,14 +110,9 @@ export const HomeSectionsTab = ({
 
     // since sections don't have an id, generate one so dndkit can track them
     const [sectionIds, setSectionIds] = useState<string[]>(() => sections.map(generateSectionId));
-
-    // 使用 useEffect 同步长度变化，禁止在渲染周期内直接 setState
-    useEffect(() => {
-        setSectionIds((prev) => {
-            if (prev.length === sections.length) return prev;
-            return sections.map((_, i) => prev[i] || generateSectionId());
-        });
-    }, [sections.length]);
+    if (sectionIds.length !== sections.length) {
+        setSectionIds(sections.map(generateSectionId));
+    }
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
