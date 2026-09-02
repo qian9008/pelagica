@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import JASSUB from 'jassub';
+import { useTranslation } from 'react-i18next';
 import { AvPlayPlayerAdapter, createAvPlayPlayerAdapter } from '@pelagica/tv-platform';
 import { useLayerActive } from '@/router';
+import { toast } from '@/components/ui/toast';
+import {
+    getJassubUnsupportedReason,
+    installVideoFrameCallbackFallback,
+    overrideVideoDimensions,
+} from './jassub';
 import type { VideoPlayerProps } from './types';
 
 const STALL_TIMEOUT_MS = 20_000;
@@ -13,6 +22,7 @@ const TizenVideoPlayer = ({
     src,
     startTicks,
     subtitles,
+    subtitleFonts,
     onReady,
     onPlaybackStalled,
     pendingAudioSwitchSeekRef,
@@ -20,8 +30,11 @@ const TizenVideoPlayer = ({
     audioTrackIndex,
     audioStreams,
 }: VideoPlayerProps) => {
+    const { t } = useTranslation('player');
     const containerRef = useRef<HTMLDivElement | null>(null);
     const subtitleVideoRef = useRef<HTMLVideoElement | null>(null);
+    const assAnchorVideoRef = useRef<HTMLVideoElement | null>(null);
+    const assRendererRef = useRef<JASSUB | null>(null);
     const adapterRef = useRef<AvPlayPlayerAdapter | null>(null);
     const hasSeekedRef = useRef(false);
     const onPlaybackStalledRef = useRef(onPlaybackStalled);
@@ -29,6 +42,7 @@ const TizenVideoPlayer = ({
     const audioTrackIndexRef = useRef(audioTrackIndex);
     const audioStreamsRef = useRef(audioStreams);
     const [activeCueText, setActiveCueText] = useState('');
+    const [isBuffering, setIsBuffering] = useState(true);
     const isLayerActive = useLayerActive();
 
     useEffect(() => {
@@ -83,8 +97,12 @@ const TizenVideoPlayer = ({
         adapterRef.current = adapter;
 
         avplay.setListener({
+            onbufferingstart: () => adapter.notifyWaiting(),
             onbufferingprogress: (percent) => adapter.notifyBufferingProgress(percent),
-            onbufferingcomplete: () => clearStallTimeout(),
+            onbufferingcomplete: () => {
+                clearStallTimeout();
+                adapter.notifyPlaying();
+            },
             oncurrentplaytime: (currentTime) => {
                 clearStallTimeout();
                 adapter.notifyCurrentTime(currentTime);
@@ -103,9 +121,16 @@ const TizenVideoPlayer = ({
             },
         });
 
+        const handleWaiting = () => setIsBuffering(true);
+        const handlePlaying = () => setIsBuffering(false);
+        adapter.on('waiting', handleWaiting);
+        adapter.on('playing', handlePlaying);
+
         onReady?.(adapter);
 
         return () => {
+            adapter.off('waiting', handleWaiting);
+            adapter.off('playing', handlePlaying);
             clearStallTimeout();
             adapter.dispose();
             adapterRef.current = null;
@@ -128,6 +153,7 @@ const TizenVideoPlayer = ({
         const adapter = adapterRef.current;
         if (!avplay || !adapter || !src) return;
 
+        setIsBuffering(true);
         let cancelled = false;
         const pendingSeek = pendingAudioSwitchSeekRef.current;
         pendingAudioSwitchSeekRef.current = null;
@@ -192,6 +218,7 @@ const TizenVideoPlayer = ({
                     const startPlayback = () => {
                         if (cancelled) return;
                         adapter.play();
+                        adapter.notifyPlaying();
                         selectPreferredAudioTrack();
                     };
 
@@ -226,11 +253,85 @@ const TizenVideoPlayer = ({
         subtitleTrackIndex !== null ? (subtitles?.[subtitleTrackIndex] ?? null) : null;
 
     useEffect(() => {
-        if (activeSubtitle?.format === 'ass') {
-            console.error('ASS subtitles are not supported for Tizen AVPlay playback');
-        }
         setActiveCueText('');
     }, [activeSubtitle]);
+
+    // we fake a video element for ASS subtitles because the AVPlay video plane is below the HTML layer and we can't use a normal <video> element for playback
+    useEffect(() => {
+        const anchor = assAnchorVideoRef.current;
+        const adapter = adapterRef.current;
+        if (!anchor || !adapter) return;
+
+        if (!assRendererRef.current) {
+            if (!activeSubtitle || activeSubtitle.format !== 'ass') return;
+
+            const unsupportedReason = getJassubUnsupportedReason();
+            if (unsupportedReason) {
+                console.error(
+                    `ASS subtitles unsupported on this device (missing ${unsupportedReason})`
+                );
+                toast.add({ title: t('assSubtitlesUnsupported'), type: 'error' });
+                return;
+            }
+
+            try {
+                overrideVideoDimensions(anchor, anchor.clientWidth, anchor.clientHeight);
+                installVideoFrameCallbackFallback(
+                    anchor,
+                    () => adapter.getCurrentTime(),
+                    () => ({ width: anchor.clientWidth, height: anchor.clientHeight })
+                );
+                const renderer = new JASSUB({
+                    video: anchor,
+                    subUrl: activeSubtitle.src,
+                    fonts: subtitleFonts,
+                });
+                assRendererRef.current = renderer;
+
+                const readyTimeout = setTimeout(() => {
+                    console.error(
+                        '[JASSUB] renderer.ready did not settle within 8s - the worker likely hung during init'
+                    );
+                    toast.add({ title: t('assSubtitlesUnsupported'), type: 'error' });
+                }, 8000);
+
+                renderer.ready
+                    .then(() => clearTimeout(readyTimeout))
+                    .catch((error) => {
+                        clearTimeout(readyTimeout);
+                        console.error('Error initializing ASS subtitle renderer:', error);
+                        toast.add({ title: t('assSubtitlesUnsupported'), type: 'error' });
+                    });
+
+                return () => clearTimeout(readyTimeout);
+            } catch (error) {
+                console.error('Failed to create ASS subtitle renderer:', error);
+                toast.add({ title: t('assSubtitlesUnsupported'), type: 'error' });
+            }
+            return;
+        }
+
+        const renderer = assRendererRef.current;
+        renderer.ready
+            .then(() => {
+                // Bail out if the renderer was replaced/destroyed while we were waiting
+                if (assRendererRef.current !== renderer) return;
+
+                if (!activeSubtitle || activeSubtitle.format !== 'ass') {
+                    renderer.renderer.freeTrack();
+                } else {
+                    renderer.renderer.setTrackByUrl(activeSubtitle.src);
+                }
+            })
+            .catch((error) => console.error('Error updating ASS subtitles:', error));
+    }, [activeSubtitle, subtitleFonts, t]);
+
+    useEffect(() => {
+        return () => {
+            assRendererRef.current?.destroy();
+            assRendererRef.current = null;
+        };
+    }, []);
 
     useEffect(() => {
         const adapter = adapterRef.current;
@@ -275,11 +376,22 @@ const TizenVideoPlayer = ({
                     />
                 )}
             </video>
+            <video
+                ref={assAnchorVideoRef}
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full bg-transparent pointer-events-none"
+            />
             {activeCueText && (
                 <div className="absolute bottom-24 left-0 right-0 flex justify-center px-8 pointer-events-none z-10">
                     <span className="max-w-3xl text-center text-white text-2xl font-medium whitespace-pre-line [text-shadow:0_1px_4px_rgb(0_0_0_/_80%)]">
                         {activeCueText}
                     </span>
+                </div>
+            )}
+            {isBuffering && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <Loader2 className="h-10 w-10 animate-spin text-white" />
                 </div>
             )}
         </div>

@@ -1,27 +1,21 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import JASSUB from 'jassub';
+import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { createVideoJsPlayerAdapter } from '@pelagica/tv-platform';
+import { toast } from '@/components/ui/toast';
+import { getJassubUnsupportedReason, installVideoFrameCallbackFallback } from './jassub';
 import type { VideoPlayerProps } from './types';
 
 type VideoJsPlayer = ReturnType<typeof videojs>;
 
 const STALL_TIMEOUT_MS = 20_000;
 
-function isJassubSupported() {
-    return (
-        typeof WebAssembly !== 'undefined' &&
-        typeof Worker !== 'undefined' &&
-        typeof HTMLCanvasElement !== 'undefined' &&
-        'transferControlToOffscreen' in HTMLCanvasElement.prototype
-    );
-}
-
 const VideoPlayer = ({
     src,
     srcType = 'application/x-mpegURL',
-    poster,
     startTicks,
     subtitles,
     subtitleFonts,
@@ -31,6 +25,7 @@ const VideoPlayer = ({
     pendingAudioSwitchSeekRef,
     subtitleTrackIndex,
 }: VideoPlayerProps) => {
+    const { t } = useTranslation('player');
     const containerRef = useRef<HTMLDivElement | null>(null);
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const playerRef = useRef<VideoJsPlayer | null>(null);
@@ -39,6 +34,7 @@ const VideoPlayer = ({
     const onPlaybackErrorRef = useRef(onPlaybackError);
     const onPlaybackStalledRef = useRef(onPlaybackStalled);
     const stallTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [isBuffering, setIsBuffering] = useState(true);
 
     useEffect(() => {
         onPlaybackErrorRef.current = onPlaybackError;
@@ -65,7 +61,6 @@ const VideoPlayer = ({
             controls: false,
             autoplay: false,
             preload: 'auto',
-            poster: poster,
             responsive: false,
             fluid: false,
             html5: {
@@ -80,8 +75,12 @@ const VideoPlayer = ({
         player.on('error', () => {
             const mediaError = player.error() as unknown as MediaError | null;
             console.error('video.js playback error:', mediaError);
+            setIsBuffering(false);
             onPlaybackErrorRef.current?.(mediaError);
         });
+
+        player.on('waiting', () => setIsBuffering(true));
+        player.on('playing', () => setIsBuffering(false));
 
         player.ready(() => {
             onReady?.(createVideoJsPlayerAdapter(player));
@@ -96,7 +95,7 @@ const VideoPlayer = ({
             }
             videoRef.current = null;
         };
-    }, [onReady, poster]);
+    }, [onReady]);
 
     useEffect(() => {
         if (!playerRef.current) return;
@@ -117,6 +116,8 @@ const VideoPlayer = ({
         if (!playerRef.current || !src) return;
 
         const player = playerRef.current;
+
+        setIsBuffering(true);
 
         let seekTo: number | null = null;
 
@@ -220,25 +221,43 @@ const VideoPlayer = ({
         if (!assRendererRef.current) {
             if (!activeTrack || activeTrack.format !== 'ass') return;
 
-            if (!isJassubSupported()) {
+            const unsupportedReason = getJassubUnsupportedReason();
+            if (unsupportedReason) {
                 console.error(
-                    'ASS subtitles unsupported on this device (missing WebAssembly, module Worker, or OffscreenCanvas support)'
+                    `ASS subtitles unsupported on this device (missing ${unsupportedReason})`
                 );
+                toast.add({ title: t('assSubtitlesUnsupported'), type: 'error' });
                 return;
             }
 
             try {
+                installVideoFrameCallbackFallback(videoEl);
                 const renderer = new JASSUB({
                     video: videoEl,
                     subUrl: activeTrack.src,
                     fonts: subtitleFonts,
                 });
                 assRendererRef.current = renderer;
-                renderer.ready.catch((error) =>
-                    console.error('Error initializing ASS subtitle renderer:', error)
-                );
+
+                const readyTimeout = setTimeout(() => {
+                    console.error(
+                        '[JASSUB] renderer.ready did not settle within 8s - the worker likely hung during init'
+                    );
+                    toast.add({ title: t('assSubtitlesUnsupported'), type: 'error' });
+                }, 8000);
+
+                renderer.ready
+                    .then(() => clearTimeout(readyTimeout))
+                    .catch((error) => {
+                        clearTimeout(readyTimeout);
+                        console.error('Error initializing ASS subtitle renderer:', error);
+                        toast.add({ title: t('assSubtitlesUnsupported'), type: 'error' });
+                    });
+
+                return () => clearTimeout(readyTimeout);
             } catch (error) {
                 console.error('Failed to create ASS subtitle renderer:', error);
+                toast.add({ title: t('assSubtitlesUnsupported'), type: 'error' });
             }
             return;
         }
@@ -256,14 +275,21 @@ const VideoPlayer = ({
                 }
             })
             .catch((error) => console.error('Error updating ASS subtitles:', error));
-    }, [subtitleTrackIndex, subtitles, subtitleFonts]);
+    }, [subtitleTrackIndex, subtitles, subtitleFonts, t]);
 
     return (
-        <div
-            ref={containerRef}
-            className="w-full h-full overflow-hidden"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        />
+        <div className="relative w-full h-full overflow-hidden">
+            <div
+                ref={containerRef}
+                className="w-full h-full overflow-hidden"
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            />
+            {isBuffering && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 pointer-events-none">
+                    <Loader2 className="h-10 w-10 animate-spin text-white" />
+                </div>
+            )}
+        </div>
     );
 };
 

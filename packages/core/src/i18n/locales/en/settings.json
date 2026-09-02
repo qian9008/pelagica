@@ -49,6 +49,7 @@
     "section_type_streamystatsRecommended": "Recommended (Streamystats)",
     "section_type_genres": "Genres",
     "section_type_libraries": "Libraries",
+    "section_type_recentEpisodes": "Recent Episodes",
     "section_type_seerrDiscover": "Seerr Discover",
     "detail_badges_ReleaseYear": "Release Year",
     "detail_badges_ReleaseYearAndMonth": "Release Year and Month",
@@ -144,6 +145,8 @@
     "link_icon_search_placeholder": "Search icons...",
     "recently_added_libraries": "Libraries",
     "recently_added_libraries_description": "Select which libraries to show in the recently added section. If none are selected, all libraries are shown.",
+    "recent_episodes_library_label": "Library",
+    "recent_episodes_library_description": "Select the TV shows library to show recent episodes from.",
     "section_type_studios": "Studios",
     "show_download_button_label": "Show Download Button",
     "usage_statistics_label": "Allow anonymous usage statistics collection",
@@ -183,5 +186,7 @@
     "version_label": "Pelagica Version",
     "application_section_title": "Application",
     "clear_logo_cache_button": "Clear Logo Cache",
-    "clear_logo_cache_success": "Logo cache cleared successfully!"
+    "clear_logo_cache_success": "Logo cache cleared successfully!",
+    "clear_app_cache_button": "Clear App Cache",
+    "clear_app_cache_success": "App cache cleared successfully!"
 }

@@ -12,9 +12,7 @@
   <a href="https://twoglot.com/@KartoffelChipss/pelagica"><img src="https://twoglot.com/api/projects/by-owner/KartoffelChipss/pelagica/badge.svg" alt="Translations"></a>
 </p>
 
-<p align="center">Pelagica is a web, desktop, and TV client for <a href="https://jellyfin.org">Jellyfin</a> built using React. It aims to provide a fast, modern, and customizable user experience for browsing and watching your media library. It's available as a self-hosted web app, a native desktop app for macOS, Windows, and Linux, and a TV app for Samsung Tizen.</p>
-
-<!-- p align="center">A fast, modern web frontend for Jellyfin</p> -->
+<p align="center">Pelagica is a web, desktop, and TV client for <a href="https://jellyfin.org">Jellyfin</a> built using React. It aims to provide a fast, modern, and customizable user experience for browsing and watching your media library. It's available as a self-hosted web app, a native desktop app for macOS, Windows, and Linux, and a TV app for Samsung Tizen and LG webOS.</p>
 
 ![Home](./.github/assets/home.webp)
 
@@ -99,13 +97,35 @@ Pelagica is also available as a native desktop app for macOS, Windows, and Linux
 
 - **macOS:** Not notarized, so Gatekeeper will flag it — right-click the app and choose "Open" to bypass.
 - **Windows:** Not signed with an Authenticode certificate, so SmartScreen will flag it.
-- **Linux:** Available as a `.deb` package or an `.AppImage`.
+- **Linux:** Available as a `.deb` package, a `.pkg.tar.zst` package (Arch Linux), or an `.AppImage`.
 
 See the [desktop README](./desktop/README.md) for build and packaging instructions if you'd rather build it yourself.
+
+#### Homebrew (macOS)
+
+On Apple Silicon, Pelagica can be installed and kept up to date through the [Homebrew tap](https://github.com/PelagicaApp/homebrew-pelagica):
+
+```sh
+brew tap PelagicaApp/pelagica
+brew trust PelagicaApp/pelagica
+brew install --cask pelagica
+```
+
+Since the app is not notarized, clear the quarantine attribute once after installing:
+
+```sh
+xattr -dr com.apple.quarantine "/Applications/Pelagica.app"
+```
+
+Later updates are just `brew upgrade --cask pelagica`.
 
 ### Samsung Tizen
 
 Pelagica is available as a Tizen app for Samsung Smart TVs. See the [Tizen Documentation](https://pelagica.app/docs/tizen) for installation instructions.
+
+### LG webOS
+
+Pelagica is available as a webOS app for LG Smart TVs. See the [webOS Documentation](https://pelagica.app/docs/webos) for installation instructions.
 
 ## Discord
 
