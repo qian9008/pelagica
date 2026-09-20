@@ -12,6 +12,7 @@
 * **`frontend` (`pelagica`)**: Web 客户端主项目。
 * **`packages/tv-frontend` / `packages/tv-platform`**: 电视端专用前端与平台适配层。
 * **`tizen`**: 三星 Tizen 客户端。
+* **`webos`**: LG webOS 客户端。
 
 ---
 
@@ -70,3 +71,19 @@ export interface ShareItem {
    - **共享系统**：顶栏「共享库」入口、分享弹窗创建及删除功能。
    - **外部播放器**：详情页「外部播放器」按钮（Potplayer/VLC/IINA 调用）。
    - **媒体库视图**：列表视图、网格视图与文件夹穿透下钻。
+
+---
+
+## 5. 最近同步记录
+
+### 2026-09-20: 同步官方 upstream/develop
+* **合并提交**: `3a35c9a7`
+* **上游变动**:
+  * 引入 `webos` 客户端工程及 TV 端适配支持。
+  * 新增意大利语 (it)、罗马尼亚语 (ro)、越南语 (vi) 国际化词条。
+  * `ItemPage` 增加 `useItemCollections` 合集骨架预加载与防抖。
+  * `Dockerfile` 升级依赖分层缓存机制与 `BASE_PATH` 支持。
+* **二开保留与融合**:
+  * 保留 `ItemPage.tsx` 智能上一级兜底路由导航 `handleBack`。
+  * 保留 `VideoPlayer.tsx` 动态全屏 opacity 防黑屏逻辑与洋红描边字幕样式。
+  * 保留并完成 `folder-view` 模块解耦重构，全工程通过 `pnpm -r build` 构建验证。
