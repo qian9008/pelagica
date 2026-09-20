@@ -1,22 +1,24 @@
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     useConfig,
-    getUserId,
     getPrimaryImageUrl,
     getBackdropUrl,
-    getApi,
 } from '@pelagica/core';
 import type { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 import type { TFunction } from 'i18next';
 import { ImageOff, Star, Clock, FolderClosed, Play } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { buildPlayerUrl } from '@/utils/playerUrl';
 import { getItemUrl } from '@/utils/itemUrl';
 import WatchedStateBadge from '@/components/WatchedStateBadge';
 import ItemContextMenu from '@/components/ItemContextMenu';
-import { getItemsApi } from '@jellyfin/sdk/lib/utils/api/items-api';
 import { useTitleDisplayMode, getItemDisplayName } from '@/hooks/useTitleDisplayMode';
+import {
+    useFolderCoverFeed,
+    FolderWrapper,
+    FolderCornerIndicator,
+} from '@/features/folder-view';
 
 const getAspectStyle = (ratio: string) => {
     if (ratio === 'video') return '16/9';
@@ -55,120 +57,20 @@ const LibraryItem = ({
     const [posterError, setPosterError] = useState(false);
     const [titleMode] = useTitleDisplayMode();
 
-    const isPhysicalFolder = item.Type === 'Folder';
-    const isCollectionFolder = item.Type === 'CollectionFolder';
-    const isFolder = item.IsFolder || isPhysicalFolder || isCollectionFolder;
+    // 引入解耦后的文件夹智能封面反哺与播放进度管理 Hook
+    const {
+        isFolder,
+        folderProgress,
+        childCount,
+        finalPosterUrl,
+        shouldRenderFolderIcon,
+    } = useFolderCoverFeed(item, posterUrl, posterAspectRatio);
+
     const location = useLocation();
     const playUrl = buildPlayerUrl(item.Id!, location.pathname + location.search);
     const itemPath =
         itemLink ||
         (isDirectPlay ? playUrl : getItemUrl(item.Type, item.Id) ?? `/item/${item.Id}`);
-
-    // 检查该文件夹是否有封面图哈希
-    const hasPrimaryImage = !!item.ImageTags?.Primary;
-
-    // 智能获取文件夹内部视频的最短播放进度和反哺封面
-    const [folderProgress, setFolderProgress] = useState<number>(0);
-    const [folderCoverUrl, setFolderCoverUrl] = useState<string>('');
-    const [childCount, setChildCount] = useState<number | null>(item.ChildCount ?? null);
-
-    useEffect(() => {
-        if (!isFolder || !item.Id || item.Id === 'undefined') return;
-
-        let active = true;
-
-        const fetchFolderSubData = async () => {
-            try {
-                const api = getApi();
-                const itemsApi = getItemsApi(api);
-
-                // 仅递归拉取该物理目录下前 10 个视频实体，计算内部的播放进度和反哺封面
-                const response = await itemsApi.getItems({
-                    parentId: item.Id!,
-                    recursive: true,
-                    limit: 10,
-                    includeItemTypes: ['Movie', 'Episode', 'Video'],
-                    userId: getUserId() || undefined,
-                });
-
-                if (!active) return;
-
-                const subItems = response.data?.Items || [];
-                if (response.data?.TotalRecordCount !== undefined) {
-                    setChildCount(response.data.TotalRecordCount);
-                }
-
-                // 1. 优先挑选有进度的子项
-                let minProg = 0;
-                let activeSubItem: BaseItemDto | null = null;
-
-                subItems.forEach((v) => {
-                    const watchedTicks = v.UserData?.PlaybackPositionTicks ?? 0;
-                    const runtimeTicks = v.RunTimeTicks ?? 0;
-                    const isPlayed = v.UserData?.Played ?? false;
-
-                    if (!isPlayed && watchedTicks > 0 && runtimeTicks > 0) {
-                        const percent = (watchedTicks / runtimeTicks) * 100;
-                        if (percent > 0) {
-                            if (minProg === 0 || percent < minProg) {
-                                minProg = percent;
-                                activeSubItem = v;
-                            }
-                        }
-                    }
-                });
-
-                setFolderProgress(minProg);
-
-                // 2. 如果没有任何进度，但文件夹内有视频，选取第一个或随机子视频作为封面源
-                if (!activeSubItem && subItems.length > 0) {
-                    activeSubItem = subItems[0];
-                }
-
-                // 3. 提取该子视频的封面反哺给当前文件夹
-                if (activeSubItem && activeSubItem.Id) {
-                    const subId = activeSubItem.Id;
-                    const subTag = activeSubItem.ImageTags?.Primary;
-                    let calculatedCover = '';
-
-                    if (posterAspectRatio === 'video') {
-                        // 横版模式：优先拉取 Backdrop，无则 Primary 降级
-                        const backdropTag =
-                            activeSubItem.BackdropImageTags?.[0] || activeSubItem.ImageTags?.Backdrop;
-                        if (backdropTag) {
-                            calculatedCover = getBackdropUrl(
-                                subId,
-                                { width: 640, height: 360 },
-                                backdropTag
-                            );
-                        } else if (subTag) {
-                            calculatedCover = getPrimaryImageUrl(subId, { width: 640 }, subTag);
-                        }
-                    } else {
-                        // 默认竖版海报模式
-                        if (subTag) {
-                            calculatedCover = getPrimaryImageUrl(
-                                subId,
-                                { height: 640, width: 416 },
-                                subTag
-                            );
-                        }
-                    }
-                    if (calculatedCover) {
-                        setFolderCoverUrl(calculatedCover);
-                    }
-                }
-            } catch (err) {
-                console.warn('Folder sub-progress and cover fetch failed:', err);
-            }
-        };
-
-        fetchFolderSubData();
-
-        return () => {
-            active = false;
-        };
-    }, [isFolder, item.Id, posterAspectRatio]);
 
     const watched = item.UserData?.PlaybackPositionTicks ?? 0;
     const runtime = item.RunTimeTicks ?? 0;
@@ -200,6 +102,8 @@ const LibraryItem = ({
         );
     };
 
+    const displayName = getItemDisplayName(item, titleMode);
+
     // 拦截文件夹点击，跳转至深钻层级
     const handleLinkClick = (e: React.MouseEvent) => {
         if (isFolder && onFolderClick) {
@@ -208,33 +112,6 @@ const LibraryItem = ({
         }
     };
 
-    // 渲染高精圆角文件夹封套 (当文件夹无封面且无子视频反哺图时展现)
-    const renderFolderWrapper = () => (
-        <div className="w-full h-full bg-gradient-to-tr from-accent/40 via-accent/20 to-background flex flex-col items-center justify-center rounded-md border border-accent/20 group-hover:border-primary/50 transition-all duration-300">
-            <FolderClosed className="text-4xl text-amber-500 fill-amber-500/10 group-hover:scale-105 transition-transform duration-300" />
-            <span className="text-xs text-muted-foreground mt-2 font-medium">
-                {t('library:folder', '文件夹')}
-            </span>
-        </div>
-    );
-
-    // 物理文件夹或合集封面左上角的精美微型指示器
-    const renderFolderCornerIndicator = () => (
-        <div className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md border border-white/10 text-white rounded-md p-1.5 flex items-center justify-center z-20 shadow-md pointer-events-none">
-            <FolderClosed className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
-        </div>
-    );
-
-    // 当前卡片最终采用的封面图片
-    const finalPosterUrl = isPhysicalFolder
-        ? hasPrimaryImage
-            ? posterUrl
-            : folderCoverUrl
-        : posterUrl;
-
-    // 是否渲染黄色文件夹图标：物理文件夹无主图且无子图片反哺时渲染
-    const shouldRenderFolderIcon = isPhysicalFolder && !hasPrimaryImage && !folderCoverUrl;
-    const displayName = getItemDisplayName(item, titleMode);
     const runtimeMinutes = item.RunTimeTicks
         ? Math.round(item.RunTimeTicks / 10000000 / 60)
         : null;
@@ -265,7 +142,7 @@ const LibraryItem = ({
                         className="relative w-[140px] sm:w-[180px] shrink-0 h-auto overflow-hidden rounded-md group-hover:opacity-90 transition-opacity"
                     >
                         {shouldRenderFolderIcon ? (
-                            renderFolderWrapper()
+                            <FolderWrapper />
                         ) : !posterError && displayPosterUrl ? (
                             <>
                                 <img
@@ -279,7 +156,7 @@ const LibraryItem = ({
                                 <Skeleton className="absolute bottom-0 left-0 right-0 top-0 -z-1" />
                             </>
                         ) : isFolder ? (
-                            renderFolderWrapper()
+                            <FolderWrapper />
                         ) : (
                             <div className="w-full h-full bg-muted flex items-center justify-center rounded-md">
                                 <ImageOff className="text-2xl text-muted-foreground" />
@@ -289,7 +166,7 @@ const LibraryItem = ({
                             item={item}
                             show={config?.watchedStateBadgeLibrary || false}
                         />
-                        {!shouldRenderFolderIcon && isFolder && renderFolderCornerIndicator()}
+                        {!shouldRenderFolderIcon && isFolder && <FolderCornerIndicator />}
                         {renderProgressBar()}
                     </div>
 
@@ -374,7 +251,7 @@ const LibraryItem = ({
                     className="relative w-full h-auto overflow-hidden rounded-md group"
                 >
                     {shouldRenderFolderIcon ? (
-                        renderFolderWrapper()
+                        <FolderWrapper />
                     ) : !posterError && finalPosterUrl ? (
                         <>
                             <img
@@ -413,7 +290,7 @@ const LibraryItem = ({
                             <div className="absolute inset-0 rounded-md pointer-events-none poster-card-outline z-20" />
                         </>
                     ) : isFolder ? (
-                        renderFolderWrapper()
+                        <FolderWrapper />
                     ) : (
                         <div className="w-full h-full bg-muted flex items-center justify-center rounded-md">
                             <ImageOff className="text-4xl text-muted-foreground" />
@@ -423,7 +300,7 @@ const LibraryItem = ({
                         item={item}
                         show={config?.watchedStateBadgeLibrary || false}
                     />
-                    {!shouldRenderFolderIcon && isFolder && renderFolderCornerIndicator()}
+                    {!shouldRenderFolderIcon && isFolder && <FolderCornerIndicator />}
                     {renderProgressBar()}
                 </div>
                 <p className="mt-2 text-sm line-clamp-1 text-ellipsis break-all text-foreground group-hover:text-primary transition-colors">

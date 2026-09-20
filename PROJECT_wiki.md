@@ -20,6 +20,11 @@
 * **`/frontend/src/features/player/`**: [解耦模块] 播放器增强手势与交互层
   * **[`usePlayerGestures.ts`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/features/player/usePlayerGestures.ts)**: 独立封装的长按 3x 快进、左右半屏双击 ±30s 识别、触摸/鼠标状态机与定时器管理。
   * **[`PlayerGestureOverlay.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/features/player/PlayerGestureOverlay.tsx)**: 独立渲染快进徽章与跳转动画浮层组件。
+* **`/frontend/src/features/folder-view/`**: [解耦模块] 媒体库文件夹下钻与智能封面反哺
+  * **[`useFolderNavigation.ts`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/features/folder-view/useFolderNavigation.ts)**: 纯 URL 驱动的文件夹导航路径栈与原子状态切换，消除分页竞态。
+  * **[`useFolderCoverFeed.ts`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/features/folder-view/useFolderCoverFeed.ts)**: 独立提取子视频封面与最短播放进度反哺给物理文件夹卡片。
+  * **[`FolderBreadcrumbs.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/features/folder-view/FolderBreadcrumbs.tsx)**: 独立的面包屑层级导航组件。
+  * **[`FolderVisuals.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/features/folder-view/FolderVisuals.tsx)**: 高精圆角黄色文件夹封套与微型指示角标组件。
 * **`/frontend/src/components/`**: 基础 UI 组件目录
   * **[`ExternalPlayerButton.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/components/ExternalPlayerButton.tsx)**: 用于唤起本地 Potplayer/VLC/IINA 播放器的通用按钮组件。
   * **[`ShareDialog.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/components/ShareDialog.tsx)**: 媒体分享目标选择与提交弹窗。

@@ -26,16 +26,17 @@
 ## 2. 媒体库文件夹视图与多模式切换 (Folder & List View) `[本地]`
 
 * **涉及文件**:
-  * [`frontend/src/pages/Library/LibraryPage.tsx`](file:///d:/Users/Documents/1/emby2openlist/pelagica/frontend/src/pages/Library/LibraryPage.tsx) — 文件夹导航 + 视图切换
-  * [`frontend/src/pages/Library/LibraryItem.tsx`](file:///d:/Users/Documents/1/emby2openlist/pelagica/frontend/src/pages/Library/LibraryItem.tsx) — 卡片渲染（含上下文菜单）
-  * [`frontend/src/hooks/api/useLibraryItems.ts`](file:///d:/Users/Documents/1/emby2openlist/pelagica/frontend/src/hooks/api/useLibraryItems.ts) — 扩展 queryKey（sortOrder/recursive/includeItemTypes）
-  * [`frontend/src/locales/zh/library.json`](file:///d:/Users/Documents/1/emby2openlist/pelagica/frontend/src/locales/zh/library.json) — 中文翻译
+  * [`frontend/src/features/folder-view/`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/features/folder-view/) — [解耦模块] 文件夹导航栈、智能封面反哺、面包屑与视觉封套
+  * [`frontend/src/pages/Library/LibraryPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Library/LibraryPage.tsx) — 主页面接入（视图切换与布局渲染）
+  * [`frontend/src/pages/Library/LibraryItem.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/Library/LibraryItem.tsx) — 媒体卡片装配（组装封面与指示角标）
+  * [`frontend/src/locales/zh/library.json`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/locales/zh/library.json) — 中文翻译
 * **功能说明**:
-  * 支持在媒体库中树状点击进入各级子文件夹，并修复了"返回上一级"历史栈死循环的 Bug。
-  * 提供了 **「海报网格 (Poster)」**、**「横版网格 (Backdrop)」** 和 **「列表模式 (List)」** 三种视图切换按钮，且会记住用户的选择。
+  * 支持在媒体库中树状点击进入各级子文件夹，纯 URL 驱动路径栈，杜绝分页时序冲突。
+  * 具备文件夹智能封面反哺（自动检索内部子视频的高清背景图并提取最短播放进度）。
+  * 提供了 **「海报网格 (Poster)」**、**「横版网格 (Backdrop)」**、**「列表模式 (List)」** 和 **「文件夹视图 (Folder)」** 4 种视图切换按钮，支持本地记住用户偏好。
 * **复查要点**:
-  * 进入媒体库（Library）后，点击文件夹能正常深入，点击面包屑或返回按钮能正常退回。
-  * 右上角是否有视图切换按钮组，切换为"列表模式"时卡片是否能正常渲染为单行列表。
+  * 进入媒体库（Library）后，在任意分页下点击文件夹能正常深入，点击面包屑或返回按钮能正常退回。
+  * 右上角是否有视图切换按钮组，切换各视图卡片是否能正常渲染。
 
 ## 3. 详情页唤起外部播放器 (External Player Launch) `[本地]`
 

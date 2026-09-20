@@ -8,7 +8,7 @@ import {
     getPrimaryImageUrl,
     getBackdropUrl,
 } from '@pelagica/core';
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -50,6 +50,11 @@ import { ButtonGroup } from '@/components/ui/button-group';
 import LibraryItem from './LibraryItem';
 import { SUPPORTED_LIBRARY_COLLECTION_TYPES } from '@/utils/itemTypes';
 import { toast } from 'sonner';
+import {
+    useFolderNavigation,
+    FolderBreadcrumbs,
+    type FolderBreadcrumbItem,
+} from '@/features/folder-view';
 
 export type ViewMode = 'poster' | 'backdrop' | 'list' | 'folder';
 
@@ -83,7 +88,9 @@ const LibraryContent = ({
     viewMode,
     currentFolderId,
     folderPathStack,
-    setFolderPathStack,
+    onNavigateToFolder,
+    onNavigateToBreadcrumb,
+    onNavigateToRoot,
 }: {
     libraryId: string;
     collectionType?: string;
@@ -94,8 +101,10 @@ const LibraryContent = ({
     onPageChange: (p: number) => void;
     viewMode: ViewMode;
     currentFolderId: string;
-    folderPathStack: Array<{ id: string; name: string }>;
-    setFolderPathStack: React.Dispatch<React.SetStateAction<Array<{ id: string; name: string }>>>;
+    folderPathStack: FolderBreadcrumbItem[];
+    onNavigateToFolder: (folder: FolderBreadcrumbItem) => void;
+    onNavigateToBreadcrumb: (index: number) => void;
+    onNavigateToRoot: () => void;
 }) => {
     const { t } = useTranslation(['library', 'common']);
     const [pageSize, setPageSize] = useState(
@@ -107,21 +116,17 @@ const LibraryContent = ({
         const handleResize = () => {
             const newPageSize = getColumnCount(window.innerWidth, viewMode) * ITEM_ROWS;
             setPageSize(newPageSize);
-            onPageChange(0);
         };
 
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
-    }, [onPageChange, viewMode]);
+    }, [viewMode]);
 
-    // 监听视图切换以即时更新列数和重新分页
+    // 监听视图切换以即时更新列数
     useEffect(() => {
         const newPageSize = getColumnCount(typeof window !== 'undefined' ? window.innerWidth : 640, viewMode) * ITEM_ROWS;
-        setTimeout(() => {
-            setPageSize(newPageSize);
-            onPageChange(0);
-        }, 0);
-    }, [viewMode, onPageChange]);
+        setPageSize(newPageSize);
+    }, [viewMode]);
 
     const isFolderMode = viewMode === 'folder';
 
@@ -220,47 +225,15 @@ const LibraryContent = ({
         return 'w-full gap-4 mt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-9';
     }, [viewMode]);
 
-    const handleFolderClick = (folder: { id: string; name: string }) => {
-        setFolderPathStack((prev) => [...prev, folder]);
-        onPageChange(0);
-    };
-
     return (
         <div className="mb-4">
-            {/* 文件夹模式下的面包屑导航组件 */}
+            {/* 解耦后的独立面包屑导航组件 */}
             {isFolderMode && (
-                <div className="flex items-center gap-1.5 mb-4 text-sm text-muted-foreground flex-wrap bg-accent/20 px-3 py-2 rounded-lg border border-accent/20">
-                    <button
-                        onClick={() => {
-                            setFolderPathStack([]);
-                            onPageChange(0);
-                        }}
-                        className="hover:text-primary font-medium transition-colors cursor-pointer"
-                    >
-                        {t('folder_root', '全部媒体')}
-                    </button>
-                    
-                    {folderPathStack.map((crumb, index) => {
-                        const isLast = index === folderPathStack.length - 1;
-                        return (
-                            <div key={crumb.id} className="flex items-center gap-1.5">
-                                <span className="text-muted-foreground/60 select-none">/</span>
-                                <button
-                                    disabled={isLast}
-                                    onClick={() => {
-                                        setFolderPathStack((prev) => prev.slice(0, index + 1));
-                                        onPageChange(0);
-                                    }}
-                                    className={`hover:text-primary transition-colors cursor-pointer ${
-                                        isLast ? 'text-foreground font-semibold pointer-events-none' : 'font-medium'
-                                    }`}
-                                >
-                                    {crumb.name}
-                                </button>
-                            </div>
-                        );
-                    })}
-                </div>
+                <FolderBreadcrumbs
+                    folderPathStack={folderPathStack}
+                    onNavigateToRoot={onNavigateToRoot}
+                    onNavigateToBreadcrumb={onNavigateToBreadcrumb}
+                />
             )}
 
             {isLoading && (
@@ -318,7 +291,7 @@ const LibraryContent = ({
                                 posterUrl={posterUrls[item.Id!]}
                                 t={t}
                                 layoutMode={viewMode === 'list' ? 'list' : 'grid'}
-                                onFolderClick={handleFolderClick}
+                                onFolderClick={onNavigateToFolder}
                                 posterAspectRatio={
                                     item.Type === 'MusicAlbum'
                                         ? 'square'
@@ -383,12 +356,38 @@ const LibraryPage = () => {
         );
     };
     const [searchParams, setSearchParams] = useSearchParams();
-    const sortByParam = (searchParams.get('sortBy') as ItemSortBy) || 'Name';
-    const sortOrderParam = (searchParams.get('sortOrder') as SortOrder) || 'Ascending';
-    const [sortBy, setSortBy] = useState<ItemSortBy>(sortByParam);
-    const [sortOrder, setSortOrder] = useState<SortOrder>(sortOrderParam);
+    const sortBy = (searchParams.get('sortBy') as ItemSortBy) || 'Name';
+    const sortOrder = (searchParams.get('sortOrder') as SortOrder) || 'Ascending';
     const pageParam = parseInt(searchParams.get('page') ?? '0', 10);
-    const [page, setPage] = useState<number>(Number.isNaN(pageParam) ? 0 : pageParam);
+    const page = Number.isNaN(pageParam) ? 0 : pageParam;
+
+    const setPage = useCallback((newPage: number) => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            next.set('page', String(newPage));
+            return next;
+        });
+    }, [setSearchParams]);
+
+    const setSortBy = useCallback((newSortBy: ItemSortBy) => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            next.set('sortBy', newSortBy);
+            next.set('page', '0');
+            return next;
+        });
+    }, [setSearchParams]);
+
+    const setSortOrder = useCallback((updater: SortOrder | ((prev: SortOrder) => SortOrder)) => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            const currentOrder = (next.get('sortOrder') as SortOrder) || 'Ascending';
+            const nextOrder = typeof updater === 'function' ? updater(currentOrder) : updater;
+            next.set('sortOrder', nextOrder);
+            next.set('page', '0');
+            return next;
+        });
+    }, [setSearchParams]);
 
     // 本地持久化视图状态
     const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -399,34 +398,21 @@ const LibraryPage = () => {
         return 'folder';
     });
 
-    // 文件夹路径导航栈：从 URL 的 folderPath 派生（URL 作为唯一的事实来源）
-    const folderPathStack = useMemo<Array<{ id: string; name: string }>>(() => {
-        const param = searchParams.get('folderPath');
-        if (!param) return [];
-        try {
-            return JSON.parse(param);
-        } catch (e) {
-            console.error('Failed to parse folderPath from URL', e);
-            return [];
-        }
-    }, [searchParams]);
+    const firstLibraryId = libraries?.Items?.[0]?.Id ?? '';
+    const libraryIdFromUrl = searchParams.get('library') || '';
+    const activeLibraryId =
+        libraryIdFromUrl && libraries?.Items?.some((library) => library.Id === libraryIdFromUrl)
+            ? libraryIdFromUrl
+            : firstLibraryId;
 
-    // 修改文件夹导航栈的辅助函数，直接通过更新 URL 实现
-    const setFolderPathStack = (
-        updater: Array<{ id: string; name: string }> | ((prev: Array<{ id: string; name: string }>) => Array<{ id: string; name: string }>)
-    ) => {
-        const nextStack = typeof updater === 'function' ? updater(folderPathStack) : updater;
-        setSearchParams((prev) => {
-            const next = new URLSearchParams(prev);
-            if (nextStack.length > 0) {
-                next.set('folderPath', JSON.stringify(nextStack));
-            } else {
-                next.delete('folderPath');
-            }
-            next.set('page', '0'); // 切换目录时重置页码为 0
-            return next;
-        });
-    };
+    // 使用解耦的文件夹导航 Hook 管理路径栈与下钻返回
+    const {
+        folderPathStack,
+        currentFolderId,
+        navigateToFolder,
+        navigateToBreadcrumb,
+        navigateToRoot,
+    } = useFolderNavigation(activeLibraryId);
 
     const handleViewModeChange = (mode: ViewMode) => {
         setViewMode(mode);
@@ -436,20 +422,7 @@ const LibraryPage = () => {
         }
     };
 
-    const firstLibraryId = libraries?.Items?.[0]?.Id ?? '';
-    const libraryIdFromUrl = searchParams.get('library') || '';
-    const activeLibraryId =
-        libraryIdFromUrl && libraries?.Items?.some((library) => library.Id === libraryIdFromUrl)
-            ? libraryIdFromUrl
-            : firstLibraryId;
-
-    // 当前真正查询的 parent 文件夹 Id
-    const currentFolderId = folderPathStack.length > 0
-        ? folderPathStack[folderPathStack.length - 1].id
-        : activeLibraryId;
-
     const handleLibraryChange = (libraryId: string) => {
-        setPage(0);
         // 切换不同库的时候通过 setSearchParams 隐式清空子级文件夹参数，防止路径错乱
         setSearchParams({
             library: libraryId,
@@ -463,31 +436,16 @@ const LibraryPage = () => {
         SUPPORTED_LIBRARY_COLLECTION_TYPES.includes(library.CollectionType!)
     );
 
-    const folderPathStr = searchParams.get('folderPath') || '';
-
-    // 将状态同步到 URL 的 searchParams 中
+    // 如果 URL 中尚未指定 activeLibraryId，平滑补充 library 参数
     useEffect(() => {
-        const nextParams: Record<string, string> = {
-            library: activeLibraryId,
-            page: String(page),
-            sortBy,
-            sortOrder,
-        };
-        if (folderPathStr) {
-            nextParams.folderPath = folderPathStr;
+        if (!searchParams.get('library') && activeLibraryId) {
+            setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                next.set('library', activeLibraryId);
+                return next;
+            }, { replace: true });
         }
-
-        // 仅在参数真正变化时调用 setSearchParams，杜绝一切潜在的死循环
-        const hasChanged = Object.keys(nextParams).some(
-            (key) => searchParams.get(key) !== nextParams[key]
-        ) || Array.from(searchParams.keys()).some(
-            (key) => nextParams[key] === undefined
-        );
-
-        if (hasChanged) {
-            setSearchParams(nextParams);
-        }
-    }, [activeLibraryId, page, sortBy, sortOrder, folderPathStr, searchParams, setSearchParams]);
+    }, [activeLibraryId, searchParams, setSearchParams]);
 
     return (
         <Page title={t('title')} requiresAuth className="flex-1">
@@ -629,7 +587,7 @@ const LibraryPage = () => {
                     return (
                         <TabsContent key={library.Id} value={library.Id ?? ''}>
                             <LibraryContent
-                                key={`${library.Id}-${sortBy}-${sortOrder}`}
+                                key={`${library.Id}-${currentFolderId}-${sortBy}-${sortOrder}`}
                                 libraryId={library.Id}
                                 collectionType={library.CollectionType}
                                 pageRef={pageRef}
@@ -640,7 +598,9 @@ const LibraryPage = () => {
                                 viewMode={viewMode}
                                 currentFolderId={currentFolderId}
                                 folderPathStack={folderPathStack}
-                                setFolderPathStack={setFolderPathStack}
+                                onNavigateToFolder={navigateToFolder}
+                                onNavigateToBreadcrumb={navigateToBreadcrumb}
+                                onNavigateToRoot={navigateToRoot}
                             />
                         </TabsContent>
                     );
