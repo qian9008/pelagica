@@ -13,7 +13,9 @@ export type TvPlayerEventName =
     | 'loadedmetadata'
     | 'progress'
     | 'volumechange'
-    | 'ended';
+    | 'ended'
+    | 'waiting'
+    | 'playing';
 
 export interface TvPlayer {
     play(): void;
@@ -28,8 +30,6 @@ export interface TvPlayer {
     isMuted(): boolean;
     setMuted(muted: boolean): void;
     getVolume(): number;
-    /** Shows the subtitle track at `index` (as passed to the player) and hides all others, or hides all if null. */
-    setSubtitleTrack(index: number | null): void;
     on(event: TvPlayerEventName, handler: () => void): void;
     off(event: TvPlayerEventName, handler: () => void): void;
 }

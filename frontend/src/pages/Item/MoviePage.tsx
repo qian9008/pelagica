@@ -7,6 +7,7 @@ import { ImageOff, Play, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Skeleton } from '@/components/ui/skeleton';
+import CollectionRows from './CollectionRows';
 import MoreLikeThisRow from './MoreLikeThisRow';
 import SeerRecommendationsRow from './SeerrRecommendationsRow';
 import DetailBadges from './DetailBadges';
@@ -255,6 +256,7 @@ const MoviePage = ({ item, config, onBack }: MoviePageProps) => {
                     title={<h3 className="text-3xl font-bold">{t('cast_and_crew')}</h3>}
                     people={item.People || []}
                 />
+                <CollectionRows itemId={item.Id || ''} config={config} />
                 <MoreLikeThisRow
                     title={<h3 className="text-3xl font-bold">{t('more_like_this')}</h3>}
                     itemId={item.Id || ''}

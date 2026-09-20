@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useNavigate, useParams } from '@/router';
 import { useTranslation } from 'react-i18next';
 import { FocusContext } from '@noriginmedia/norigin-spatial-navigation';
@@ -27,12 +27,20 @@ import ItemRow from '../components/ItemRow';
 import { Skeleton } from '../components/ui/skeleton';
 import TrailerButton from '../components/TrailerButton';
 import { buildPlayerUrl } from '@/lib/playerUrl';
+import PlayStateButton from '../components/PlayStateButton';
 
-const EpisodeCard = ({ episode, autoFocus }: { episode: BaseItemDto; autoFocus?: boolean }) => {
+const EpisodeCard = memo(function EpisodeCard({
+    episode,
+    autoFocus,
+}: {
+    episode: BaseItemDto;
+    autoFocus?: boolean;
+}) {
     const [imageError, setImageError] = useState(false);
     const navigate = useNavigate();
     const { t } = useTranslation('item');
     const { ref, focused, focusSelf } = useFocusable<object, HTMLButtonElement>({
+        focusOnHover: true,
         onEnterPress: () => ref.current?.click(),
     });
 
@@ -127,7 +135,7 @@ const EpisodeCard = ({ episode, autoFocus }: { episode: BaseItemDto; autoFocus?:
             </div>
         </button>
     );
-};
+});
 
 const EpisodeCardSkeleton = () => (
     <div className="w-64 shrink-0">
@@ -145,7 +153,13 @@ const EpisodeCardSkeleton = () => (
     </div>
 );
 
-const EpisodeRow = ({ episodes, isLoading }: { episodes: BaseItemDto[]; isLoading: boolean }) => {
+const EpisodeRow = memo(function EpisodeRow({
+    episodes,
+    isLoading,
+}: {
+    episodes: BaseItemDto[];
+    isLoading: boolean;
+}) {
     const { ref, focusKey } = useFocusable<object, HTMLDivElement>({
         focusable: !isLoading && episodes.length > 0,
         saveLastFocusedChild: true,
@@ -162,9 +176,9 @@ const EpisodeRow = ({ episodes, isLoading }: { episodes: BaseItemDto[]; isLoadin
             </div>
         </FocusContext.Provider>
     );
-};
+});
 
-const SeasonsRow = ({
+const SeasonsRow = memo(function SeasonsRow({
     seasons,
     isLoading,
     selectedSeasonId,
@@ -174,7 +188,7 @@ const SeasonsRow = ({
     isLoading: boolean;
     selectedSeasonId?: string;
     onSelectSeason: (seasonId: string | undefined) => void;
-}) => {
+}) {
     const { t } = useTranslation('item');
     const { ref, focusKey } = useFocusable<object, HTMLDivElement>({
         focusable: !isLoading && seasons.length > 1,
@@ -211,7 +225,7 @@ const SeasonsRow = ({
             </div>
         </FocusContext.Provider>
     );
-};
+});
 
 const SeriesDetail = () => {
     const { itemId } = useParams<{ itemId: string }>();
@@ -241,13 +255,6 @@ const SeriesDetail = () => {
             <ItemHero
                 item={item}
                 isLoading={isLoading}
-                extraBadge={
-                    item?.ChildCount && (
-                        <Badge variant="outline">
-                            {t('common:season_count', { count: item.ChildCount })}
-                        </Badge>
-                    )
-                }
                 mainButtonRow={
                     item && (
                         <>
@@ -255,6 +262,7 @@ const SeriesDetail = () => {
                             <TrailerButton item={item} />
                             <WatchlistButton item={item} />
                             <FavoriteButton item={item} />
+                            <PlayStateButton itemId={item.Id || ''} userId={getUserId() || ''} />
                         </>
                     )
                 }

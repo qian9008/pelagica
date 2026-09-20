@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Fragment, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useConfig } from '@pelagica/core';
+import { useItemCollections } from '@pelagica/core';
 import EpisodePage from './EpisodePage';
 import SeasonPage from './SeasonPage';
 import { getUserId } from '@pelagica/core';
@@ -159,6 +160,11 @@ const ItemPage = () => {
         }
     };
 
+    // Lightweight membership check running in parallel with the item fetch, so
+    // the page renders with collection skeletons already reserved (no layout shift).
+    const collectionsEnabled = !configLoading && config.itemPage?.showCollections !== false;
+    const { isLoading: collectionsLoading } = useItemCollections(itemId, collectionsEnabled);
+
     const redirectPath =
         item?.Type && REDIRECT_ITEM_TYPES[item.Type]
             ? `${REDIRECT_ITEM_TYPES[item.Type]}/${item.Id}`
@@ -171,12 +177,13 @@ const ItemPage = () => {
         <Page
             title={item ? `${item.Name}` : isLoading ? t('loading') : t('item_not_found')}
             className="flex-1 flex flex-col relative"
-            overlayHeader={isFullPageItem || isLoading || configLoading}
+            overlayHeader={isFullPageItem || isLoading || configLoading || collectionsLoading}
             pagePadding={!isFullPageItem}
         >
-            {(isLoading || configLoading) && <ItemPageSkeleton />}
+            {(isLoading || configLoading || collectionsLoading) && <ItemPageSkeleton />}
             {error && <p>Error loading item details.</p>}
             {item &&
+                !collectionsLoading &&
                 (() => {
                     switch (item.Type) {
                         case 'Movie':

@@ -25,7 +25,7 @@ interface VideoPlayerProps {
     subtitleFonts?: string[];
     onReady?: (player: VideoJsPlayer) => void;
     onPlaybackError?: (error: MediaError | null) => void;
-    isAudioSwitchRef: React.MutableRefObject<boolean>;
+    pendingAudioSwitchSeekRef: React.MutableRefObject<number | null>;
     subtitleTrackIndex: number | null;
     // 由 PlayerPage 传入的全屏状态：用于动态切换 video opacity，
     // 解决 opacity:0.999(修复移动端黑屏) 与 ASS 字幕 canvas 在全屏下被遮挡的冲突
@@ -41,7 +41,7 @@ const VideoPlayer = ({
     subtitleFonts,
     onReady,
     onPlaybackError,
-    isAudioSwitchRef,
+    pendingAudioSwitchSeekRef,
     subtitleTrackIndex,
     isFullscreen = false,
 }: VideoPlayerProps) => {
@@ -128,15 +128,10 @@ const VideoPlayer = ({
         }
     }, [isFullscreen]);
 
+    const startTicksRef = useRef(startTicks);
+
     useEffect(() => {
-        if (!playerRef.current) return;
-        if (!startTicks || startTicks <= 0) return;
-        if (hasSeekedRef.current) return;
-
-        const seconds = startTicks / 10_000_000;
-
-        playerRef.current.currentTime(seconds);
-        hasSeekedRef.current = true;
+        startTicksRef.current = startTicks;
     }, [startTicks]);
 
     useEffect(() => {
@@ -150,21 +145,33 @@ const VideoPlayer = ({
 
         let seekTo: number | null = null;
 
-        if (isAudioSwitchRef.current) {
-            seekTo = player.currentTime() || null;
-            isAudioSwitchRef.current = false;
+        if (pendingAudioSwitchSeekRef.current !== null) {
+            seekTo = pendingAudioSwitchSeekRef.current;
+            pendingAudioSwitchSeekRef.current = null;
+        } else if (!hasSeekedRef.current && startTicksRef.current > 0) {
+            seekTo = startTicksRef.current / 10_000_000;
+            hasSeekedRef.current = true;
         }
 
         player.pause();
         player.src({ src, type: srcType });
-        player.load();
 
         if (seekTo !== null) {
-            player.currentTime(seekTo);
+            const target = seekTo;
+            const seekOnCanPlay = () => {
+                player.currentTime(target);
+                player.play()?.catch(console.error);
+            };
+
+            player.one('canplay', seekOnCanPlay);
+
+            return () => {
+                player.off('canplay', seekOnCanPlay);
+            };
         }
 
         player.play()?.catch(console.error);
-    }, [src, srcType, isAudioSwitchRef]);
+    }, [src, srcType, pendingAudioSwitchSeekRef]);
 
     useEffect(() => {
         if (!playerRef.current) return;
@@ -173,8 +180,8 @@ const VideoPlayer = ({
 
         const addSubtitles = (activeIndex: number | null) => {
             const tracks = player.remoteTextTracks();
-            while (tracks.tracks_.length > 0) {
-                const track = tracks.tracks_[0];
+            for (let i = tracks.tracks_.length - 1; i >= 0; i--) {
+                const track = tracks.tracks_[i];
                 if (track) player.removeRemoteTextTrack(track);
             }
 
@@ -275,7 +282,13 @@ const VideoPlayer = ({
                 // opacity 声明式控制：
                 // - 非全屏：0.999 强制 video 进入独立 GPU 渲染层，修复移动端 WebGL 黑屏遮罩
                 // - 全屏：  1 消除层叠上下文对 JASSUB canvas 的遮挡
-                style={{ width: '100%', height: '100%', opacity: isFullscreen ? 1 : 0.999 }}
+                style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    width: '100%',
+                    height: '100%',
+                    opacity: isFullscreen ? 1 : 0.999,
+                }}
             >
                 <track kind="captions" srcLang="en" label="English" />
             </video>

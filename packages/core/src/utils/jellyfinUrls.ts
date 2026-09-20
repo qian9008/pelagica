@@ -1,3 +1,4 @@
+import { withBasePath } from './basePath';
 import { getAccessToken, getServerUrl } from './localstorageCredentials';
 import { getSupportedVideoCodecs } from './videoCodecDetection';
 import type { PlayMethod } from '../hooks/usePlaybackInfo';
@@ -26,7 +27,7 @@ export interface ItemImageOptions {
     index?: number;
     size?: ImageSize;
     quality?: number;
-    tag?: string;
+    tag?: string | null;
     fallback?: string;
 }
 
@@ -69,7 +70,12 @@ function buildItemImageUrl(
     }
 }
 
-export function getBackdropUrl(itemId: string, size?: ImageSize, tag?: string, quality?: number) {
+export function getBackdropUrl(
+    itemId: string,
+    size?: ImageSize,
+    tag?: string | null,
+    quality?: number
+) {
     return buildItemImageUrl(itemId, 'Backdrop', {
         index: 0,
         size,
@@ -79,11 +85,21 @@ export function getBackdropUrl(itemId: string, size?: ImageSize, tag?: string, q
     });
 }
 
-export function getLogoUrl(itemId: string, size?: ImageSize, tag?: string, quality?: number) {
+export function getLogoUrl(
+    itemId: string,
+    size?: ImageSize,
+    tag?: string | null,
+    quality?: number
+) {
     return buildItemImageUrl(itemId, 'Logo', { size, tag, quality });
 }
 
-export function getThumbUrl(itemId: string, size?: ImageSize, tag?: string, quality?: number) {
+export function getThumbUrl(
+    itemId: string,
+    size?: ImageSize,
+    tag?: string | null,
+    quality?: number
+) {
     return buildItemImageUrl(itemId, 'Thumb', {
         size,
         tag,
@@ -95,7 +111,7 @@ export function getThumbUrl(itemId: string, size?: ImageSize, tag?: string, qual
 export function getPrimaryImageUrl(
     itemId: string,
     size?: ImageSize,
-    tag?: string,
+    tag?: string | null,
     quality?: number
 ) {
     return buildItemImageUrl(itemId, 'Primary', {
@@ -112,7 +128,7 @@ export function getItemImageUrl(
     imageType: string,
     index: number,
     size?: ImageSize,
-    tag?: string,
+    tag?: string | null,
     quality?: number
 ) {
     return buildItemImageUrl(itemId, imageType, { index, size, tag, quality });
@@ -437,7 +453,7 @@ export function getBackendStudioImageUrl(
     monoColor2: string
 ) {
     const params = new URLSearchParams({ mono: 'true', color: monoColor, color2: monoColor2 });
-    return `/api/studios/${encodeURIComponent(studioName)}/logo?${params.toString()}`;
+    return withBasePath(`/api/studios/${encodeURIComponent(studioName)}/logo?${params.toString()}`);
 }
 
 export function getStaticStreamUrl(itemId: string) {

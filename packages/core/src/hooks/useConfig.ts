@@ -160,6 +160,16 @@ export interface StudiosSection extends BaseHomeScreenSection {
     limit?: number;
 }
 
+export interface RecentEpisodesSection extends BaseHomeScreenSection {
+    type: 'recentEpisodes';
+    /** Maximum number of episodes to display */
+    limit?: number;
+    /** The ID of the library to show episodes from */
+    libraryId: string;
+    titleLine?: ContinueWatchingTitleLine;
+    detailLine?: ContinueWatchingDetailLine[];
+}
+
 export const SEERR_DISCOVER_VARIANTS = ['trending', 'popularMovies', 'popularSeries'] as const;
 export type SeerrDiscoverVariant = (typeof SEERR_DISCOVER_VARIANTS)[number];
 
@@ -181,6 +191,7 @@ export type HomeScreenSection =
     | GenresSection
     | LibrariesSection
     | StudiosSection
+    | RecentEpisodesSection
     | SeerrDiscoverSection;
 
 export const EPISODE_DISPLAYS = ['grid', 'row'] as const;
@@ -189,11 +200,15 @@ export type EpisodeDisplay = (typeof EPISODE_DISPLAYS)[number];
 export const SERIES_VIEWS = ['episodes', 'seasons'] as const;
 export type SeriesView = (typeof SERIES_VIEWS)[number];
 
+export const COLLECTION_SORT_OPTIONS = ['PremiereDateAsc', 'PremiereDateDesc', 'Random'] as const;
+export type CollectionSortOption = (typeof COLLECTION_SORT_OPTIONS)[number];
+
 export const DETAIL_BADGES = [
     'ReleaseYear',
     'ReleaseYearAndMonth',
     'ReleaseDate',
     'CommunityRating',
+    'CriticsRating',
     'PlayDuration',
     'PlayEnd',
     'SeasonCount',
@@ -220,6 +235,10 @@ export interface ItemPageSettings {
     showWatchlistButton?: boolean;
     /** Whether to autoplay a local trailer as a background video on item detail pages */
     autoPlayTrailers?: boolean;
+    /** Whether to show rows for the collections an item belongs to on movie and series detail pages */
+    showCollections?: boolean;
+    /** How to sort the items within collection rows on item detail pages */
+    collectionSort?: CollectionSortOption;
 }
 
 export interface ConfigLink {
@@ -276,6 +295,8 @@ const DEFAULT_ITEM_PAGE_SETTINGS: ItemPageSettings = {
     showWatchlistButton: true,
     showDownloadButton: true,
     autoPlayTrailers: false,
+    showCollections: true,
+    collectionSort: 'PremiereDateAsc',
 };
 
 const DEFAULT_CONFIG: AppConfig = {

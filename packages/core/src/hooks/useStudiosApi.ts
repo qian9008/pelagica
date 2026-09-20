@@ -1,6 +1,7 @@
 import { getApi } from '../api/getApi';
+import { withBasePath } from '../utils/basePath';
 import { getAccessToken, getServerUrl } from '../utils/localstorageCredentials';
-import { getItemsApi } from '@jellyfin/sdk/lib/utils/api/items-api';
+import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface StudioSummary {
@@ -31,7 +32,7 @@ async function fetchStudiosDirectlyFromJellyfin({
     search,
 }: StudiosQueryOptions): Promise<StudiosResult> {
     const api = getApi();
-    const itemsApi = getItemsApi(api);
+    const itemsApi = getLibraryApi(api);
 
     const counts = new Map<string, StudioSummary>();
     let pageStart = 0;
@@ -87,7 +88,7 @@ const BACKEND_AVAILABLE_QUERY_KEY = ['studios', 'backend-available'];
 
 async function checkStudiosBackendAvailable(): Promise<boolean> {
     try {
-        const response = await fetch('/api/studios/health');
+        const response = await fetch(withBasePath('/api/studios/health'));
         if (!response.ok) return false;
         const data = (await response.json()) as { ok?: boolean };
         return data.ok === true;
@@ -124,7 +125,7 @@ async function fetchStudiosFromBackend({
     });
     if (search) params.set('search', search);
 
-    const response = await fetch(`/api/studios?${params.toString()}`, {
+    const response = await fetch(withBasePath(`/api/studios?${params.toString()}`), {
         headers: {
             Authorization: token,
         },

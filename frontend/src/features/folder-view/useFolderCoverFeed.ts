@@ -6,7 +6,7 @@ import {
     getPrimaryImageUrl,
     getBackdropUrl,
 } from '@pelagica/core';
-import { getItemsApi } from '@jellyfin/sdk/lib/utils/api/items-api';
+import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 
 /**
  * 文件夹智能封面反哺与子项播放进度提取 Hook
@@ -35,10 +35,10 @@ export function useFolderCoverFeed(
         const fetchFolderSubData = async () => {
             try {
                 const api = getApi();
-                const itemsApi = getItemsApi(api);
+                const libraryApi = getLibraryApi(api);
 
                 // 递归拉取该物理目录下前 10 个视频实体，计算内部的播放进度和反哺封面
-                const response = await itemsApi.getItems({
+                const response = await libraryApi.getItems({
                     parentId: item.Id!,
                     recursive: true,
                     limit: 10,
@@ -48,7 +48,7 @@ export function useFolderCoverFeed(
 
                 if (!active) return;
 
-                const subItems = response.data?.Items || [];
+                const subItems: BaseItemDto[] = response.data?.Items || [];
                 if (response.data?.TotalRecordCount !== undefined) {
                     setChildCount(response.data.TotalRecordCount);
                 }
@@ -57,7 +57,7 @@ export function useFolderCoverFeed(
                 let minProg = 0;
                 let activeSubItem: BaseItemDto | null = null;
 
-                subItems.forEach((v) => {
+                subItems.forEach((v: BaseItemDto) => {
                     const watchedTicks = v.UserData?.PlaybackPositionTicks ?? 0;
                     const runtimeTicks = v.RunTimeTicks ?? 0;
                     const isPlayed = v.UserData?.Played ?? false;

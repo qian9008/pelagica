@@ -15,6 +15,8 @@ jobs:
     tizen:
         name: Build and sign Tizen widget
         runs-on: ubuntu-latest
+        env:
+            TAG: ${{ github.event.release.tag_name }}
 
         steps:
             - name: Checkout repository
@@ -38,6 +40,8 @@ jobs:
               run: task tizen:install
 
             - name: Build Tizen bundle
+              env:
+                  VITE_PING_TOKEN: ${{ secrets.STATS_TOKEN }}
               run: task tizen:build
 
             - name: Cache Tizen Studio CLI installer
@@ -55,9 +59,11 @@ jobs:
                   author-password: ${{ secrets.TIZEN_CERT_PASSWORD }}
 
             - name: Rename asset
-              run: mv "${{ steps.tizen-build.outputs.package-artifact }}" pelagica-tizen.wgt
+              env:
+                  ARTIFACT: ${{ steps.tizen-build.outputs.package-artifact }}
+              run: mv "$ARTIFACT" "pelagica-tizen-${TAG}.wgt"
 
             - name: Upload asset to release
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: gh release upload "${{ github.event.release.tag_name }}" pelagica-tizen.wgt --clobber
+              run: gh release upload "$TAG" "pelagica-tizen-${TAG}.wgt" --clobber

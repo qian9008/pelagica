@@ -29,7 +29,7 @@ import { cn } from '@/lib/utils';
 import { FOCUS_RING_COMPACT } from '@/lib/focus-styles';
 import { formatPlayTime, ticksToReadableTime, ticksToSeconds } from '@/lib/timeConversion';
 import { getLogoUrl, getPrimaryImageUrl, useReportPlaybackProgress } from '@pelagica/core';
-import { tizenNavigationAdapter, type TvPlayer } from '@pelagica/tv-platform';
+import { getNavigationAdapter, type TvPlayer } from '@pelagica/tv-platform';
 import {
     removeLastSubtitleLanguage,
     setLastAudioLanguage,
@@ -163,8 +163,16 @@ const PlayerControls = forwardRef<PlayerControlsHandle, PlayerControlsProps>(
                 resetHideTimeout();
             }
 
+            function handlePointerActivity() {
+                resetHideTimeout();
+            }
+
             window.addEventListener('keydown', handleKeyDown);
-            return () => window.removeEventListener('keydown', handleKeyDown);
+            window.addEventListener('mousemove', handlePointerActivity);
+            return () => {
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('mousemove', handlePointerActivity);
+            };
         }, [resetHideTimeout, showControls, playPauseFocusKey]);
 
         useImperativeHandle(
@@ -250,7 +258,7 @@ const PlayerControls = forwardRef<PlayerControlsHandle, PlayerControlsProps>(
         );
 
         useEffect(() => {
-            tizenNavigationAdapter.registerMediaKeys();
+            getNavigationAdapter().registerMediaKeys();
         }, []);
 
         useEffect(() => {
@@ -685,6 +693,7 @@ function TrackOption({
     onClick: () => void;
 }) {
     const { ref, focused, focusSelf } = useLayerFocusable<object, HTMLButtonElement>({
+        focusOnHover: true,
         onEnterPress: () => ref.current?.click(),
     });
 

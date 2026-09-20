@@ -10,6 +10,8 @@ import {
     PL,
     ES,
     CN,
+    IT,
+    RO,
 } from "country-flag-icons/react/3x2";
 
 export interface SupportedLanguage {
@@ -29,4 +31,6 @@ export const SUPPORTED_LANGUAGES: SupportedLanguage[] = [
     { code: "ja", Flag: JP, label: "日本語" },
     { code: "vi", Flag: VN, label: "Tiếng Việt" },
     { code: "es", Flag: ES, label: "Español" },
+    { code: "it", Flag: IT, label: "Italiano" },
+    { code: "ro", Flag: RO, label: "Română" },
 ];

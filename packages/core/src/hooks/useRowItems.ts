@@ -1,11 +1,11 @@
 import { getApi } from '../api/getApi';
 import { useQuery } from '@tanstack/react-query';
-import { getItemsApi } from '@jellyfin/sdk/lib/utils/api/items-api';
+import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import type { SectionItemsConfig } from './useConfig';
 import { ItemFilter, type BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models';
 import { getRetryConfig } from '../utils/authErrorHandler';
 
-export function useRowItems(items?: SectionItemsConfig) {
+export function useRowItems(items?: SectionItemsConfig, enabled: boolean | undefined = true) {
     const sectionTypes = items?.types?.length
         ? items.types
         : (['Movie', 'Series'] as BaseItemKind[]);
@@ -14,7 +14,7 @@ export function useRowItems(items?: SectionItemsConfig) {
         queryKey: ['mediaBarItems', items],
         queryFn: async () => {
             const api = getApi();
-            const itemsApi = getItemsApi(api);
+            const itemsApi = getLibraryApi(api);
 
             const filters: ItemFilter[] = [];
             if (items?.isInKefinTweaksWatchlist) filters.push(ItemFilter.Likes);
@@ -37,6 +37,7 @@ export function useRowItems(items?: SectionItemsConfig) {
             });
             return response.data.Items;
         },
+        enabled: enabled,
         ...getRetryConfig(),
     });
 }

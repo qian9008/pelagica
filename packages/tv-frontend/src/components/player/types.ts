@@ -4,14 +4,13 @@ import type { SubtitleTrack, TvPlayer } from '@pelagica/tv-platform';
 export interface VideoPlayerProps {
     src: string;
     srcType?: string;
-    poster?: string;
     startTicks: number;
     subtitles?: SubtitleTrack[];
     subtitleFonts?: string[];
     onReady?: (player: TvPlayer) => void;
     onPlaybackError?: (error: MediaError | null) => void;
     onPlaybackStalled?: () => void;
-    isAudioSwitchRef: React.MutableRefObject<boolean>;
+    pendingAudioSwitchSeekRef: React.MutableRefObject<number | null>;
     subtitleTrackIndex: number | null;
     /**
      * The `MediaStreams[].Index` of the audio track the caller wants active. Only used by

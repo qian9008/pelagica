@@ -3,15 +3,20 @@ FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app
 
-RUN npm install -g pnpm
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY frontend/package.json frontend/package.json
+COPY tizen/package.json tizen/package.json
+COPY packages/core/package.json packages/core/package.json
+COPY packages/tv-frontend/package.json packages/tv-frontend/package.json
+COPY packages/tv-platform/package.json packages/tv-platform/package.json
+RUN npm install -g pnpm \
+    && pnpm install --frozen-lockfile --filter pelagica...
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages packages
 COPY frontend frontend
-COPY tizen/package.json tizen/package.json
-
-RUN pnpm install --frozen-lockfile --filter pelagica...
-RUN pnpm --filter pelagica run build
+ARG BASE_PATH=
+RUN BASE_PATH=$BASE_PATH pnpm --filter pelagica run build
 
 
 # Stage 2: Build backend
@@ -42,7 +47,10 @@ ARG COLLECTOR_PING_TOKEN
 RUN apk add --no-cache ca-certificates tzdata
 
 # frontend
-COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
+ARG BASE_PATH=
+# drop the nginx default page so a base-path build serves nothing at /
+RUN rm -f /usr/share/nginx/html/index.html /usr/share/nginx/html/50x.html
+COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html${BASE_PATH}
 
 # backend
 COPY --from=backend-builder /backend/server /server
@@ -50,6 +58,9 @@ COPY --from=backend-builder /backend/default.theme.json /default.theme.json
 
 # nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+RUN sed -i "s|__BASE_PATH__|${BASE_PATH}|g" \
+        /etc/nginx/conf.d/default.conf \
+        /usr/share/nginx/html${BASE_PATH}/manifest.webmanifest
 
 # config directory (volume-friendly)
 RUN mkdir -p /config
