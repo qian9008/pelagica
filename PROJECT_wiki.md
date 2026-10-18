@@ -78,11 +78,7 @@ export interface ShareItem {
 
 ### 2026-09-20: 同步官方 upstream/develop
 * **合并提交**: `3a35c9a7`
-* **上游变动**:
-  * 引入 `webos` 客户端工程及 TV 端适配支持。
-  * 新增意大利语 (it)、罗马尼亚语 (ro)、越南语 (vi) 国际化词条。
-  * `ItemPage` 增加 `useItemCollections` 合集骨架预加载与防抖。
-  * `Dockerfile` 升级依赖分层缓存机制与 `BASE_PATH` 支持。
+
 * **二开保留与融合**:
   * 保留 `ItemPage.tsx` 智能上一级兜底路由导航 `handleBack`。
   * 保留 `VideoPlayer.tsx` 动态全屏 opacity 防黑屏逻辑与洋红描边字幕样式。
