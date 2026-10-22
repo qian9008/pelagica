@@ -242,13 +242,33 @@ const VideoPlayer = ({
                 finalFonts.push(fallbackFontBlobUrl);
             }
 
-            assRendererRef.current = new JASSUB({
+            const renderer = new JASSUB({
                 video: videoEl,
                 subUrl: activeTrack.src,
                 fonts: finalFonts,
                 queryFonts: false,
                 defaultFont: 'Noto Sans SC',
             });
+            assRendererRef.current = renderer;
+
+            // JASSUB 的 worker/wasm 加载失败时 ready 永远不会 resolve 也不会 reject，
+            // 外部表现就是"选了 ASS 字幕但屏幕上什么都没有"，且控制台无声。加个看门狗把
+            // 失败暴露出来，否则很难与"视频本身没字幕"区分。
+            const watchdog = setTimeout(() => {
+                if (assRendererRef.current !== renderer) return;
+                console.error(
+                    '[JASSUB] 字幕渲染器 15s 内未就绪，ASS/SSA 字幕不会显示。' +
+                        '常见原因：worker/wasm 加载失败——dev 环境下依赖预构建缓存过期' +
+                        '（jassub 升级后 worker 路径指向旧版本）会触发此问题。' +
+                        '处理：重启 dev server 并清理 node_modules/.vite。'
+                );
+            }, 15000);
+            renderer.ready
+                .then(() => clearTimeout(watchdog))
+                .catch((error) => {
+                    clearTimeout(watchdog);
+                    console.error('[JASSUB] 字幕渲染器初始化失败:', error);
+                });
             return;
         }
 

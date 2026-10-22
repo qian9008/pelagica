@@ -110,8 +110,20 @@ export interface ShareItem {
 
 ## 4.1 本地开发常见故障
 
+### ASS / SSA 字幕完全不显示（选字幕无反应，控制台可能只有一条 MIME 报错）
+**现象**：视频能播，字幕菜单里选了 ASS 字幕但屏幕什么都没有；控制台报
+`Failed to load module script: The server responded with a non-JavaScript MIME type of "text/html" ... /@fs/.../jassub@2.5.14/.../worker.js`。
+
+**原因**：`jassub` 在构造函数里用 `new Worker(new URL('./worker/worker.js', import.meta.url))` 定位 worker 与 wasm。这个包**必须**被 Vite 预构建（它依赖 CJS 的 `throughput`，排除预构建会直接报 `does not provide an export named 'default'`），而预构建产物会把 worker/wasm 路径写死成安装当时的 `.pnpm/jassub@<版本>` 绝对路径。`pnpm install` 把 jassub 从 2.5.14 升到 2.5.21 后，旧路径已不存在，Vite 对不存在的路径回退返回 `index.html`，worker 以 `text/html` 加载失败 → `JASSUB.ready` 永远不 resolve（**不 reject**）→ 字幕静默消失。
+
+**修复**：重启 dev server（仅删 `node_modules/.vite` 不够，运行中的进程内存里还留着旧依赖图）。代码侧已加 15s 看门狗，超时会在控制台明确报 `[JASSUB] 字幕渲染器 15s 内未就绪`。
+
+**注意**：不要试图用 `optimizeDeps.exclude: ['jassub']` 绕过——实测会因 CJS 互操作报错更彻底地挂掉。
+
 ### `pnpm dev` 后页面全白 / 控制台全是模块加载报错，日志出现 `ENOENT ... .pnpm/@jellyfin+sdk@1.0.0_axios@1.19.0_.../lib/index.js`
 **原因**：`pnpm install` 改动过 peer 依赖版本（本次是 axios 1.19 → 1.20），`@jellyfin/sdk` 在虚拟目录里的路径 hash 随之改变，但 Vite 的依赖预构建缓存 `frontend/node_modules/.vite` 仍指向旧路径，导致所有 import 链断裂。
+
+**修复**：删掉 `frontend/node_modules/.vite` 并**重启** dev server（进程内依赖图不会热更新）。
 
 **修复**（不用重装依赖）：
 ```bash
