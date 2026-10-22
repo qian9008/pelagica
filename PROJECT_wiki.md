@@ -47,7 +47,7 @@
 
 ### 国际化（i18n）双层架构
 
-上游自 4.12.0 起把全部翻译迁到独立 npm 包 **`@pelagica/i18n`**，并删除了仓库内的 `packages/core/src/i18n/locales/**`。
+上游自 4.12.0 起把全部翻译迁到独立 npm 包 **`@pelagica/i18n`**，并删除了仓库内的 `packages/core/src/i18n/locales/**`。  
 我们必须采用「**共享包打底 + 本地覆盖**」，不要再整份复制 13 种语言（那样每次合并都要手工解冲突）。
 
 - **`packages/core/src/i18n/index.ts`**: 初始化入口。先取 `i18nextOptions`，再用 `deepMergeResources` 把本地覆盖层合并进去。
@@ -58,7 +58,7 @@
   - `en/**`：**只放共享包缺失的 key**（二开功能文案 + 上游遗漏），其余跟随共享包，避免覆盖上游最新英文。
   - 其他 11 种语言（de/es/fr/it/ja/pl/pt/ro/sv/tr/vi）：**不本地维护**，完全跟随共享包。
 
-**复数规则（i18next v4）**：新格式是 `key_one` / `key_other`，已废弃 `key_plural`。
+**复数规则（i18next v4）**：新格式是 `key_one` / `key_other`，已废弃 `key_plural`。  
 覆盖层里凡是历史遗留的 `xxx_plural`，都额外补了一份 `xxx_other` 别名，两者并存不冲突。
 
 **新增二开文案的流程**：往 `overrides/zh/<ns>.json` 和 `overrides/en/<ns>.json` 各加一条即可，不要动 `node_modules` 里的共享包。
@@ -111,7 +111,8 @@ export interface ShareItem {
 ## 4.1 本地开发常见故障
 
 ### ASS / SSA 字幕完全不显示（选字幕无反应，控制台可能只有一条 MIME 报错）
-**现象**：视频能播，字幕菜单里选了 ASS 字幕但屏幕什么都没有；控制台报
+
+**现象**：视频能播，字幕菜单里选了 ASS 字幕但屏幕什么都没有；控制台报  
 `Failed to load module script: The server responded with a non-JavaScript MIME type of "text/html" ... /@fs/.../jassub@2.5.14/.../worker.js`。
 
 **原因**：`jassub` 在构造函数里用 `new Worker(new URL('./worker/worker.js', import.meta.url))` 定位 worker 与 wasm。这个包**必须**被 Vite 预构建（它依赖 CJS 的 `throughput`，排除预构建会直接报 `does not provide an export named 'default'`），而预构建产物会把 worker/wasm 路径写死成安装当时的 `.pnpm/jassub@<版本>` 绝对路径。`pnpm install` 把 jassub 从 2.5.14 升到 2.5.21 后，旧路径已不存在，Vite 对不存在的路径回退返回 `index.html`，worker 以 `text/html` 加载失败 → `JASSUB.ready` 永远不 resolve（**不 reject**）→ 字幕静默消失。
@@ -121,18 +122,22 @@ export interface ShareItem {
 **注意**：不要试图用 `optimizeDeps.exclude: ['jassub']` 绕过——实测会因 CJS 互操作报错更彻底地挂掉。
 
 ### `pnpm dev` 后页面全白 / 控制台全是模块加载报错，日志出现 `ENOENT ... .pnpm/@jellyfin+sdk@1.0.0_axios@1.19.0_.../lib/index.js`
+
 **原因**：`pnpm install` 改动过 peer 依赖版本（本次是 axios 1.19 → 1.20），`@jellyfin/sdk` 在虚拟目录里的路径 hash 随之改变，但 Vite 的依赖预构建缓存 `frontend/node_modules/.vite` 仍指向旧路径，导致所有 import 链断裂。
 
 **修复**：删掉 `frontend/node_modules/.vite` 并**重启** dev server（进程内依赖图不会热更新）。
 
 **修复**（不用重装依赖）：
+
 ```bash
 rm -rf frontend/node_modules/.vite node_modules/.vite
 pnpm dev   # 或 frontend 目录下 npx vite
 ```
+
 只要动过 `pnpm-lock.yaml`，删缓存是标准动作。
 
 ### 在当前沙箱环境跑 `pnpm install` 报 `EEXIST: symlink ... pnpm/store/v11/projects` 被拒
+
 文件系统 shim 拦截了 pnpm 的项目注册软链。用 `env -u NODE_OPTIONS pnpm install` 绕过（需要提权）。
 
 ---
@@ -157,8 +162,9 @@ pnpm dev   # 或 frontend 目录下 npx vite
 ### 2026-09-20: 同步官方 upstream/develop
 
 - **合并提交**: `3a35c9a7`
-
 - **二开保留与融合**:
   - 保留 `ItemPage.tsx` 智能上一级兜底路由导航 `handleBack`。
   - 保留 `VideoPlayer.tsx` 动态全屏 opacity 防黑屏逻辑与洋红描边字幕样式。
+
+
   - 保留并完成 `folder-view` 模块解耦重构，全工程通过 `pnpm -r build` 构建验证。
