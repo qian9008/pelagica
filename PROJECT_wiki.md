@@ -108,6 +108,23 @@ export interface ShareItem {
 
 ---
 
+## 4.1 本地开发常见故障
+
+### `pnpm dev` 后页面全白 / 控制台全是模块加载报错，日志出现 `ENOENT ... .pnpm/@jellyfin+sdk@1.0.0_axios@1.19.0_.../lib/index.js`
+**原因**：`pnpm install` 改动过 peer 依赖版本（本次是 axios 1.19 → 1.20），`@jellyfin/sdk` 在虚拟目录里的路径 hash 随之改变，但 Vite 的依赖预构建缓存 `frontend/node_modules/.vite` 仍指向旧路径，导致所有 import 链断裂。
+
+**修复**（不用重装依赖）：
+```bash
+rm -rf frontend/node_modules/.vite node_modules/.vite
+pnpm dev   # 或 frontend 目录下 npx vite
+```
+只要动过 `pnpm-lock.yaml`，删缓存是标准动作。
+
+### 在当前沙箱环境跑 `pnpm install` 报 `EEXIST: symlink ... pnpm/store/v11/projects` 被拒
+文件系统 shim 拦截了 pnpm 的项目注册软链。用 `env -u NODE_OPTIONS pnpm install` 绕过（需要提权）。
+
+---
+
 ## 5. 最近同步记录
 
 ### 2026-10-22: 同步官方 upstream/develop (4.11.0 → 4.14.0)
