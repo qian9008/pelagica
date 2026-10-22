@@ -161,5 +161,17 @@
     "download": "下载",
     "original": "原始文件",
     "download_original_file": "下载原始媒体文件",
-    "open_in_new_tab": "在新标签页中打开"
+    "open_in_new_tab": "在新标签页中打开",
+    "external_play": "外部播放",
+    "select_external_player": "选择外部播放器",
+    "no_matched_player": "未检测到匹配系统的播放器",
+    "copy_stream_url": "复制播放直链",
+    "copied": "直链已成功复制到剪贴板！",
+    "copy_error": "复制失败，请手动尝试",
+    "stream_url_error": "获取播放流失败",
+    "manual_copy_title": "手动复制直链",
+    "manual_copy_desc": "浏览器无法确认自动复制结果。链接已为你选中，按 Ctrl/⌘ + C 即可确保复制。",
+    "select_all": "全选链接",
+    "selected": "已选中",
+    "close": "关闭"
 }

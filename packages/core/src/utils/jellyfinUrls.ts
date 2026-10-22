@@ -456,13 +456,21 @@ export function getBackendStudioImageUrl(
     return withBasePath(`/api/studios/${encodeURIComponent(studioName)}/logo?${params.toString()}`);
 }
 
-export function getStaticStreamUrl(itemId: string) {
+/**
+ * 构造视频静态直链（供外部播放器使用）。
+ *
+ * 注意：`/Videos/{itemId}/stream` 路径段必须是 **itemId**，
+ * 媒体源需通过 `MediaSourceId` 查询参数指定，二者不可混用。
+ * 同时保留服务器自身的子路径（如 `https://host/jellyfin`）。
+ */
+export function getStaticStreamUrl(itemId: string, mediaSourceId?: string) {
     try {
         const creds = resolveCredentials();
         if (!creds) return '';
         const url = new URL(creds.server);
-        url.pathname = `/Videos/${itemId}/stream`;
+        url.pathname = appendPath(url.pathname, 'Videos', itemId, 'stream');
         url.searchParams.append('Static', 'true');
+        if (mediaSourceId) url.searchParams.append('MediaSourceId', mediaSourceId);
         url.searchParams.append('api_key', creds.token);
         return url.toString();
     } catch {

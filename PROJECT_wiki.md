@@ -30,6 +30,12 @@
   * **[`ExternalPlayerButton.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/components/ExternalPlayerButton.tsx)**: 用于唤起本地 Potplayer/VLC/IINA 播放器的通用按钮组件。
   * **[`ShareDialog.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/components/ShareDialog.tsx)**: 媒体分享目标选择与提交弹窗。
   * **[`TopBar.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/components/TopBar.tsx)**: 顶部水平导航栏，包含“共享库”入口。
+* **`/frontend/src/utils/`**: 通用工具函数目录
+  * **[`clipboard.ts`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/utils/clipboard.ts)**: **统一剪贴板写入工具 `copyTextToClipboard(text): Promise<CopyOutcome>`**，返回三态 `'ok' | 'unverified' | 'failed'`。降级顺序：桌面端 Wails 原生 `Clipboard.SetText` → 安全上下文 `navigator.clipboard` → `document.execCommand('copy')`。**只有前两条能确认结果（`ok`）；`execCommand` 只能给 `unverified`**——它的返回值只代表「命令已调度」，明文 HTTP 下无法用 `readText()` 回读验证，实测存在返回 true 但系统剪贴板为空的情况。**调用方只有拿到 `ok` 才能弹「已成功复制」**，`unverified`/`failed` 必须走 `ManualCopyDialog`。
+    - 明文 HTTP 局域网访问时 `navigator.clipboard` 为 undefined，禁止直接调用，必须走本工具。
+    - `textarea` 兜底的三条硬约束：①不能加 `readonly`（iOS/WebView 上 `select()` 失效）；②不能 `display:none`/`visibility:hidden`/`z-index:-1`（会被静默丢弃）；③校验选区必须读 `selectionStart/selectionEnd`，`document.getSelection()` 对表单控件恒为空串。
+    - 根治方案：部署 HTTPS 或使用 `localhost` 访问，恢复安全上下文后自动复制才真正可靠。
+* **[`ManualCopyDialog.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/components/ManualCopyDialog.tsx)**: 自动复制失败时的兜底弹窗（展示原文 + 自动全选，用户 Ctrl/⌘+C 即可）。任何「复制到剪贴板」功能都应对接它，而不是只弹 `toast.error`。
 * **`/frontend/src/pages/`**: 视图页面组件目录
   * **[`App.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/App.tsx)**: 根应用组件，已挂载 `/shared-library` 路由。
   * **[`SharedLibrary/SharedLibraryPage.tsx`](file:///Users/qian/Documents/code/emby2openlist/pelagica/frontend/src/pages/SharedLibrary/SharedLibraryPage.tsx)**: 共享库主管理页面，包括共享给我的、我分享的列表及分页管理。
@@ -69,7 +75,7 @@ export interface ShareItem {
    - **手势交互**：长按 3x 快速播放、双击左右半屏 ±30s 动画指示。
    - **行内播放**：电影/单集详情页顶部无缝渲染内嵌播放器。
    - **共享系统**：顶栏「共享库」入口、分享弹窗创建及删除功能。
-   - **外部播放器**：详情页「外部播放器」按钮（Potplayer/VLC/IINA 调用）。
+   - **外部播放器**：详情页「外部播放器」按钮（Potplayer/VLC/IINA 调用）、「复制播放直链」（走 `utils/clipboard.ts`，勿回退成裸 `navigator.clipboard`）。
    - **媒体库视图**：列表视图、网格视图与文件夹穿透下钻。
 
 ---

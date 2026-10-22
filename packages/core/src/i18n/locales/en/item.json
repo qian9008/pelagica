@@ -148,5 +148,17 @@
     "remoteTrailer": "Remote Trailer",
     "unknown_item": "Item",
     "unknown_library": "Library",
-    "unknown_episode": "Episode"
+    "unknown_episode": "Episode",
+    "external_play": "External Player",
+    "select_external_player": "Select External Player",
+    "no_matched_player": "No player matched your system",
+    "copy_stream_url": "Copy Direct Stream URL",
+    "copied": "Direct link copied to clipboard!",
+    "copy_error": "Copy failed, please copy manually",
+    "stream_url_error": "Failed to get stream URL",
+    "manual_copy_title": "Copy Link Manually",
+    "manual_copy_desc": "The browser could not confirm the automatic copy. The link is already selected — press Ctrl/⌘ + C to make sure it is copied.",
+    "select_all": "Select Link",
+    "selected": "Selected",
+    "close": "Close"
 }

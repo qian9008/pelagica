@@ -142,7 +142,7 @@ export const PlayerCore = ({ itemId, isInline = false }: PlayerCoreProps) => {
 
         if (isStrm) {
             return {
-                url: getStaticStreamUrl(itemId),
+                url: getStaticStreamUrl(itemId, mediaSource?.Id || undefined),
                 mimeType: 'video/mp4',
             };
         }

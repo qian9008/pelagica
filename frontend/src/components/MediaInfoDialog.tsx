@@ -20,15 +20,18 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import type { TFunction } from 'i18next';
+import { copyTextToClipboard } from '@/utils/clipboard';
 
 const DetailBox = ({ label, value }: { label: string; value: string }) => {
     const [copySuccess, setCopySuccess] = useState<boolean>(false);
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(value).then(() => {
+    const handleCopy = async () => {
+        // 这里只做「已尝试复制」的图标反馈，不弹成功提示，避免明文 HTTP 下误报
+        const outcome = await copyTextToClipboard(value);
+        if (outcome !== 'failed') {
             setCopySuccess(true);
             setTimeout(() => setCopySuccess(false), 2000);
-        });
+        }
     };
 
     return (
@@ -196,11 +199,12 @@ const MediaStreamInfo = ({ stream, t }: { stream: MediaStream; t: TFunction }) =
                     variant={'ghost'}
                     size={'icon-sm'}
                     className="text-muted-foreground"
-                    onClick={() => {
-                        navigator.clipboard.writeText(JSON.stringify(stream, null, 2)).then(() => {
+                    onClick={async () => {
+                        const outcome = await copyTextToClipboard(JSON.stringify(stream, null, 2));
+                        if (outcome !== 'failed') {
                             setCopySuccess(true);
                             setTimeout(() => setCopySuccess(false), 2000);
-                        });
+                        }
                     }}
                 >
                     {copySuccess ? (

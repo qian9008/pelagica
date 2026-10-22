@@ -11,6 +11,8 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { getStaticStreamUrl, getSubtitleUrl } from '@pelagica/core';
+import { copyTextToClipboard } from '@/utils/clipboard';
+import ManualCopyDialog from '@/components/ManualCopyDialog';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 
@@ -206,6 +208,8 @@ export default function ExternalPlayerButton({
         return 'other';
     });
     const [copied, setCopied] = useState(false);
+    // 自动复制失败时的手动兜底链接，非空即打开弹窗
+    const [manualCopyText, setManualCopyText] = useState('');
 
     // 智能选取第一个外置中文（或任意首个外置）字幕并转成 SRT/VTT 流直链
     const getExternalSubtitle = (targetMediaSourceId: string) => {
@@ -245,8 +249,9 @@ export default function ExternalPlayerButton({
 
     // 提取当前的直链 URL、字幕及进度信息并构造外部链接
     const handlePlayerClick = (option: PlayerOption) => {
-        const targetMediaSourceId = mediaSourceId || item.MediaSources?.[0]?.Id || item.Id || '';
-        const streamUrl = getStaticStreamUrl(targetMediaSourceId);
+        const targetMediaSourceId = mediaSourceId || item.MediaSources?.[0]?.Id || '';
+        // 路径段用 itemId，媒体源通过 MediaSourceId 查询参数传递
+        const streamUrl = getStaticStreamUrl(item.Id || '', targetMediaSourceId);
         const subUrl = getExternalSubtitle(targetMediaSourceId);
         const title = item.Name || 'Video';
         const positionMs = Math.floor((item.UserData?.PlaybackPositionTicks || 0) / 10000);
@@ -262,79 +267,90 @@ export default function ExternalPlayerButton({
     };
 
     // 复制直链功能
-    const handleCopyLink = () => {
-        const targetMediaSourceId = mediaSourceId || item.MediaSources?.[0]?.Id || item.Id || '';
-        const streamUrl = getStaticStreamUrl(targetMediaSourceId);
+    const handleCopyLink = async () => {
+        const targetMediaSourceId = mediaSourceId || item.MediaSources?.[0]?.Id || '';
+        const streamUrl = getStaticStreamUrl(item.Id || '', targetMediaSourceId);
 
         if (!streamUrl) {
             toast.error(t('stream_url_error', '获取直链链接失败'));
             return;
         }
 
-        navigator.clipboard
-            .writeText(streamUrl)
-            .then(() => {
-                setCopied(true);
-                toast.success(t('copied', '直链已成功复制到剪贴板！'));
-                setTimeout(() => setCopied(false), 2000);
-            })
-            .catch(() => {
-                toast.error(t('copy_error', '复制失败，请手动尝试'));
-            });
+        const outcome = await copyTextToClipboard(streamUrl);
+        if (outcome === 'ok') {
+            setCopied(true);
+            toast.success(t('copied', '直链已成功复制到剪贴板！'));
+            setTimeout(() => setCopied(false), 2000);
+        } else {
+            // unverified：execCommand 回报成功但无法回读验证，实测在部分环境
+            // 仍不写入系统剪贴板；failed：全部通道失败。两种情况都给手动兜底，
+            // 绝不弹「已成功复制」的假提示。
+            setManualCopyText(streamUrl);
+        }
     };
 
     // 智能筛选出适合当前系统的播放器
     const filteredPlayers = PLAYER_OPTIONS.filter((p) => p.platforms.includes(os));
 
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button
-                    variant="outline"
-                    className={`h-10 px-4 gap-2 cursor-pointer font-semibold text-sm rounded-md border border-border/50 bg-background/30 backdrop-blur-sm hover:bg-background/80 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md ${className}`}
+        <>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        variant="outline"
+                        className={`h-10 px-4 gap-2 cursor-pointer font-semibold text-sm rounded-md border border-border/50 bg-background/30 backdrop-blur-sm hover:bg-background/80 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md ${className}`}
+                    >
+                        <ExternalLink className="h-4 w-4" />
+                        <span>{t('external_play', '外部播放')}</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                    align="start"
+                    className="min-w-[180px] bg-background/90 backdrop-blur-md border border-border/50 shadow-xl"
                 >
-                    <ExternalLink className="h-4 w-4" />
-                    <span>{t('external_play', '外部播放')}</span>
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-                align="start"
-                className="min-w-[180px] bg-background/90 backdrop-blur-md border border-border/50 shadow-xl"
-            >
-                <DropdownMenuLabel className="text-xs text-muted-foreground">
-                    {t('select_external_player', '选择外部播放器')}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-border/50" />
+                    <DropdownMenuLabel className="text-xs text-muted-foreground">
+                        {t('select_external_player', '选择外部播放器')}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-border/50" />
 
-                {filteredPlayers.length > 0 ? (
-                    filteredPlayers.map((player) => (
-                        <DropdownMenuItem
-                            key={player.id}
-                            onSelect={() => handlePlayerClick(player)}
-                            className="cursor-pointer focus:bg-accent/80"
-                        >
-                            <span className="flex-1">{player.name}</span>
-                        </DropdownMenuItem>
-                    ))
-                ) : (
-                    <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                        {t('no_matched_player', '未检测到匹配系统的播放器')}
-                    </div>
-                )}
-
-                <DropdownMenuSeparator className="bg-border/50" />
-                <DropdownMenuItem
-                    onSelect={handleCopyLink}
-                    className="cursor-pointer focus:bg-accent/80 gap-2 flex items-center"
-                >
-                    {copied ? (
-                        <Check className="h-4 w-4 text-green-500" />
+                    {filteredPlayers.length > 0 ? (
+                        filteredPlayers.map((player) => (
+                            <DropdownMenuItem
+                                key={player.id}
+                                onSelect={() => handlePlayerClick(player)}
+                                className="cursor-pointer focus:bg-accent/80"
+                            >
+                                <span className="flex-1">{player.name}</span>
+                            </DropdownMenuItem>
+                        ))
                     ) : (
-                        <Copy className="h-4 w-4" />
+                        <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                            {t('no_matched_player', '未检测到匹配系统的播放器')}
+                        </div>
                     )}
-                    <span className="flex-1">{t('copy_stream_url', '复制播放直链')}</span>
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+
+                    <DropdownMenuSeparator className="bg-border/50" />
+                    <DropdownMenuItem
+                        onSelect={handleCopyLink}
+                        className="cursor-pointer focus:bg-accent/80 gap-2 flex items-center"
+                    >
+                        {copied ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                            <Copy className="h-4 w-4" />
+                        )}
+                        <span className="flex-1">{t('copy_stream_url', '复制播放直链')}</span>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <ManualCopyDialog
+                open={manualCopyText !== ''}
+                onOpenChange={(next) => {
+                    if (!next) setManualCopyText('');
+                }}
+                text={manualCopyText}
+            />
+        </>
     );
 }

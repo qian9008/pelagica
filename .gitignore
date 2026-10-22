@@ -33,4 +33,7 @@ branding
 /backend/cache/
 /cache/
 
+# 本地工作区数据（AI 记忆、临时报告），不入库
+.workbuddy/
+
 .metadata/
