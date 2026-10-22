@@ -56,6 +56,7 @@ import {
 } from '@/utils/localstorageLastlanguage';
 import { usePlayerGestures } from '@/features/player/usePlayerGestures';
 import { PlayerGestureOverlay } from '@/features/player/PlayerGestureOverlay';
+import { cn } from '../../lib/utils';
 
 function getPrimaryTrickplayInfo(trickplay?: BaseItemDto['Trickplay']) {
     if (!trickplay) return null;
@@ -569,18 +570,23 @@ const PlayerControls = ({
     });
 
     return (
-        <div
-            className={`absolute inset-0 z-10 ${showControls ? '' : 'cursor-none'}`}
-            {...gestureHandlers}
-            style={{
-                WebkitUserSelect: 'none',
-                userSelect: 'none',
-                WebkitTouchCallout: 'none',
-            }}
-        >
+        <>
+            {/* 手势指示层：只渲染 ±30s / 3x 快进的视觉反馈，不拦截指针事件 */}
             <PlayerGestureOverlay
                 isFastForwarding={isFastForwarding}
                 seekIndicator={seekIndicator}
+            />
+            <div
+                className={`absolute inset-0 z-10 p-4 ${showControls ? '' : 'cursor-none'}`}
+                {...gestureHandlers}
+                style={{
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                }}
+                onClick={togglePlay}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={handleMouseLeave}
             />
 
             {!showInlineControls && (
@@ -599,10 +605,23 @@ const PlayerControls = ({
                         <h1>{title}</h1>
                     ) : (
                         <img
-                            className="h-9 object-contain"
+                            className={cn('object-contain', {
+                                'h-16': config?.playerControlsLogoSize === 'large',
+                                'h-12': config?.playerControlsLogoSize === 'medium',
+                                'h-9':
+                                    !config?.playerControlsLogoSize ||
+                                    config?.playerControlsLogoSize === 'small',
+                            })}
                             src={getLogoUrl(
                                 backButtonImageId!,
-                                { maxHeight: 40 },
+                                {
+                                    maxHeight:
+                                        config?.playerControlsLogoSize === 'large'
+                                            ? 160
+                                            : config?.playerControlsLogoSize === 'medium'
+                                              ? 120
+                                              : 90,
+                                },
                                 backButtonImageTag
                             )}
                             onError={() => setBackButtonLogoFailed(true)}
@@ -1200,7 +1219,7 @@ const PlayerControls = ({
                     </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 

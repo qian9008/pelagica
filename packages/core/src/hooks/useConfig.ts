@@ -113,6 +113,8 @@ export interface ContinueWatchingSection extends BaseHomeScreenSection {
     type: 'continueWatching';
     titleLine?: ContinueWatchingTitleLine;
     detailLine?: ContinueWatchingDetailLine[];
+    /** Whether to show the series image instead of the episode image */
+    useSeriesImage?: boolean;
     limit?: number;
     /** Whether to use more accurate sorting that may involve additional API calls */
     accurateSorting?: boolean;
@@ -134,6 +136,8 @@ export interface NextUpSection extends BaseHomeScreenSection {
     type: 'nextUp';
     titleLine?: ContinueWatchingTitleLine;
     detailLine?: ContinueWatchingDetailLine[];
+    /** Whether to show the series image instead of the episode image */
+    useSeriesImage?: boolean;
     limit?: number;
 }
 
@@ -141,6 +145,8 @@ export interface ResumeSection extends BaseHomeScreenSection {
     type: 'resume';
     titleLine?: ContinueWatchingTitleLine;
     detailLine?: ContinueWatchingDetailLine[];
+    /** Whether to show the series image instead of the episode image */
+    useSeriesImage?: boolean;
     limit?: number;
 }
 
@@ -250,6 +256,9 @@ export interface ConfigLink {
     icon: string;
 }
 
+export type PlayerControlsLogoSize = 'small' | 'medium' | 'large';
+export const PLAYER_CONTROLS_LOGO_SIZES: PlayerControlsLogoSize[] = ['small', 'medium', 'large'];
+
 export interface AppConfig {
     /** Optional URL for Streamystats integration */
     streamystatsUrl?: string;
@@ -285,6 +294,8 @@ export interface AppConfig {
     hideBackToServerButton?: boolean;
     /** Whether to show the logo of the item in the player controls */
     showLogoInPlayerControls?: boolean;
+    /** Size of the logo in the player controls */
+    playerControlsLogoSize?: PlayerControlsLogoSize;
 }
 
 const DEFAULT_ITEM_PAGE_SETTINGS: ItemPageSettings = {
@@ -311,6 +322,7 @@ const DEFAULT_CONFIG: AppConfig = {
     logoLightUrl: '',
     logoDarkUrl: '',
     showLogoInPlayerControls: true,
+    playerControlsLogoSize: 'medium',
     homeScreenSections: [
         {
             type: 'mediaBar',

@@ -1,0 +1,12 @@
+{
+  "actions": "Actions",
+  "cancel_error": "Failed to cancel",
+  "cancel_failed": "Failed to cancel share",
+  "cancel_share": "Cancel share",
+  "no_shares_found": "No shares found",
+  "share_cancelled": "Share cancelled",
+  "shared_date": "Shared on",
+  "shared_media_name": "Media name",
+  "shared_target_user": "Shared with",
+  "use_series_image": "Use series thumbnail"
+}

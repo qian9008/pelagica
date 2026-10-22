@@ -125,8 +125,10 @@ const AuthorizeQuickConnectDialog = ({
     isLoading,
     hasSuccess,
     hasError,
+    onReset,
 }: {
     onAuthorize: (code: string) => void;
+    onReset: () => void;
     isLoading: boolean;
     hasSuccess: boolean;
     hasError: boolean;
@@ -182,7 +184,13 @@ const AuthorizeQuickConnectDialog = ({
     }, [hasError, code.length]);
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog
+            open={open}
+            onOpenChange={(nextOpen) => {
+                if (nextOpen) onReset();
+                setOpen(nextOpen);
+            }}
+        >
             <DialogTrigger asChild>
                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                     <Fingerprint className="text-muted-foreground" />
@@ -628,6 +636,11 @@ const UserMenu = () => {
                     isLoading={quickConnectLoading}
                     hasSuccess={quickConnectSuccess}
                     hasError={quickConnectError}
+                    onReset={() => {
+                        setQuickConnectLoading(false);
+                        setQuickConnectSuccess(false);
+                        setQuickConnectError(false);
+                    }}
                 />
 
                 {isAdmin && (

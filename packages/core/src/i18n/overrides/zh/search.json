@@ -1,0 +1,19 @@
+{
+  "clear_search": "清除搜索",
+  "description": "搜索电影、电视剧、音乐和其他媒体项",
+  "error_occurred_while_searching": "在搜索过程中发生错误。",
+  "failed_search": "搜索失败",
+  "group_episodes": "单集",
+  "group_moviesTv": "电影与电视剧",
+  "group_music": "音乐",
+  "group_people": "演职人员",
+  "input_placeholder": "搜索媒体...",
+  "no_results": "未找到相关结果",
+  "no_results_description": "尝试调整您的搜索关键字或过滤条件来重新寻找。",
+  "start_typing": "开始输入以进行搜索...",
+  "title": "搜索媒体",
+  "typefilter_all": "全部",
+  "typefilter_movies-tv": "电影 / 电视",
+  "typefilter_music": "音乐",
+  "unexpected_error": "异常错误"
+}
