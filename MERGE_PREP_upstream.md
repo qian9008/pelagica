@@ -137,3 +137,22 @@ i18n.init({
 | 2 | 非中文语言（11 种）是否继续本地维护副本             | **不维护**，跟随上游，减少每次合并的冲突面           |
 | 3 | `frontend/package-lock.json` 是否删除 | **删除**，改用 pnpm 单一锁文件              |
 | 4 | WIP 改动先提交还是先挪覆盖层                  | **先挪覆盖层再提交**，一次到位                 |
+
+---
+
+## 8. 执行结果（2026-10-22 已完成）
+
+- **备份分支**：`backup/dev-before-sync-20261022`（合并前 HEAD `646a5dd4`）
+- **合并提交**：`bbae35bb`，双亲 `8dcd4839` + `075b5b20`；合并后 `dev` 相对上游 **21 领先 / 0 落后**
+- **前置提交**：`8dcd4839`（外部播放器增强 WIP 先收尾入库，避免脏工作区合并）
+- **实际冲突**：4 处 —— 比 §2 预估多 1 个（`en/item.json` 因前置提交改过，也变成 modify/delete）
+- **i18n 落地形态**：
+  - 删除 `packages/core/src/i18n/locales/**` 全部 13 语言副本
+  - 新增 `mergeResources.ts`（深合并）、`overrides.ts`（glob 加载器）、`overrides/{zh,en}/*.json`
+  - `zh` 全量保留精翻；`en` 只补共享包缺失项；其余 11 语言跟随上游
+  - 历史 `_plural` 自动补 `_other` 别名（i18next v4）
+  - 补全二开功能缺失文案：英文 50 条、中文 54 条
+- **验证**：`tsc -b` 通过 / `vite build` 通过 / `pnpm -r build` 全仓通过（含 tizen、webos、tv-frontend）/ 覆盖层文案已确认进入构建产物
+- **待人工验证**：ASS 字幕（jassub 2.5.21）、播放器手势、行内播放、外部播放器与复制直链、登录页二维码快速连接
+- **遗留技术债**：`PlayerControls.tsx` 存在历史 ESLint 报错 `react-hooks/immutability`（`setIsPiP` 在 `useEffect` 中被引用时 `useState` 尚未声明，合并前即存在，不影响构建）
+- **未推送**：本地 `dev` 尚未 push 到 `origin`
