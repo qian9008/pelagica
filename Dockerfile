@@ -12,7 +12,8 @@ COPY packages/tv-platform/package.json packages/tv-platform/package.json
 RUN npm install -g pnpm \
     && pnpm install --frozen-lockfile --filter pelagica...
 
-COPY packages/core packages/core
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages packages
 COPY frontend frontend
 ARG BASE_PATH=
 RUN BASE_PATH=$BASE_PATH pnpm --filter pelagica run build

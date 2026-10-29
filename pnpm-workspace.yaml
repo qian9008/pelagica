@@ -8,7 +8,7 @@ minimumReleaseAgeExclude:
   - '@pelagica/i18n'
 
 allowBuilds:
-  esbuild: false
+  esbuild: true
   lfa-ponyfill: false
 
 overrides:
