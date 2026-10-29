@@ -1,0 +1,16 @@
+{
+  "ascending": "Ascending",
+  "descending": "Descending",
+  "folder": "Folder",
+  "folder_root": "Root folder",
+  "no_title": "Untitled",
+  "scan_failed": "Failed to start scan",
+  "scan_library": "Scan for new files",
+  "scan_success": "Library scan started",
+  "scanning_library": "Scanning...",
+  "select_library": "Select library",
+  "view_backdrop": "Backdrop view",
+  "view_folder": "Folder view",
+  "view_list": "List view",
+  "view_poster": "Poster view"
+}

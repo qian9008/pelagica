@@ -1,0 +1,22 @@
+{
+  "ends_at_unknown": "End time unknown",
+  "episode_count": "{{count}} Episode",
+  "episode_count_plural": "{{count}} Episodes",
+  "no_shared_items": "Nothing shared yet",
+  "no_shared_items_desc": "You haven't shared any library or item with anyone yet.",
+  "progress_unknown": "Progress unknown",
+  "progress_watched": "Watched",
+  "season_count": "{{count}} Season",
+  "season_count_plural": "{{count}} Seasons",
+  "season_episode": "Season {{season}} · Episode {{episode}}",
+  "share": "Share",
+  "shared_by": "Shared by {{user}}",
+  "shared_incoming": "Shared with me",
+  "shared_library": "Shared library",
+  "shared_outgoing": "Shared by me",
+  "time_remaining": "{{time}} left",
+  "time_remaining_unknown": "Time remaining unknown",
+  "view_backdrop": "Backdrop view",
+  "view_list": "List view",
+  "view_poster": "Poster view"
+}

@@ -14,7 +14,7 @@ const numberToStatsConsent = (value: number): StatsConsent => {
         case 0:
             return 'granted';
         default:
-            throw new Error(`Invalid stats consent value: ${value}`);
+            return 'unknown';
     }
 };
 
@@ -33,28 +33,38 @@ const setLocalStatsConsent = (consent: boolean): void => {
 };
 
 export const getStatsConsent = async (): Promise<StatsConsent> => {
+    // 纯前端或已有本地记录时优先保证可用
+    const local = getLocalStatsConsent();
+    if (local !== 'unknown') return local;
+
     if (!hasStatsConsentBackend()) {
-        return getLocalStatsConsent();
+        return local;
     }
 
-    const res = await fetch(withBasePath('/api/stats-consent'));
-    if (!res.ok) {
-        throw new Error('Failed to fetch stats consent');
+    try {
+        const res = await fetch(withBasePath('/api/stats-consent'));
+        if (!res.ok) {
+            return local;
+        }
+        const data = await res.json();
+        return numberToStatsConsent(data.consent);
+    } catch {
+        return local;
     }
-    const data = await res.json();
-    return numberToStatsConsent(data.consent);
 };
 
 export const setStatsConsent = async (consent: boolean): Promise<void> => {
+    setLocalStatsConsent(consent);
+
     if (!hasStatsConsentBackend()) {
-        setLocalStatsConsent(consent);
         return;
     }
 
-    const res = await fetch(withBasePath('/api/stats-consent?consent=' + consent), {
-        method: 'POST',
-    });
-    if (!res.ok) {
-        throw new Error('Failed to set stats consent');
+    try {
+        await fetch(withBasePath('/api/stats-consent?consent=' + consent), {
+            method: 'POST',
+        });
+    } catch {
+        // 纯前端模式静默忽略后端上报异常
     }
 };

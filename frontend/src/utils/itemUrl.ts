@@ -1,8 +1,6 @@
 import type { BaseItemKind } from '@jellyfin/sdk/lib/generated-client/models';
 
 const DIRECT_PLAY_ROUTES: Partial<Record<BaseItemKind, string>> = {
-    MusicVideo: '/play',
-    Video: '/play',
     Photo: '/photo',
     TvChannel: '/play',
 };

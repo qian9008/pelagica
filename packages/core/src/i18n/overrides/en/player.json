@@ -1,0 +1,16 @@
+{
+  "equalizerBands": {
+    "bass": "Bass",
+    "lowMid": "Low mid",
+    "mid": "Mid",
+    "highMid": "High mid",
+    "treble": "Treble"
+  },
+  "equalizerPresets": {
+    "flat": "Flat",
+    "bassBoost": "Bass Boost",
+    "vocalBoost": "Vocal Boost",
+    "podcast": "Podcast",
+    "sleep": "Sleep"
+  }
+}

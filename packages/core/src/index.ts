@@ -13,6 +13,7 @@ export * from './api/seerr/request';
 export * from './api/seerr/search';
 export * from './api/seerr/status';
 export * from './api/seerr/types';
+export * from './api/share';
 export * from './api/stats';
 export * from './api/themes';
 export * from './collector/tvStatsCollector';

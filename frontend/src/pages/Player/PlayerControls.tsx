@@ -35,20 +35,27 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { formatPlayTime, ticksToReadableTime, ticksToSeconds } from '@pelagica/core';
 import { buildPlayerUrl } from '@/utils/playerUrl';
-import { isDesktopApp } from '@/utils/desktopApp';
 import { useTranslation } from 'react-i18next';
+import { isDesktopApp } from '@/utils/desktopApp';
 import { usePlayerKeyboardControls } from '@/hooks/usePlayerKeyboardControls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getLogoUrl, getPrimaryImageUrl, getTrickplayImageUrl } from '@pelagica/core';
-import { useReportPlaybackProgress } from '@pelagica/core';
+import {
+    getLogoUrl,
+    getPrimaryImageUrl,
+    getTrickplayImageUrl,
+    useReportPlaybackProgress,
+    useSession,
+    useConfig,
+} from '@pelagica/core';
 import { getRuntimePlaybackStats, type RuntimePlaybackStats } from '@/utils/playbackStats';
-import { useSession } from '@pelagica/core';
+import { usePlaybackRate } from '@/hooks/usePlaybackRate';
 import {
     removeLastSubtitleLanguage,
     setLastAudioLanguage,
     setLastSubtitleLanguage,
 } from '@/utils/localstorageLastlanguage';
-import { useConfig } from '@pelagica/core';
+import { usePlayerGestures } from '@/features/player/usePlayerGestures';
+import { PlayerGestureOverlay } from '@/features/player/PlayerGestureOverlay';
 import { cn } from '../../lib/utils';
 
 function getPrimaryTrickplayInfo(trickplay?: BaseItemDto['Trickplay']) {
@@ -109,6 +116,7 @@ interface PlayerControlsProps {
     nextItem?: BaseItemDto | null;
     srcUrl: string;
     containerRef: React.RefObject<HTMLDivElement | null>;
+    isInline?: boolean;
 }
 
 const PlayerControls = ({
@@ -125,21 +133,27 @@ const PlayerControls = ({
     nextItem,
     srcUrl,
     containerRef,
+    isInline = false,
 }: PlayerControlsProps) => {
     const { t } = useTranslation('player');
     const [isPlaying, setIsPlaying] = useState(false);
+    const [playbackRate, setPlaybackRate] = usePlaybackRate(player);
     const [currentTime, setCurrentTime] = useState(0);
-    const [duration, setDuration] = useState(0);
+    const [duration, setDuration] = useState(() => {
+        return item.RunTimeTicks ? ticksToSeconds(item.RunTimeTicks) : 0;
+    });
     const [bufferedTime, setBufferedTime] = useState(0);
     const [volume, setVolume] = useState(() => {
         const saved = localStorage.getItem('playerVolume');
         return saved ? parseFloat(saved) : 1;
     });
     const [isMuted, setIsMuted] = useState(false);
+    const [showVolumeBar, setShowVolumeBar] = useState(false);
     const [hoverTime, setHoverTime] = useState<number | null>(null);
     const [hoverPosition, setHoverPosition] = useState<number>(0);
-    const [showControls, setShowControls] = useState(true);
-    const [isPiP, setIsPiP] = useState(false);
+    const [isDraggingProgress, setIsDraggingProgress] = useState(false);
+    const isDraggingProgressRef = useRef(false);
+    const [dragTime, setDragTime] = useState<number | null>(null);
     const progressRef = useRef<HTMLDivElement>(null);
     const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const navigate = useNavigate();
@@ -151,15 +165,15 @@ const PlayerControls = ({
     const [showStats, setShowStats] = useState(false);
     const [container, setContainer] = useState<HTMLElement | null>(null);
     const { data: session } = useSession(item.Id, showStats);
-    const [backButtonLogoFailed, setBackButtonLogoFailed] = useState(false);
-    const { config } = useConfig();
 
+    // 优先使用浏览器历史后退，避免 navigate(backUrl) 产生 PUSH 导致详情页↔播放页死循环
     const handleBack = () => {
-        if (backUrl) {
-            navigate(backUrl);
-        } else {
+        if (window.history.state && window.history.state.idx > 0) {
             navigate(-1);
+            return;
         }
+        // 无浏览器历史时，用 backUrl 或首页作为兜底
+        navigate(backUrl || '/');
     };
 
     useEffect(() => {
@@ -181,11 +195,14 @@ const PlayerControls = ({
             clearTimeout(hideTimeoutRef.current);
         }
         hideTimeoutRef.current = setTimeout(() => {
-            setShowControls(false);
+            if (!isDraggingProgressRef.current) {
+                setShowControls(false);
+            }
         }, 3000);
     };
 
     const handleMouseMove = () => {
+        if (isDraggingProgressRef.current) return;
         resetHideTimeout();
     };
 
@@ -199,13 +216,21 @@ const PlayerControls = ({
     const markItemAsCompleted = useCallback(
         (itemId: string | undefined) => {
             if (!itemId) return;
+            const playerDuration = player && !player.isDisposed?.() ? player.duration() : 0;
+            const finalTicks =
+                playerDuration &&
+                playerDuration > 0 &&
+                playerDuration !== Infinity &&
+                !isNaN(playerDuration)
+                    ? Math.floor(playerDuration * 10000000)
+                    : item.RunTimeTicks || 0;
             reportProgress({
                 itemId,
-                positionTicks: item.RunTimeTicks || 0,
+                positionTicks: finalTicks,
                 isPaused: true,
             });
         },
-        [item.RunTimeTicks, reportProgress]
+        [item.RunTimeTicks, player, reportProgress]
     );
 
     useEffect(() => {
@@ -227,7 +252,21 @@ const PlayerControls = ({
 
         const updatePlayState = () => setIsPlaying(!player.paused());
         const updateTime = () => setCurrentTime(player.currentTime() || 0);
-        const updateDuration = () => setDuration(player.duration() || 0);
+        const updateDuration = () => {
+            const playerDuration = player.duration();
+            if (
+                playerDuration &&
+                playerDuration > 0 &&
+                playerDuration !== Infinity &&
+                !isNaN(playerDuration)
+            ) {
+                setDuration(playerDuration);
+            } else if (item.RunTimeTicks) {
+                setDuration(ticksToSeconds(item.RunTimeTicks));
+            } else {
+                setDuration(playerDuration || 0);
+            }
+        };
         const updateMuted = () => setIsMuted(player.muted() || false);
         const updateBuffered = () => {
             const buffered = player.buffered();
@@ -256,6 +295,7 @@ const PlayerControls = ({
         player.on('timeupdate', updateTime);
         player.on('timeupdate', updateBuffered);
         player.on('loadedmetadata', updateDuration);
+        player.on('durationchange', updateDuration);
         player.on('progress', updateBuffered);
         player.on('volumechange', updateMuted);
         player.on('ended', handleEnded);
@@ -266,6 +306,7 @@ const PlayerControls = ({
             player.off('timeupdate', updateTime);
             player.off('timeupdate', updateBuffered);
             player.off('loadedmetadata', updateDuration);
+            player.off('durationchange', updateDuration);
             player.off('progress', updateBuffered);
             player.off('volumechange', updateMuted);
             player.off('ended', handleEnded);
@@ -281,9 +322,11 @@ const PlayerControls = ({
         nextItem,
         dismissedNextItemPrompt,
         item.Id,
+        item.RunTimeTicks,
         navigate,
         markItemAsCompleted,
         backUrl,
+        playbackRate,
     ]);
 
     const togglePlay = useCallback(() => {
@@ -295,16 +338,76 @@ const PlayerControls = ({
         }
     }, [player]);
 
-    const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!player || !progressRef.current) return;
+    const handleProgressPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        e.stopPropagation();
+        if (!player || !progressRef.current || !duration) return;
+
+        if (e.pointerType === 'touch') {
+            e.currentTarget.setPointerCapture(e.pointerId);
+        }
+
+        setIsDraggingProgress(true);
+        isDraggingProgressRef.current = true;
+        if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+
         const rect = progressRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
-        const percentage = x / rect.width;
-        player.currentTime(percentage * duration);
+        const percentage = Math.max(0, Math.min(1, x / rect.width));
+        const newTime = percentage * duration;
+        setDragTime(newTime);
+        setHoverTime(newTime);
+        setHoverPosition(x);
+
+        const onPointerMove = (moveEvent: PointerEvent) => {
+            if (!progressRef.current) return;
+            const currentRect = progressRef.current.getBoundingClientRect();
+            const moveX = moveEvent.clientX - currentRect.left;
+            const currentPercentage = Math.max(0, Math.min(1, moveX / currentRect.width));
+            const currentTime = currentPercentage * duration;
+            setDragTime(currentTime);
+            setHoverTime(currentTime);
+            setHoverPosition(Math.max(0, Math.min(moveX, currentRect.width)));
+        };
+
+        const preventTouchMove = (touchEvent: TouchEvent) => {
+            touchEvent.preventDefault();
+        };
+        window.addEventListener('touchmove', preventTouchMove, { passive: false });
+
+        const onPointerUp = (upEvent: PointerEvent) => {
+            if (upEvent.pointerId !== e.pointerId) return;
+
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', onPointerUp);
+            window.removeEventListener('pointercancel', onPointerUp);
+            window.removeEventListener('touchmove', preventTouchMove);
+
+            setIsDraggingProgress(false);
+            isDraggingProgressRef.current = false;
+
+            if (progressRef.current) {
+                const finalRect = progressRef.current.getBoundingClientRect();
+                const upX = upEvent.clientX - finalRect.left;
+                const finalPercentage = Math.max(0, Math.min(1, upX / finalRect.width));
+                player.currentTime(finalPercentage * duration);
+            }
+            setDragTime(null);
+
+            if (upEvent.pointerType !== 'mouse') {
+                setHoverTime(null);
+            }
+
+            resetHideTimeout();
+        };
+
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', onPointerUp);
     };
 
-    const handleProgressHover = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!progressRef.current || !duration) return;
+    const handleProgressPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (e.pointerType !== 'mouse' || isDraggingProgress || !progressRef.current || !duration)
+            return;
         const rect = progressRef.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const percentage = Math.max(0, Math.min(1, x / rect.width));
@@ -312,9 +415,16 @@ const PlayerControls = ({
         setHoverPosition(x);
     };
 
-    const handleProgressLeave = () => {
-        setHoverTime(null);
+    const handleProgressPointerLeave = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (e.pointerType === 'mouse' && !isDraggingProgress) {
+            setHoverTime(null);
+        }
     };
+
+    const [showControls, setShowControls] = useState(!isInline);
+    const [isPiP, setIsPiP] = useState(false);
+    const [backButtonLogoFailed, setBackButtonLogoFailed] = useState(false);
+    const { config } = useConfig();
 
     const togglePiP = useCallback(async () => {
         if (!player) return;
@@ -419,19 +529,14 @@ const PlayerControls = ({
         currentTime < ticksToSeconds(outtroSegment.EndTicks);
 
     const clampedCurrentTime = duration > 0 ? Math.min(currentTime, duration) : currentTime;
-    const progressPercentage = Math.min(
-        100,
-        duration > 0 ? (clampedCurrentTime / duration) * 100 : 0
-    );
+    const displayTime = isDraggingProgress && dragTime !== null ? dragTime : clampedCurrentTime;
+    const progressPercentage = Math.min(100, duration > 0 ? (displayTime / duration) * 100 : 0);
     const bufferedPercentage = Math.min(100, duration > 0 ? (bufferedTime / duration) * 100 : 0);
 
     const title =
         item.Type === 'Episode'
             ? `${item.SeriesName} - S${item.ParentIndexNumber}E${item.IndexNumber} - ${item.Name}`
             : item.Name;
-
-    const backButtonImageId = item.Type === 'Episode' ? item.SeriesId : item.Id;
-    const backButtonImageTag = item.Type === 'Episode' ? undefined : item.ImageTags?.Logo;
 
     const isLive = item.Type === 'TvChannel';
 
@@ -446,52 +551,84 @@ const PlayerControls = ({
         (timeRemaining <= 30 || // 30 sec remaining
             (duration > 0 && currentTime / duration >= 0.95)); // or 95% complete
 
+    const showInlineControls = isInline && !isFullscreen;
+    const backButtonImageId = item.Type === 'Episode' ? item.SeriesId : item.Id;
+    const backButtonImageTag = item.Type === 'Episode' ? undefined : item.ImageTags?.Logo;
+
+    const { isFastForwarding, seekIndicator, gestureHandlers } = usePlayerGestures({
+        player,
+        isInline: showInlineControls,
+        showControls,
+        setShowControls,
+        togglePlay,
+        handleMouseMove,
+        handleMouseLeave,
+        resetHideTimeout,
+        clearHideTimeout: () => {
+            if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+        },
+    });
+
     return (
         <>
-            <div
-                className="absolute top-0 left-0 w-full p-4 bg-linear-to-b from-black/80 to-transparent z-50 text-gray-200 text-lg flex items-center gap-2 transition-opacity duration-300"
-                style={{
-                    opacity: showControls ? 1 : 0,
-                    pointerEvents: showControls ? 'auto' : 'none',
-                }}
-                onMouseMove={handleMouseMove}
-            >
-                <Button variant="ghost" onClick={handleBack}>
-                    <ArrowLeft />
-                </Button>
-                {backButtonLogoFailed || (config && !config.showLogoInPlayerControls) ? (
-                    <h1>{title}</h1>
-                ) : (
-                    <img
-                        className={cn('object-contain', {
-                            'h-16': config?.playerControlsLogoSize === 'large',
-                            'h-12': config?.playerControlsLogoSize === 'medium',
-                            'h-9':
-                                !config?.playerControlsLogoSize ||
-                                config?.playerControlsLogoSize === 'small',
-                        })}
-                        src={getLogoUrl(
-                            backButtonImageId!,
-                            {
-                                maxHeight:
-                                    config?.playerControlsLogoSize === 'large'
-                                        ? 160
-                                        : config?.playerControlsLogoSize === 'medium'
-                                          ? 120
-                                          : 90,
-                            },
-                            backButtonImageTag
-                        )}
-                        onError={() => setBackButtonLogoFailed(true)}
-                    />
-                )}
-            </div>
+            {/* 手势指示层：只渲染 ±30s / 3x 快进的视觉反馈，不拦截指针事件 */}
+            <PlayerGestureOverlay
+                isFastForwarding={isFastForwarding}
+                seekIndicator={seekIndicator}
+            />
             <div
                 className={`absolute inset-0 z-10 p-4 ${showControls ? '' : 'cursor-none'}`}
+                {...gestureHandlers}
+                style={{
+                    WebkitUserSelect: 'none',
+                    userSelect: 'none',
+                    WebkitTouchCallout: 'none',
+                }}
                 onClick={togglePlay}
                 onMouseMove={handleMouseMove}
                 onMouseLeave={handleMouseLeave}
             />
+
+            {!showInlineControls && (
+                <div
+                    className="absolute top-0 left-0 w-full p-4 bg-linear-to-b from-black/80 to-transparent z-50 text-gray-200 text-lg flex items-center gap-2 transition-opacity duration-300"
+                    style={{
+                        opacity: showControls ? 1 : 0,
+                        pointerEvents: showControls ? 'auto' : 'none',
+                    }}
+                    onMouseMove={handleMouseMove}
+                >
+                    <Button variant="ghost" onClick={handleBack}>
+                        <ArrowLeft />
+                    </Button>
+                    {backButtonLogoFailed || (config && !config.showLogoInPlayerControls) ? (
+                        <h1>{title}</h1>
+                    ) : (
+                        <img
+                            className={cn('object-contain', {
+                                'h-16': config?.playerControlsLogoSize === 'large',
+                                'h-12': config?.playerControlsLogoSize === 'medium',
+                                'h-9':
+                                    !config?.playerControlsLogoSize ||
+                                    config?.playerControlsLogoSize === 'small',
+                            })}
+                            src={getLogoUrl(
+                                backButtonImageId!,
+                                {
+                                    maxHeight:
+                                        config?.playerControlsLogoSize === 'large'
+                                            ? 160
+                                            : config?.playerControlsLogoSize === 'medium'
+                                              ? 120
+                                              : 90,
+                                },
+                                backButtonImageTag
+                            )}
+                            onError={() => setBackButtonLogoFailed(true)}
+                        />
+                    )}
+                </div>
+            )}
             <div className="absolute bottom-28 right-8 z-30 flex gap-2">
                 {showSkipIntroButton && !showNextItemPrompt && (
                     <Button
@@ -698,7 +835,7 @@ const PlayerControls = ({
                 )}
             </div>
             <div
-                className="absolute bottom-0 left-0 right-0 z-20 bg-linear-to-t from-black/80 to-transparent p-4 transition-opacity duration-300"
+                className={`absolute bottom-0 left-0 right-0 z-20 bg-linear-to-t from-black/80 to-transparent p-4 transition-opacity duration-300 ${showInlineControls ? 'hidden' : ''}`}
                 style={{
                     opacity: showControls ? 1 : 0,
                     pointerEvents: showControls ? 'auto' : 'none',
@@ -710,21 +847,21 @@ const PlayerControls = ({
                 {!isLive && (
                     <div
                         ref={progressRef}
-                        className="w-full h-3 rounded cursor-pointer mb-4 transition-all relative"
-                        onClick={handleProgressClick}
-                        onMouseMove={handleProgressHover}
-                        onMouseLeave={handleProgressLeave}
+                        className="w-full h-4 rounded cursor-pointer mb-4 transition-all relative group flex items-center touch-none"
+                        onPointerDown={handleProgressPointerDown}
+                        onPointerMove={handleProgressPointerMove}
+                        onPointerLeave={handleProgressPointerLeave}
                     >
                         {/* Actually visible bar that's smaller for better asthetics */}
-                        <div className="absolute top-1 left-0 w-full h-1 bg-gray-600 rounded pointer-events-none z-0" />
+                        <div className="absolute left-0 w-full h-1 bg-gray-600 rounded pointer-events-none z-0" />
                         {/* buffered progress */}
                         <div
-                            className="absolute top-1 left-0 h-1 bg-gray-500 rounded pointer-events-none z-5"
+                            className="absolute left-0 h-1 bg-gray-500 rounded pointer-events-none z-5"
                             style={{ width: `${bufferedPercentage}%` }}
                         />
                         {/** Bar that shows the hovered time */}
                         <div
-                            className="absolute top-1 left-0 h-1 bg-white/20 rounded pointer-events-none z-10"
+                            className="absolute left-0 h-1 bg-white/20 rounded pointer-events-none z-10"
                             style={{
                                 width:
                                     hoverTime !== null ? `${(hoverTime / duration) * 100}%` : '0%',
@@ -732,8 +869,13 @@ const PlayerControls = ({
                         />
                         {/* current progress */}
                         <div
-                            className="absolute top-1 left-0 h-1 bg-brand rounded pointer-events-none z-15 transition-[width] duration-250 ease-linear"
+                            className="absolute left-0 h-1 bg-brand rounded pointer-events-none z-15"
                             style={{ width: `${progressPercentage}%` }}
+                        />
+                        {/* progress thumb dot */}
+                        <div
+                            className={`absolute w-3 h-3 bg-brand rounded-full pointer-events-none z-20 shadow transform -translate-x-1/2 transition-transform ${isDraggingProgress || hoverTime !== null ? 'scale-150' : ''}`}
+                            style={{ left: `${progressPercentage}%` }}
                         />
                         {/* Hover preview */}
                         {hoverTime !== null &&
@@ -789,6 +931,11 @@ const PlayerControls = ({
                             })()}
                     </div>
                 )}
+                {/* 进度条下方的两端时间显示 */}
+                <div className="flex justify-between items-center text-xs text-gray-400 mt-1.5 px-0.5 font-medium select-none pointer-events-none">
+                    <span className="tabular-nums">{formatPlayTime(clampedCurrentTime)}</span>
+                    <span className="tabular-nums">{formatPlayTime(duration)}</span>
+                </div>
 
                 {/* Controls */}
                 <div className="flex items-center justify-between text-white gap-4">
@@ -827,14 +974,11 @@ const PlayerControls = ({
                                 </Link>
                             </Button>
                         )}
-                        {isLive ? (
+                        {/* 直播标识：非直播时不再显示冗余时间（进度条下方已有） */}
+                        {isLive && (
                             <div className="flex items-center gap-1.5 text-sm ml-2">
                                 <Dot className="text-red-500 -mx-1" size={32} />
                                 {t('live')}
-                            </div>
-                        ) : (
-                            <div className="text-sm ml-2">
-                                {formatPlayTime(clampedCurrentTime)} / {formatPlayTime(duration)}
                             </div>
                         )}
                     </div>
@@ -915,22 +1059,81 @@ const PlayerControls = ({
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         )}
-                        <Button
-                            variant={'ghost'}
-                            size={'icon-lg'}
-                            onClick={toggleMute}
-                            className="cursor-pointer"
+                        {/* 音量控制组合区域：支持悬停/触摸滑出音量条，音量条显示时点击图标切换静音 */}
+                        <div
+                            className="flex items-center h-10"
+                            onMouseEnter={() => setShowVolumeBar(true)}
+                            onMouseLeave={() => setShowVolumeBar(false)}
                         >
-                            {isMuted ? <VolumeX /> : <Volume2 />}
-                        </Button>
-                        <Slider
-                            min={0}
-                            max={1}
-                            step={0.1}
-                            value={isMuted ? [0] : [volume]}
-                            onValueChange={handleVolumeChange}
-                            className="w-25 cursor-pointer mr-2"
-                        />
+                            <Button
+                                variant={'ghost'}
+                                size={'icon-lg'}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (showVolumeBar) {
+                                        toggleMute();
+                                    } else {
+                                        setShowVolumeBar(true);
+                                    }
+                                }}
+                                className="cursor-pointer"
+                            >
+                                {isMuted ? <VolumeX /> : <Volume2 />}
+                            </Button>
+                            <div
+                                className={`flex items-center transition-all duration-300 ease-in-out ${
+                                    showVolumeBar
+                                        ? 'w-24 opacity-100 ml-2'
+                                        : 'w-0 opacity-0 overflow-hidden pointer-events-none'
+                                }`}
+                            >
+                                <Slider
+                                    min={0}
+                                    max={1}
+                                    step={0.1}
+                                    value={isMuted ? [0] : [volume]}
+                                    onValueChange={handleVolumeChange}
+                                    className="w-24 cursor-pointer mr-2"
+                                />
+                            </div>
+                        </div>
+                        {/* 播放速度控制 */}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant={'ghost'}
+                                    size={'icon-lg'}
+                                    className="cursor-pointer text-sm font-semibold select-none"
+                                    title="播放速度"
+                                >
+                                    <span className="text-[13px]">{playbackRate}x</span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent container={container} className="w-40 z-50">
+                                <DropdownMenuLabel>播放速度</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuRadioGroup
+                                    value={playbackRate.toString()}
+                                    onValueChange={(val) => setPlaybackRate(parseFloat(val))}
+                                >
+                                    <DropdownMenuRadioItem value="0.5">0.5x</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="0.75">
+                                        0.75x
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1">
+                                        1.0x (正常)
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1.25">
+                                        1.25x
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1.5">1.5x</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="1.75">
+                                        1.75x
+                                    </DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="2">2.0x</DropdownMenuRadioItem>
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                         {document.pictureInPictureEnabled && !isDesktopApp() && (
                             <Button
                                 variant={'ghost'}
@@ -956,6 +1159,66 @@ const PlayerControls = ({
                     </div>
                 </div>
             </div>
+
+            {/* Inline non-fullscreen controls */}
+            {showInlineControls && (
+                <div
+                    className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center transition-opacity duration-300"
+                    style={{ opacity: showControls || !isPlaying ? 1 : 0 }}
+                >
+                    <div className="absolute inset-0 bg-black/30 transition-opacity duration-300" />
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            togglePlay();
+                        }}
+                        className="cursor-pointer pointer-events-auto h-16 w-16 bg-white/25 md:bg-white/20 hover:bg-white/35 backdrop-blur-md border border-white/30 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 shadow-xl z-30"
+                    >
+                        {isPlaying ? (
+                            <Pause className="h-8 w-8 text-white fill-white" />
+                        ) : (
+                            <Play className="h-8 w-8 text-white fill-white ml-1" />
+                        )}
+                    </div>
+                    <div className="absolute bottom-4 right-4 z-30 pointer-events-auto">
+                        <Button
+                            variant="ghost"
+                            size="icon-lg"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFullscreen();
+                            }}
+                            className="text-white hover:bg-black/50 bg-black/30 backdrop-blur-sm"
+                        >
+                            <Maximize />
+                        </Button>
+                    </div>
+                    {/* Inline volume control (optional on desktop) */}
+                    <div className="absolute bottom-4 left-4 z-30 pointer-events-auto flex items-center h-10 group">
+                        <Button
+                            variant="ghost"
+                            size="icon-lg"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleMute();
+                            }}
+                            className="text-white hover:bg-black/50 bg-black/30 backdrop-blur-sm rounded-l-md rounded-r-none"
+                        >
+                            {isMuted ? <VolumeX /> : <Volume2 />}
+                        </Button>
+                        <div className="w-0 opacity-0 overflow-hidden group-hover:w-24 group-hover:opacity-100 transition-all duration-300 bg-black/30 backdrop-blur-sm h-full flex items-center rounded-r-md px-2">
+                            <Slider
+                                min={0}
+                                max={1}
+                                step={0.1}
+                                value={isMuted ? [0] : [volume]}
+                                onValueChange={handleVolumeChange}
+                                className="w-full cursor-pointer"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 };

@@ -28,6 +28,7 @@ import {
     Sun,
     Telescope,
     TriangleAlert,
+    Users,
     Tv,
     X,
 } from 'lucide-react';
@@ -857,6 +858,13 @@ const TopBar = ({ overlay = false }: { overlay?: boolean }) => {
                             </Link>
                         </Button>
 
+                        <Button asChild variant="ghost" size="sm">
+                            <Link to="/shared-library">
+                                <Users className="h-4 w-4" />
+                                {t('shared_library', '共享库')}
+                            </Link>
+                        </Button>
+
                         {hasMusicLibrary && (
                             <Button asChild variant="ghost" size="sm">
                                 <Link to="/music">
@@ -925,6 +933,12 @@ const TopBar = ({ overlay = false }: { overlay?: boolean }) => {
                         <Button asChild variant="ghost" size="icon" className="h-8 w-8">
                             <Link to="/library">
                                 <Library className="h-4 w-4" />
+                            </Link>
+                        </Button>
+
+                        <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                            <Link to="/shared-library">
+                                <Users className="h-4 w-4" />
                             </Link>
                         </Button>
 

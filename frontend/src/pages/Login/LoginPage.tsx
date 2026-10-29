@@ -16,10 +16,14 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
-import { useConfig } from '@pelagica/core';
-import { useServerAddress } from '@pelagica/core';
-import { getServerUrl, saveServerUrl } from '@pelagica/core';
-import { useServerBranding } from '@pelagica/core';
+import {
+    useConfig,
+    useServerAddress,
+    getServerUrl,
+    saveServerUrl,
+    useServerBranding,
+} from '@pelagica/core';
+import { useAutoDetectServerAddress } from '@/hooks/api/useAutoDetectServerAddress';
 import DOMPurify from 'dompurify';
 import QRCode from 'react-qr-code';
 
@@ -42,15 +46,21 @@ const LoginPage = () => {
 
     const { config } = useConfig();
     const serverAddress = useServerAddress();
-    const [serverUrl, setServerUrl] = useState<string>(() =>
-        isDemo ? DEMO_SERVER_URL : getServerUrl() || ''
-    );
+    const detectedServer = useAutoDetectServerAddress();
+    const [serverUrl, setServerUrl] = useState<string>(() => {
+        if (isDemo) return DEMO_SERVER_URL;
+        const stored = getServerUrl();
+        if (stored) return stored;
+        return detectedServer.fullAddress;
+    });
     const { data: branding } = useServerBranding(serverUrl);
     const navigate = useNavigate();
     const { t } = useTranslation('login');
-    const [step, setStep] = useState<'server' | 'login' | 'quickconnect'>(
-        serverAddress || serverUrl ? 'login' : 'server'
-    );
+    const [step, setStep] = useState<'server' | 'login' | 'quickconnect'>(() => {
+        if (serverAddress || serverUrl) return 'login';
+        if (typeof window !== 'undefined' && getServerUrl()) return 'login';
+        return 'server';
+    });
 
     const [checkingServer, setCheckingServer] = useState(false);
     const [serverCheckError, setServerCheckError] = useState<string | null>(null);
@@ -171,15 +181,18 @@ const LoginPage = () => {
 
         e.preventDefault();
         const form = e.target as HTMLFormElement;
-        const serverInput = form.querySelector('#server-address') as HTMLInputElement;
-        const serverAddress = serverInput?.value?.trim();
+        const serverIpInput = form.querySelector('#server-ip') as HTMLInputElement;
+        const serverPortInput = form.querySelector('#server-port') as HTMLInputElement;
+        const serverIp = serverIpInput?.value?.trim();
+        const serverPort = serverPortInput?.value?.trim();
 
-        if (!serverAddress) {
+        if (!serverIp) {
             setServerCheckError(t('please_enter_server_address'));
             setCheckingServer(false);
             return;
         }
 
+        const serverAddress = serverPort ? `${serverIp}:${serverPort}` : serverIp;
         const servers =
             await getJellyfinInstance().discovery.getRecommendedServerCandidates(serverAddress);
         const best = getJellyfinInstance().discovery.findBestServer(servers);
@@ -281,19 +294,41 @@ const LoginPage = () => {
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={onSubmitServer}>
-                            <Label htmlFor="server-address" className="mb-2 block font-medium">
-                                {t('server_address')}
-                            </Label>
-                            <Input
-                                id="server-address"
-                                type="text"
-                                placeholder="jellyfin.example.com"
-                                className="w-full"
-                                autoCapitalize="none"
-                                autoCorrect="off"
-                                inputMode="url"
-                                autoFocus
-                            />
+                            <div className="flex gap-2 mb-2">
+                                <div className="flex-1">
+                                    <Label htmlFor="server-ip" className="mb-2 block font-medium">
+                                        {t('server_address')}
+                                    </Label>
+                                    <Input
+                                        id="server-ip"
+                                        type="text"
+                                        placeholder="192.168.1.100"
+                                        defaultValue={
+                                            detectedServer.protocol
+                                                ? `${detectedServer.protocol}//${detectedServer.hostname}`
+                                                : ''
+                                        }
+                                        className="w-full"
+                                        autoCapitalize="none"
+                                        autoCorrect="off"
+                                        autoFocus
+                                    />
+                                </div>
+                                <div className="w-24">
+                                    <Label htmlFor="server-port" className="mb-2 block font-medium">
+                                        Port
+                                    </Label>
+                                    <Input
+                                        id="server-port"
+                                        type="text"
+                                        placeholder="8096"
+                                        defaultValue={detectedServer.port}
+                                        className="w-full"
+                                        autoCapitalize="none"
+                                        autoCorrect="off"
+                                    />
+                                </div>
+                            </div>
                             <p className="mt-2 text-xs text-muted-foreground">{t('no_http')}</p>
                             {serverCheckError && (
                                 <p className="mt-2 text-sm text-destructive flex items-center gap-2">

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { CircleCheck } from 'lucide-react';
 import { useSetStatsConsent } from '@pelagica/core';
 import { useStatsConsent } from '@pelagica/core';
@@ -17,22 +18,28 @@ const StatsConsentModal = () => {
     const { t } = useTranslation('common');
     const { data: statsConsent } = useStatsConsent();
     const setStatsConsent = useSetStatsConsent();
+    const [dismissed, setDismissed] = useState(false);
 
     if (statsConsent === undefined) return null;
 
-    const open = statsConsent === 'unknown';
+    const open = statsConsent === 'unknown' && !dismissed;
 
     const handleConsent = (consent: boolean) => {
-        setStatsConsent.mutate(consent);
+        setStatsConsent.mutate(consent, {
+            onSettled: () => {
+                setDismissed(true);
+            },
+        });
     };
 
     return (
-        <Dialog open={open}>
-            <DialogContent
-                onInteractOutside={(e) => e.preventDefault()}
-                onEscapeKeyDown={(e) => e.preventDefault()}
-                showCloseButton={false}
-            >
+        <Dialog
+            open={open}
+            onOpenChange={(isOpen) => {
+                if (!isOpen) setDismissed(true);
+            }}
+        >
+            <DialogContent>
                 <DialogHeader>
                     <DialogTitle>{t('stats_consent_title')}</DialogTitle>
                     <DialogDescription>
